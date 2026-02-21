@@ -95,7 +95,7 @@ const Index = () => {
               JOIN TOURNAMENT
             </Link>
             <Link
-              to="/dashboard"
+              to="/auth"
               className="inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-display font-bold text-sm tracking-wider px-8 py-4 rounded-xl hover:bg-secondary/80 transition-colors"
             >
               LOGIN
