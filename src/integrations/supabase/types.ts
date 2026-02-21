@@ -14,7 +14,124 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      games: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          game_mode: string
+          id: string
+          pgn: string | null
+          player1_id: string
+          player2_id: string | null
+          result_type: string
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          game_mode?: string
+          id?: string
+          pgn?: string | null
+          player1_id: string
+          player2_id?: string | null
+          result_type?: string
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          game_mode?: string
+          id?: string
+          pgn?: string | null
+          player1_id?: string
+          player2_id?: string | null
+          result_type?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          country: string | null
+          created_at: string
+          crown_score: number
+          draws: number
+          games_played: number
+          id: string
+          level: number
+          losses: number
+          rank_tier: string
+          updated_at: string
+          username: string | null
+          win_streak: number
+          wins: number
+          xp: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          crown_score?: number
+          draws?: number
+          games_played?: number
+          id: string
+          level?: number
+          losses?: number
+          rank_tier?: string
+          updated_at?: string
+          username?: string | null
+          win_streak?: number
+          wins?: number
+          xp?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          crown_score?: number
+          draws?: number
+          games_played?: number
+          id?: string
+          level?: number
+          losses?: number
+          rank_tier?: string
+          updated_at?: string
+          username?: string | null
+          win_streak?: number
+          wins?: number
+          xp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

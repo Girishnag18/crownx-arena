@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Swords, Bot, Globe, Users, Trophy, TrendingUp, Clock, ChevronRight } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const ratingData = [
   { date: "Jan", rating: 1200 },
@@ -21,12 +25,67 @@ const recentGames = [
   { opponent: "PawnStorm", result: "Win", rating: "+14", time: "5 hr ago" },
 ];
 
+interface Profile {
+  username: string | null;
+  crown_score: number;
+  rank_tier: string;
+  games_played: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  level: number;
+  win_streak: number;
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
+const rankEmoji: Record<string, string> = {
+  Bronze: "🥉",
+  Silver: "🥈",
+  Gold: "🥇",
+  Platinum: "💎",
+  Diamond: "💠",
+  "Crown Master": "👑",
+};
+
 const Dashboard = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+      return;
+    }
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("username, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setProfile(data as Profile);
+        });
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
+        <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
+      </div>
+    );
+  }
+
+  const displayName = profile?.username || user?.user_metadata?.username || "Player";
+  const winRate = profile && profile.games_played > 0
+    ? ((profile.wins / profile.games_played) * 100).toFixed(1)
+    : "0.0";
+
   return (
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
       <div className="container mx-auto max-w-7xl">
@@ -46,19 +105,21 @@ const Dashboard = () => {
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card" style={{ background: "hsl(142 71% 45%)" }} />
               </div>
               <div>
-                <h2 className="font-display text-xl font-bold">Player_One</h2>
+                <h2 className="font-display text-xl font-bold">{displayName}</h2>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gradient-gold font-display font-bold">👑 Gold</span>
-                  <span className="text-muted-foreground">• Level 24</span>
+                  <span className="text-gradient-gold font-display font-bold">
+                    {rankEmoji[profile?.rank_tier || "Bronze"]} {profile?.rank_tier || "Bronze"}
+                  </span>
+                  <span className="text-muted-foreground">• Level {profile?.level || 1}</span>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { label: "Played", value: "347" },
-                { label: "Wins", value: "218" },
-                { label: "Win Rate", value: "62.8%" },
+                { label: "Played", value: String(profile?.games_played || 0) },
+                { label: "Wins", value: String(profile?.wins || 0) },
+                { label: "Win Rate", value: `${winRate}%` },
               ].map((stat) => (
                 <div key={stat.label} className="bg-secondary/50 rounded-lg p-3 text-center">
                   <div className="font-display text-lg font-bold text-foreground">{stat.value}</div>
@@ -70,17 +131,19 @@ const Dashboard = () => {
             <div className="bg-secondary/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">CrownScore™</span>
-                <span className="font-display text-lg font-bold text-primary">1,480</span>
+                <span className="font-display text-lg font-bold text-primary">{(profile?.crown_score || 1200).toLocaleString()}</span>
               </div>
               <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: "74%" }}
+                  animate={{ width: `${Math.min(((profile?.crown_score || 1200) / 2500) * 100, 100)}%` }}
                   transition={{ delay: 0.5, duration: 1 }}
                   className="h-full bg-gradient-to-r from-gold-dim to-primary rounded-full"
                 />
               </div>
-              <div className="text-xs text-muted-foreground mt-1">520 points to Platinum</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {Math.max(0, 2000 - (profile?.crown_score || 1200))} points to Platinum
+              </div>
             </div>
           </motion.div>
 
