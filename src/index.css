@@ -93,6 +93,14 @@
     border-color: hsl(45 100% 50% / 0.3);
     box-shadow: inset 0 0 20px hsl(45 100% 50% / 0.05);
   }
+
+  .chess-board-light {
+    background-color: hsl(40 30% 75%);
+  }
+
+  .chess-board-dark {
+    background-color: hsl(25 30% 35%);
+  }
 }
 
 /* Custom scrollbar */

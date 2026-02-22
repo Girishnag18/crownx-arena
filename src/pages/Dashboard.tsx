@@ -151,15 +151,16 @@ const Dashboard = () => {
           <motion.div variants={fadeUp} className="lg:col-span-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {[
-                { icon: Swords, title: "Quick Play", desc: "Find an opponent now", accent: true },
-                { icon: Bot, title: "vs Computer", desc: "Practice with AI" },
-                { icon: Globe, title: "World Arena", desc: "Global matchmaking" },
-                { icon: Users, title: "Private Room", desc: "Invite a friend" },
+                { icon: Swords, title: "Quick Play", desc: "Find an opponent now", accent: true, to: "/play" },
+                { icon: Bot, title: "vs Computer", desc: "Practice with AI", to: "/play" },
+                { icon: Globe, title: "World Arena", desc: "Global matchmaking", to: "/play" },
+                { icon: Users, title: "Private Room", desc: "Invite a friend", to: "/play" },
               ].map((mode) => (
                 <motion.button
                   key={mode.title}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(mode.to)}
                   className={`glass-card p-5 text-left group transition-all duration-300 ${
                     mode.accent ? "border-primary/30 gold-glow" : "hover:border-primary/20"
                   }`}
