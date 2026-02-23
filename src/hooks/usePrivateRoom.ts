@@ -20,21 +20,29 @@ export const usePrivateRoom = () => {
   const createRoom = useCallback(async () => {
     if (!user) return;
     setError(null);
-    const code = generateCode();
+    let createdRoom: any = null;
 
-    const { data, error: err } = await supabase
-      .from("game_rooms")
-      .insert({ room_code: code, host_id: user.id })
-      .select()
-      .single();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateCode();
+      const { data, error: err } = await supabase
+        .from("game_rooms")
+        .insert({ room_code: code, host_id: user.id })
+        .select()
+        .single();
 
-    if (err) {
-      setError(err.message);
+      if (!err && data) {
+        createdRoom = data;
+        break;
+      }
+    }
+
+    if (!createdRoom) {
+      setError("Unable to create a unique private room code. Please retry.");
       return;
     }
 
-    setRoomCode(code);
-    setRoomId(data.id);
+    setRoomCode(createdRoom.room_code);
+    setRoomId(createdRoom.id);
     setStatus("waiting");
   }, [user]);
 
@@ -84,10 +92,15 @@ export const usePrivateRoom = () => {
       return;
     }
 
-    await supabase
+    const { error: roomUpdateErr } = await supabase
       .from("game_rooms")
       .update({ guest_id: user.id, game_id: game.id, status: "playing" })
       .eq("id", room.id);
+
+    if (roomUpdateErr) {
+      setError(roomUpdateErr.message || "Unable to join this room right now");
+      return;
+    }
 
     setGameId(game.id);
     setStatus("ready");

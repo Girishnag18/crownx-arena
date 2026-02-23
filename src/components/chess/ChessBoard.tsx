@@ -16,9 +16,10 @@ interface ChessBoardProps {
   flipped?: boolean;
   disabled?: boolean;
   lastMove?: { from: Square; to: Square } | null;
+  sizeClassName?: string;
 }
 
-const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove }: ChessBoardProps) => {
+const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName }: ChessBoardProps) => {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
@@ -65,13 +66,10 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove 
 
       const result = onMove(selectedSquare, square);
       if (result instanceof Promise) {
-        result.then((success) => {
-          if (!success) { setSelectedSquare(null); setLegalMoves([]); }
-          else { setSelectedSquare(null); setLegalMoves([]); }
+        result.finally(() => {
+          setSelectedSquare(null);
+          setLegalMoves([]);
         });
-      } else if (!result) {
-        setSelectedSquare(null);
-        setLegalMoves([]);
       } else {
         setSelectedSquare(null);
         setLegalMoves([]);
@@ -89,7 +87,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove 
   }, [promotionPending, onMove]);
 
   return (
-    <div className="relative w-full max-w-[min(80vw,560px)] aspect-square">
+    <div className={`relative w-full aspect-square ${sizeClassName || "max-w-[min(80vw,560px)]"}`}>
       <AnimatePresence>
         {promotionPending && (
           <motion.div
@@ -116,7 +114,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove 
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border-2 border-glass-border/50 shadow-2xl">
+      <div className="chess-board-shell grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border-2 border-glass-border/60 shadow-2xl">
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
             const square = (file + rank) as Square;
@@ -127,18 +125,27 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove 
             const isSelected = selectedSquare === square;
             const isLegal = legalMoves.includes(square);
             const isLastMove = lastMove?.from === square || lastMove?.to === square;
+            const isMoveDestination = lastMove?.to === square;
             const isKingInCheck = kingSquare === square;
 
             return (
               <button
                 key={square}
                 onClick={() => handleSquareClick(square)}
-                className={`relative flex items-center justify-center transition-colors ${
+                className={`relative flex items-center justify-center transition-all duration-150 ${
                   isLight ? "chess-board-light" : "chess-board-dark"
                 } ${isSelected ? "!bg-primary/50" : ""} ${
-                  isLastMove ? (isLight ? "!bg-yellow-300/50" : "!bg-yellow-700/50") : ""
+                  isLastMove ? (isLight ? "!bg-yellow-300/60" : "!bg-yellow-700/60") : ""
                 } ${isKingInCheck ? "!bg-destructive/60" : ""}`}
               >
+                {isMoveDestination && (
+                  <motion.div
+                    className="absolute inset-[15%] rounded-full border-2 border-primary/60"
+                    initial={{ scale: 0.7, opacity: 0.2 }}
+                    animate={{ scale: 1.25, opacity: 0 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
+                  />
+                )}
                 {isLegal && !piece && (
                   <div className="absolute w-[30%] h-[30%] rounded-full bg-foreground/20" />
                 )}
@@ -146,14 +153,18 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove 
                   <div className="absolute inset-[5%] rounded-full border-[3px] border-foreground/30" />
                 )}
                 {piece && (
-                  <span
+                  <motion.span
+                    layout
+                    initial={{ scale: 0.9, opacity: 0.85 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 20 }}
                     className={`text-[clamp(1.5rem,5vw,3rem)] leading-none select-none drop-shadow-md ${
                       piece.color === "w" ? "text-white" : "text-gray-900"
                     }`}
                     style={{ filter: piece.color === "w" ? "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" : "drop-shadow(0 1px 2px rgba(255,255,255,0.3))" }}
                   >
                     {PIECE_UNICODE[piece.color + piece.type]}
-                  </span>
+                  </motion.span>
                 )}
                 {fi === 0 && (
                   <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/50" : "text-amber-100/50"}`}>
