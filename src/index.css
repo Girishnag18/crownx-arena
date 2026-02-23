@@ -108,6 +108,13 @@
   }
 }
 
+
+@layer base {
+  button, a, input, textarea, select {
+    @apply transition-all duration-300 ease-out;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

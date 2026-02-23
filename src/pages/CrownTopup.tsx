@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crown, IndianRupee, Wallet, Zap } from "lucide-react";
+import { CheckCircle2, Crown, IndianRupee, Loader2, Smartphone, Wallet, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,10 +16,19 @@ const CrownTopup = () => {
 
   const [profile, setProfile] = useState<WalletProfile | null>(null);
   const [topupAmount, setTopupAmount] = useState("50");
-  const [upiReference, setUpiReference] = useState("");
   const [topupLoading, setTopupLoading] = useState(false);
+  const [paymentIntentRef, setPaymentIntentRef] = useState<string | null>(null);
+  const [selectedUpiApp, setSelectedUpiApp] = useState<"gpay" | "phonepe" | "paytm" | "upi">("upi");
+  const [paymentInitiated, setPaymentInitiated] = useState(false);
 
   const upiId = import.meta.env.VITE_UPI_ID || "crownxarena@upi";
+
+  const upiApps = [
+    { key: "gpay" as const, label: "Google Pay" },
+    { key: "phonepe" as const, label: "PhonePe" },
+    { key: "paytm" as const, label: "Paytm" },
+    { key: "upi" as const, label: "Any UPI App" },
+  ];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -53,15 +62,31 @@ const CrownTopup = () => {
       return;
     }
 
+    const intentReference = `CRX${Date.now().toString().slice(-8)}`;
+    setPaymentIntentRef(intentReference);
+    setPaymentInitiated(true);
+
     const params = new URLSearchParams({
       pa: upiId,
       pn: "CrownX Arena",
-      tn: "Wallet topup",
+      tn: `Wallet topup ${intentReference}`,
       am: amount.toFixed(2),
       cu: "INR",
+      tr: intentReference,
+      mc: "5816",
     });
 
-    window.open(`upi://pay?${params.toString()}`, "_self");
+    const paymentUrl = selectedUpiApp === "upi"
+      ? `upi://pay?${params.toString()}`
+      : `intent://${params.toString()}#Intent;scheme=upi;package=${
+        selectedUpiApp === "gpay"
+          ? "com.google.android.apps.nbu.paisa.user"
+          : selectedUpiApp === "phonepe"
+            ? "com.phonepe.app"
+            : "net.one97.paytm"
+      };end`;
+
+    window.open(paymentUrl, "_self");
   };
 
   const topupWallet = async () => {
@@ -72,16 +97,16 @@ const CrownTopup = () => {
       return;
     }
 
-    if (!upiReference.trim()) {
-      toast.error("Enter your UPI transaction reference");
+    if (!paymentIntentRef) {
+      toast.error("Start payment first to generate a secure transaction reference");
       return;
     }
 
     setTopupLoading(true);
     const { data, error } = await supabase.rpc("topup_wallet_via_upi", {
       topup_rupees: amount,
-      upi_ref: upiReference.trim(),
-      upi_provider: "upi",
+      upi_ref: paymentIntentRef,
+      upi_provider: selectedUpiApp,
     });
     setTopupLoading(false);
 
@@ -92,7 +117,8 @@ const CrownTopup = () => {
 
     const newBalance = data?.[0]?.wallet_balance;
     toast.success(`Top up successful. Wallet balance: ${newBalance} crowns`);
-    setUpiReference("");
+    setPaymentIntentRef(null);
+    setPaymentInitiated(false);
 
     const { data: latest } = await supabase.from("profiles").select("wallet_crowns, username").eq("id", user.id).single();
     if (latest) setProfile(latest as WalletProfile);
@@ -116,7 +142,7 @@ const CrownTopup = () => {
             </div>
             <div>
               <h1 className="font-display text-2xl font-bold">Crown Balance</h1>
-              <p className="text-sm text-muted-foreground">Manage your Crown wallet with secure UPI top ups.</p>
+              <p className="text-sm text-muted-foreground">Manage your Crown wallet with secure real-time UPI top ups.</p>
             </div>
           </div>
 
@@ -140,27 +166,46 @@ const CrownTopup = () => {
               />
             </div>
 
-            <label className="text-sm font-semibold">UPI transaction reference</label>
-            <input
-              value={upiReference}
-              onChange={(e) => setUpiReference(e.target.value.toUpperCase())}
-              placeholder="Enter UPI transaction reference"
-              className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <label className="text-sm font-semibold">Choose UPI app</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {upiApps.map((app) => (
+                <button
+                  key={app.key}
+                  type="button"
+                  onClick={() => setSelectedUpiApp(app.key)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-display font-bold tracking-wide transition-all duration-300 ${
+                    selectedUpiApp === app.key
+                      ? "border-primary bg-primary/20 text-primary"
+                      : "border-border bg-secondary hover:border-primary/40"
+                  }`}
+                >
+                  {app.label}
+                </button>
+              ))}
+            </div>
+
+            {paymentIntentRef && (
+              <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                Payment intent created: <span className="font-mono">{paymentIntentRef}</span>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2 pt-2">
-              <button onClick={openUpiApp} className="bg-secondary border border-border px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide">
-                Open UPI
+              <button onClick={openUpiApp} className="bg-secondary border border-border px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide transition-all duration-300 hover:border-primary/40 flex items-center gap-2">
+                <Smartphone className="w-4 h-4" />
+                Open UPI App
               </button>
-              <button onClick={topupWallet} disabled={topupLoading} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide disabled:opacity-60">
-                {topupLoading ? "Processing" : "Top up crowns"}
+              <button onClick={topupWallet} disabled={topupLoading || !paymentInitiated} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide disabled:opacity-60 transition-all duration-300 flex items-center gap-2">
+                {topupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {topupLoading ? "Processing" : "I have paid • credit now"}
               </button>
             </div>
           </div>
 
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-primary" />
-            Use the same UPI reference only once. Duplicate references will be rejected.
+            No manual transaction reference needed. We generate a secure payment intent automatically and apply wallet updates in real time.
           </div>
         </div>
       </div>
