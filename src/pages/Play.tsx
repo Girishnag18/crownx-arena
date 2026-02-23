@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
@@ -14,14 +14,13 @@ const Play = () => {
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
 
-  // Local game state
   const [localGame, setLocalGame] = useState(new Chess());
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [syncAgo, setSyncAgo] = useState("just now");
+  const [resignPending, setResignPending] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
 
-  // Online game
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
   const isComputerGame = !isOnline && mode === "computer";
@@ -48,7 +47,6 @@ const Play = () => {
     return () => window.clearInterval(interval);
   }, [isOnline, online.lastSyncedAt]);
 
-  // Local move handler
   const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
     const gameCopy = new Chess(localGame.fen());
     try {
@@ -59,11 +57,12 @@ const Play = () => {
         setMoveHistory((prev) => [...prev, move.san]);
         return true;
       }
-    } catch { /* invalid */ }
+    } catch {
+      // invalid move
+    }
     return false;
   }, [localGame]);
 
-  // Online move handler
   const handleOnlineMove = useCallback(async (from: Square, to: Square, promotion?: string): Promise<boolean> => {
     return online.makeMove(from, to, promotion);
   }, [online]);
@@ -74,7 +73,6 @@ const Play = () => {
     setMoveHistory([]);
   };
 
-  // Derive game state
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
   const isGameOver = isOnline ? online.isGameOver : game.isGameOver();
@@ -117,9 +115,8 @@ const Play = () => {
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
   }, [game, isInCheck, isOnline, online, user]);
 
-  // Move pairs
   const displayMoves = isOnline && online.gameData?.moves
-    ? (online.gameData.moves as any[]).map((m: any) => m.san)
+    ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
     : moveHistory;
 
   const movePairs = useMemo(() => {
@@ -134,10 +131,9 @@ const Play = () => {
     return pairs;
   }, [displayMoves]);
 
-  // Derive last move for online
   const derivedLastMove = useMemo(() => {
     if (isOnline && online.gameData?.moves) {
-      const moves = online.gameData.moves as any[];
+      const moves = online.gameData.moves as Array<{ from: string; to: string }>;
       if (moves.length > 0) {
         const last = moves[moves.length - 1];
         return { from: last.from as Square, to: last.to as Square };
@@ -146,8 +142,49 @@ const Play = () => {
     return lastMove;
   }, [isOnline, online.gameData, lastMove]);
 
+  const capturedPieces = useMemo(() => {
+    const initialCounts: Record<string, number> = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+    const current = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } };
+    const pieceGlyph: Record<string, string> = {
+      wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕",
+      bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛",
+    };
+
+    for (const row of game.board()) {
+      for (const piece of row) {
+        if (!piece || piece.type === "k") continue;
+        current[piece.color][piece.type] += 1;
+      }
+    }
+
+    const order = ["q", "r", "b", "n", "p"];
+    const capturedByWhite: string[] = [];
+    const capturedByBlack: string[] = [];
+
+    for (const pieceType of order) {
+      const blackMissing = initialCounts[pieceType] - current.b[pieceType];
+      const whiteMissing = initialCounts[pieceType] - current.w[pieceType];
+      for (let i = 0; i < blackMissing; i += 1) capturedByWhite.push(pieceGlyph[`b${pieceType}`]);
+      for (let i = 0; i < whiteMissing; i += 1) capturedByBlack.push(pieceGlyph[`w${pieceType}`]);
+    }
+
+    return { capturedByWhite, capturedByBlack };
+  }, [game]);
+
   const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w");
   const boardSizeClass = isOnline ? "max-w-[min(90vw,760px)]" : "max-w-[min(92vw,820px)]";
+
+  const topPlayerName = isOnline
+    ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 1200})`
+    : isComputerGame
+      ? `${computerColor === "b" ? "Computer" : "You"} (${computerColor === "b" ? 1300 : 1200})`
+      : "Black (1200)";
+
+  const bottomPlayerName = isOnline
+    ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 1200})`
+    : isComputerGame
+      ? `${computerColor === "w" ? "Computer" : "You"} (${computerColor === "w" ? 1300 : 1200})`
+      : "White (1200)";
 
   if (isOnline && online.loading) {
     return (
@@ -161,12 +198,19 @@ const Play = () => {
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
       <div className="container mx-auto max-w-[1500px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Board */}
           <div className="lg:col-span-9 flex flex-col items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
+            <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
+              <div className="flex items-center justify-between text-sm">
+                <div className="font-display font-bold">{topPlayerName}</div>
+                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                  {capturedPieces.capturedByBlack.length === 0
+                    ? <span className="text-xs text-muted-foreground">No captures</span>
+                    : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                </div>
+              </div>
+            </div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
               <ChessBoard
                 game={game}
                 onMove={isOnline ? handleOnlineMove : handleLocalMove}
@@ -177,7 +221,17 @@ const Play = () => {
               />
             </motion.div>
 
-            {/* Status bar */}
+            <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
+              <div className="flex items-center justify-between text-sm">
+                <div className="font-display font-bold">{bottomPlayerName}</div>
+                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                  {capturedPieces.capturedByWhite.length === 0
+                    ? <span className="text-xs text-muted-foreground">No captures</span>
+                    : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                </div>
+              </div>
+            </div>
+
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -194,11 +248,17 @@ const Play = () => {
               <div className="flex gap-2">
                 {isOnline && !online.isGameOver && (
                   <button
-                    onClick={online.resign}
-                    className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive"
+                    onClick={async () => {
+                      if (!window.confirm("Are you sure to resign?")) return;
+                      setResignPending(true);
+                      await online.resign();
+                      setResignPending(false);
+                    }}
+                    disabled={resignPending}
+                    className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
                     title="Resign"
                   >
-                    <Flag className="w-4 h-4" />
+                    {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
                 {!isOnline && (
@@ -214,22 +274,20 @@ const Play = () => {
             </motion.div>
           </div>
 
-          {/* Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
             className="lg:col-span-3 space-y-4"
           >
-            {/* Game info */}
             <div className="glass-card p-5 border-glow space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
-                {isOnline ? `vs ${online.opponentName}` : "Local Game"}
+                {isOnline ? `Live match: ${online.playerName} vs ${online.opponentName}` : "Local Game"}
               </h3>
               <p className="text-xs text-muted-foreground">
                 {isOnline
-                  ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}`
+                  ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
                   : isComputerGame
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}.`
                     : "Play against a friend on the same device."}
@@ -251,7 +309,11 @@ const Play = () => {
               )}
             </div>
 
-            {/* Move history */}
+            <div className="glass-card p-5 border border-primary/20">
+              <h3 className="font-display font-bold text-sm mb-2 flex items-center gap-2"><Swords className="w-4 h-4 text-primary" />Latest move</h3>
+              <p className="text-xs text-muted-foreground">The most recent move is highlighted in yellow on the board so you can instantly see your opponent's last move.</p>
+            </div>
+
             <div className="glass-card p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
               <div className="max-h-64 overflow-y-auto space-y-1 text-sm font-mono">
@@ -268,7 +330,6 @@ const Play = () => {
               </div>
             </div>
 
-            {/* Game over */}
             {isGameOver && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}

@@ -15,12 +15,19 @@ interface GameData {
   winner_id: string | null;
 }
 
+interface PlayerSummary {
+  id: string;
+  username: string;
+  crown_score: number;
+}
+
 export const useOnlineGame = (gameId: string | null) => {
   const { user } = useAuth();
   const [game, setGame] = useState<Chess | null>(null);
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [playerColor, setPlayerColor] = useState<"w" | "b" | null>(null);
-  const [opponentName, setOpponentName] = useState<string>("Opponent");
+  const [whitePlayer, setWhitePlayer] = useState<PlayerSummary | null>(null);
+  const [blackPlayer, setBlackPlayer] = useState<PlayerSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncState, setSyncState] = useState<"connecting" | "live" | "offline">("connecting");
   const [pendingMove, setPendingMove] = useState(false);
@@ -45,15 +52,28 @@ export const useOnlineGame = (gameId: string | null) => {
         setGame(chess);
         setPlayerColor(gd.player_white === user.id ? "w" : "b");
 
-        // Get opponent name
-        const opponentId = gd.player_white === user.id ? gd.player_black : gd.player_white;
-        if (opponentId) {
-          const { data: profile } = await supabase
+        const playerIds = [gd.player_white, gd.player_black].filter(Boolean) as string[];
+        if (playerIds.length > 0) {
+          const { data: profiles } = await supabase
             .from("profiles")
-            .select("username")
-            .eq("id", opponentId)
-            .single();
-          if (profile?.username) setOpponentName(profile.username);
+            .select("id, username, crown_score")
+            .in("id", playerIds);
+
+          if (profiles) {
+            const profileMap = new Map(
+              profiles.map((profile) => [
+                profile.id,
+                {
+                  id: profile.id,
+                  username: profile.username || "Player",
+                  crown_score: profile.crown_score || 1200,
+                } satisfies PlayerSummary,
+              ]),
+            );
+
+            setWhitePlayer(gd.player_white ? profileMap.get(gd.player_white) || null : null);
+            setBlackPlayer(gd.player_black ? profileMap.get(gd.player_black) || null : null);
+          }
         }
         setLoading(false);
       }
@@ -97,6 +117,50 @@ export const useOnlineGame = (gameId: string | null) => {
       supabase.removeChannel(channel);
     };
   }, [gameId, user]);
+
+  useEffect(() => {
+    if (!gameData) return;
+
+    const playerIds = [gameData.player_white, gameData.player_black].filter(Boolean) as string[];
+    if (playerIds.length === 0) return;
+
+    const profileChannel = supabase
+      .channel(`game-profiles-${gameData.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        async (payload) => {
+          const updatedProfileId = (payload.new as { id?: string })?.id;
+          if (!updatedProfileId || !playerIds.includes(updatedProfileId)) return;
+
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, username, crown_score")
+            .in("id", playerIds);
+
+          if (!profiles) return;
+
+          const profileMap = new Map(
+            profiles.map((profile) => [
+              profile.id,
+              {
+                id: profile.id,
+                username: profile.username || "Player",
+                crown_score: profile.crown_score || 1200,
+              } satisfies PlayerSummary,
+            ]),
+          );
+
+          setWhitePlayer(gameData.player_white ? profileMap.get(gameData.player_white) || null : null);
+          setBlackPlayer(gameData.player_black ? profileMap.get(gameData.player_black) || null : null);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+    };
+  }, [gameData]);
 
   const makeMove = useCallback(
     async (from: Square, to: Square, promotion?: string) => {
@@ -194,13 +258,18 @@ export const useOnlineGame = (gameId: string | null) => {
     game,
     gameData,
     playerColor,
-    opponentName,
+    whitePlayer,
+    blackPlayer,
     loading,
     pendingMove,
     syncState,
     lastSyncedAt,
     makeMove,
     resign,
+    playerName: user
+      ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
+      : "You",
+    opponentName: playerColor === "w" ? blackPlayer?.username || "Opponent" : whitePlayer?.username || "Opponent",
     isMyTurn: game ? game.turn() === playerColor : false,
     isGameOver: gameData?.result_type !== "in_progress" && gameData?.result_type !== "pending",
   };
