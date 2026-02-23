@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
@@ -17,6 +17,7 @@ const Play = () => {
   const [localGame, setLocalGame] = useState(new Chess());
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
+  const [syncAgo, setSyncAgo] = useState("just now");
 
   // Online game
   const online = useOnlineGame(onlineGameId);
@@ -25,6 +26,24 @@ const Play = () => {
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [authLoading, user, navigate]);
+
+  useEffect(() => {
+    if (!isOnline || !online.lastSyncedAt) return;
+
+    const formatSyncAge = () => {
+      const diffSeconds = Math.max(0, Math.floor((Date.now() - online.lastSyncedAt!.getTime()) / 1000));
+      if (diffSeconds < 1) {
+        setSyncAgo("just now");
+        return;
+      }
+      setSyncAgo(`${diffSeconds}s ago`);
+    };
+
+    formatSyncAge();
+    const interval = window.setInterval(formatSyncAge, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [isOnline, online.lastSyncedAt]);
 
   // Local move handler
   const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
@@ -134,7 +153,7 @@ const Play = () => {
                 game={game}
                 onMove={isOnline ? handleOnlineMove : handleLocalMove}
                 flipped={flipped}
-                disabled={isOnline ? !online.isMyTurn || online.isGameOver : false}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : false}
                 lastMove={derivedLastMove}
               />
             </motion.div>
@@ -150,6 +169,7 @@ const Play = () => {
                 {!isOnline && (
                   <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
+                {isOnline && online.pendingMove && <LoaderCircle className="w-4 h-4 animate-spin text-primary" />}
                 {gameStatus}
               </div>
               <div className="flex gap-2">
@@ -183,8 +203,8 @@ const Play = () => {
             className="lg:col-span-4 space-y-4"
           >
             {/* Game info */}
-            <div className="glass-card p-5 border-glow">
-              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2">
+            <div className="glass-card p-5 border-glow space-y-3">
+              <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
                 {isOnline ? `vs ${online.opponentName}` : "Local Game"}
               </h3>
@@ -193,6 +213,21 @@ const Play = () => {
                   ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}`
                   : "Play against a friend on the same device."}
               </p>
+              {isOnline && (
+                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-display">
+                    <span className="text-muted-foreground">Realtime sync</span>
+                    <span className={`flex items-center gap-1.5 ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
+                      {online.syncState === "live" ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+                      {online.syncState === "live" ? "Connected" : "Reconnecting"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Last sync</span>
+                    <span className="text-foreground/90">{syncAgo}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Move history */}

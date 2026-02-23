@@ -22,10 +22,14 @@ export const useOnlineGame = (gameId: string | null) => {
   const [playerColor, setPlayerColor] = useState<"w" | "b" | null>(null);
   const [opponentName, setOpponentName] = useState<string>("Opponent");
   const [loading, setLoading] = useState(true);
+  const [syncState, setSyncState] = useState<"connecting" | "live" | "offline">("connecting");
+  const [pendingMove, setPendingMove] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   // Load game data
   useEffect(() => {
     if (!gameId || !user) return;
+    setSyncState("connecting");
 
     const loadGame = async () => {
       const { data } = await supabase
@@ -73,11 +77,23 @@ export const useOnlineGame = (gameId: string | null) => {
           setGameData(updated);
           const chess = new Chess(updated.current_fen);
           setGame(chess);
+          setLastSyncedAt(new Date());
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setSyncState("live");
+          setLastSyncedAt(new Date());
+          return;
+        }
+
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setSyncState("offline");
+        }
+      });
 
     return () => {
+      setSyncState("offline");
       supabase.removeChannel(channel);
     };
   }, [gameId, user]);
@@ -90,9 +106,22 @@ export const useOnlineGame = (gameId: string | null) => {
       if (game.turn() !== playerColor) return false;
 
       const gameCopy = new Chess(game.fen());
+      const previousFen = game.fen();
+      const previousMoves = gameData.moves || [];
       try {
         const move = gameCopy.move({ from, to, promotion: promotion || undefined });
         if (!move) return false;
+
+        setPendingMove(true);
+        setGame(gameCopy);
+        setGameData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            current_fen: gameCopy.fen(),
+            moves: [...(prev.moves || []), { from, to, san: move.san, promotion }],
+          };
+        });
 
         // Determine game result
         let resultType = "in_progress";
@@ -111,9 +140,9 @@ export const useOnlineGame = (gameId: string | null) => {
           endedAt = new Date().toISOString();
         }
 
-        const newMoves = [...(gameData.moves || []), { from, to, san: move.san, promotion }];
+        const newMoves = [...previousMoves, { from, to, san: move.san, promotion }];
 
-        await supabase
+        const { error } = await supabase
           .from("games")
           .update({
             current_fen: gameCopy.fen(),
@@ -125,8 +154,23 @@ export const useOnlineGame = (gameId: string | null) => {
           })
           .eq("id", gameData.id);
 
+        if (error) throw error;
+
+        setLastSyncedAt(new Date());
+        setPendingMove(false);
+
         return true;
       } catch {
+        setPendingMove(false);
+        setGame(new Chess(game.fen()));
+        setGameData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            current_fen: previousFen,
+            moves: previousMoves,
+          };
+        });
         return false;
       }
     },
@@ -152,6 +196,9 @@ export const useOnlineGame = (gameId: string | null) => {
     playerColor,
     opponentName,
     loading,
+    pendingMove,
+    syncState,
+    lastSyncedAt,
     makeMove,
     resign,
     isMyTurn: game ? game.turn() === playerColor : false,
