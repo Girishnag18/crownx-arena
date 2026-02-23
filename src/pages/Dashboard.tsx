@@ -151,10 +151,10 @@ const Dashboard = () => {
           <motion.div variants={fadeUp} className="lg:col-span-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {[
-                { icon: Swords, title: "Quick Play", desc: "Find an opponent now", accent: true, to: "/play" },
+                { icon: Swords, title: "Quick Play", desc: "Find an opponent now", accent: true, to: "/lobby" },
                 { icon: Bot, title: "vs Computer", desc: "Practice with AI", to: "/play" },
-                { icon: Globe, title: "World Arena", desc: "Global matchmaking", to: "/play" },
-                { icon: Users, title: "Private Room", desc: "Invite a friend", to: "/play" },
+                { icon: Globe, title: "World Arena", desc: "Global matchmaking", to: "/lobby" },
+                { icon: Users, title: "Private Room", desc: "Invite a friend", to: "/lobby" },
               ].map((mode) => (
                 <motion.button
                   key={mode.title}

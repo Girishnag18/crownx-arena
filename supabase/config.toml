@@ -1,1 +1,4 @@
 project_id = "nwvvvazidezllccvxsrp"
+
+[functions.matchmake]
+verify_jwt = false

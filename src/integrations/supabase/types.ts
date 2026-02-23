@@ -14,14 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_rooms: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          guest_id: string | null
+          host_id: string
+          id: string
+          room_code: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          guest_id?: string | null
+          host_id: string
+          id?: string
+          room_code: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          guest_id?: string | null
+          host_id?: string
+          id?: string
+          room_code?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_rooms_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
           created_at: string
+          current_fen: string | null
           duration_seconds: number | null
           ended_at: string | null
           game_mode: string
           id: string
+          moves: Json | null
           pgn: string | null
+          player_black: string | null
+          player_white: string | null
           player1_id: string
           player2_id: string | null
           result_type: string
@@ -29,11 +85,15 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_fen?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           game_mode?: string
           id?: string
+          moves?: Json | null
           pgn?: string | null
+          player_black?: string | null
+          player_white?: string | null
           player1_id: string
           player2_id?: string | null
           result_type?: string
@@ -41,17 +101,35 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_fen?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           game_mode?: string
           id?: string
+          moves?: Json | null
           pgn?: string | null
+          player_black?: string | null
+          player_white?: string | null
           player1_id?: string
           player2_id?: string | null
           result_type?: string
           winner_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "games_player_black_fkey"
+            columns: ["player_black"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_player_white_fkey"
+            columns: ["player_white"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "games_player1_id_fkey"
             columns: ["player1_id"]
@@ -70,6 +148,41 @@ export type Database = {
             foreignKeyName: "games_winner_id_fkey"
             columns: ["winner_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matchmaking_queue: {
+        Row: {
+          created_at: string
+          game_mode: string
+          id: string
+          player_id: string
+          rating: number
+          region: string | null
+        }
+        Insert: {
+          created_at?: string
+          game_mode?: string
+          id?: string
+          player_id: string
+          rating?: number
+          region?: string | null
+        }
+        Update: {
+          created_at?: string
+          game_mode?: string
+          id?: string
+          player_id?: string
+          rating?: number
+          region?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaking_queue_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
