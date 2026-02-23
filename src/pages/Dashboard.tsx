@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet } from "lucide-react";
+import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -203,7 +203,11 @@ const Dashboard = () => {
     setCreateTournamentLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      if (error.message.toLowerCase().includes("public.tournments")) {
+        toast.error("Tournament schema is syncing. Please refresh once and try again.");
+      } else {
+        toast.error(error.message);
+      }
       return;
     }
 
@@ -332,7 +336,7 @@ const Dashboard = () => {
                 <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Tournament name" className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="Prize" type="number" min={0} className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm w-full sm:w-28 focus:outline-none focus:ring-2 focus:ring-primary" />
                 <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="Max regs" type="number" min={2} className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm w-full sm:w-28 focus:outline-none focus:ring-2 focus:ring-primary" />
-                <button onClick={createTournament} disabled={createTournamentLoading} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-1 disabled:opacity-60"><Plus className="w-3.5 h-3.5" /> {createTournamentLoading ? "CREATING" : "CREATE"}</button>
+                <button onClick={createTournament} disabled={createTournamentLoading} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-1 disabled:opacity-60 transition-all duration-300"><Plus className="w-3.5 h-3.5" /> {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> CREATING</> : "CREATE"}</button>
               </div>
             </div>
             <div className="space-y-2 max-h-[20rem] overflow-y-auto pr-1">
@@ -348,7 +352,7 @@ const Dashboard = () => {
                       <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ₹{tournament.prize_pool}</div>
                       <div className="text-[11px] text-primary/90 mt-0.5">Ready for registrations • Entry: 2 crowns</div>
                     </div>
-                    <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? "Joining..." : "Register (2C)"}</button>
+                    <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2C)"}</button>
                   </div>
                 );
               })}

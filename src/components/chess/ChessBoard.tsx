@@ -132,15 +132,15 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
               <button
                 key={square}
                 onClick={() => handleSquareClick(square)}
-                className={`relative flex items-center justify-center transition-all duration-150 ${
+                className={`relative flex items-center justify-center transition-all duration-200 ${
                   isLight ? "chess-board-light" : "chess-board-dark"
                 } ${isSelected ? "!bg-primary/50" : ""} ${
-                  isLastMove ? (isLight ? "!bg-yellow-300/60" : "!bg-yellow-700/60") : ""
+                  isLastMove ? (isLight ? "!bg-slate-500/70" : "!bg-slate-900/85") : ""
                 } ${isKingInCheck ? "!bg-destructive/60" : ""}`}
               >
                 {isMoveDestination && (
                   <motion.div
-                    className="absolute inset-[15%] rounded-full border-2 border-primary/60"
+                    className="absolute inset-[15%] rounded-full border-2 border-slate-200/70"
                     initial={{ scale: 0.7, opacity: 0.2 }}
                     animate={{ scale: 1.25, opacity: 0 }}
                     transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
