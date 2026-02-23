@@ -266,6 +266,47 @@ export type Database = {
           },
         ]
       }
+      wallet_transactions: {
+        Row: {
+          amount_rupees: number
+          crowns_credited: number
+          created_at: string
+          id: string
+          player_id: string
+          status: string
+          upi_app: string | null
+          upi_txn_ref: string
+        }
+        Insert: {
+          amount_rupees: number
+          crowns_credited: number
+          created_at?: string
+          id?: string
+          player_id: string
+          status?: string
+          upi_app?: string | null
+          upi_txn_ref: string
+        }
+        Update: {
+          amount_rupees?: number
+          crowns_credited?: number
+          created_at?: string
+          id?: string
+          player_id?: string
+          status?: string
+          upi_app?: string | null
+          upi_txn_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -283,6 +324,7 @@ export type Database = {
           username: string | null
           win_streak: number
           wins: number
+          wallet_crowns: number
           xp: number
         }
         Insert: {
@@ -301,6 +343,7 @@ export type Database = {
           username?: string | null
           win_streak?: number
           wins?: number
+          wallet_crowns?: number
           xp?: number
         }
         Update: {
@@ -319,6 +362,7 @@ export type Database = {
           username?: string | null
           win_streak?: number
           wins?: number
+          wallet_crowns?: number
           xp?: number
         }
         Relationships: []
@@ -328,7 +372,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      register_tournament_with_wallet: {
+        Args: { target_tournament: string }
+        Returns: {
+          charged_crowns: number
+          registration_id: string
+          wallet_balance: number
+        }[]
+      }
+      topup_wallet_via_upi: {
+        Args: { topup_rupees: number; upi_provider?: string; upi_ref: string }
+        Returns: {
+          credited_crowns: number
+          wallet_balance: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

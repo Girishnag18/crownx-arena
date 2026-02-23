@@ -50,10 +50,18 @@ export const usePrivateRoom = () => {
     if (!user) return;
     setError(null);
 
+    const sanitizedCode = code.trim().toUpperCase();
+    const isValidCode = /^[A-Z2-9]{6}$/.test(sanitizedCode);
+
+    if (!isValidCode) {
+      setError("Enter a valid 6-character room code");
+      return;
+    }
+
     const { data: room, error: fetchErr } = await supabase
       .from("game_rooms")
       .select("*")
-      .eq("room_code", code.toUpperCase())
+      .eq("room_code", sanitizedCode)
       .eq("status", "waiting")
       .single();
 
