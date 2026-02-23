@@ -348,7 +348,6 @@ const Dashboard = () => {
               <Zap className="w-3.5 h-3.5 text-primary" />
               Live profile updates enabled
             </div>
-            </div>
           </motion.div>
 
           <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
