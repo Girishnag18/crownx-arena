@@ -1,134 +1,124 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Chess, Square, Move } from "chess.js";
-import { motion, AnimatePresence } from "framer-motion";
-import { Crown, RotateCcw, Flag, ChevronLeft, ChevronRight } from "lucide-react";
+import { Chess, Square } from "chess.js";
+import { motion } from "framer-motion";
+import { Crown, RotateCcw, Flag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-
-const PIECE_UNICODE: Record<string, string> = {
-  wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
-  bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
-};
-
-const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useOnlineGame } from "@/hooks/useOnlineGame";
+import ChessBoard from "@/components/chess/ChessBoard";
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [game, setGame] = useState(new Chess());
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-  const [legalMoves, setLegalMoves] = useState<Square[]>([]);
+  const [searchParams] = useSearchParams();
+  const onlineGameId = searchParams.get("game");
+
+  // Local game state
+  const [localGame, setLocalGame] = useState(new Chess());
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
-  const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
 
+  // Online game
+  const online = useOnlineGame(onlineGameId);
+  const isOnline = !!onlineGameId;
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [authLoading, user, navigate]);
 
-  const makeMove = useCallback((from: Square, to: Square, promotion?: string) => {
-    const gameCopy = new Chess(game.fen());
+  // Local move handler
+  const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
+    const gameCopy = new Chess(localGame.fen());
     try {
       const move = gameCopy.move({ from, to, promotion: promotion || undefined });
       if (move) {
-        setGame(gameCopy);
+        setLocalGame(gameCopy);
         setLastMove({ from, to });
         setMoveHistory((prev) => [...prev, move.san]);
-        setSelectedSquare(null);
-        setLegalMoves([]);
         return true;
       }
-    } catch {
-      // invalid move
-    }
+    } catch { /* invalid */ }
     return false;
-  }, [game]);
+  }, [localGame]);
 
-  const handleSquareClick = useCallback((square: Square) => {
-    if (promotionPending) return;
+  // Online move handler
+  const handleOnlineMove = useCallback(async (from: Square, to: Square, promotion?: string): Promise<boolean> => {
+    return online.makeMove(from, to, promotion);
+  }, [online]);
 
-    const piece = game.get(square);
-
-    // If a piece of current turn is clicked, select it
-    if (piece && piece.color === game.turn()) {
-      setSelectedSquare(square);
-      const moves = game.moves({ square, verbose: true }) as Move[];
-      setLegalMoves(moves.map((m) => m.to as Square));
-      return;
-    }
-
-    // If a square is already selected, try to move
-    if (selectedSquare) {
-      // Check for promotion
-      const selectedPiece = game.get(selectedSquare);
-      if (
-        selectedPiece?.type === "p" &&
-        ((selectedPiece.color === "w" && square[1] === "8") ||
-          (selectedPiece.color === "b" && square[1] === "1"))
-      ) {
-        setPromotionPending({ from: selectedSquare, to: square });
-        return;
-      }
-
-      if (!makeMove(selectedSquare, square)) {
-        setSelectedSquare(null);
-        setLegalMoves([]);
-      }
-    }
-  }, [game, selectedSquare, makeMove, promotionPending]);
-
-  const handlePromotion = useCallback((piece: string) => {
-    if (promotionPending) {
-      makeMove(promotionPending.from, promotionPending.to, piece);
-      setPromotionPending(null);
-    }
-  }, [promotionPending, makeMove]);
-
-  const resetGame = () => {
-    setGame(new Chess());
-    setSelectedSquare(null);
-    setLegalMoves([]);
+  const resetLocalGame = () => {
+    setLocalGame(new Chess());
     setLastMove(null);
     setMoveHistory([]);
-    setPromotionPending(null);
   };
 
+  // Derive game state
+  const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = game.isGameOver();
+  const isGameOver = isOnline ? online.isGameOver : game.isGameOver();
+
   const gameStatus = useMemo(() => {
+    if (isOnline && online.gameData) {
+      const rt = online.gameData.result_type;
+      if (rt === "checkmate") {
+        const won = online.gameData.winner_id === user?.id;
+        return won ? "You win by checkmate!" : "You lost by checkmate";
+      }
+      if (rt === "resignation") {
+        const won = online.gameData.winner_id === user?.id;
+        return won ? "Opponent resigned — You win!" : "You resigned";
+      }
+      if (rt === "stalemate") return "Stalemate — Draw";
+      if (rt === "draw") return "Draw";
+      if (rt === "in_progress") {
+        return online.isMyTurn ? "Your turn" : "Opponent's turn";
+      }
+    }
     if (game.isCheckmate()) return `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`;
     if (game.isStalemate()) return "Stalemate — Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
-  }, [game, isInCheck]);
+  }, [game, isInCheck, isOnline, online, user]);
 
-  const kingSquare = useMemo(() => {
-    if (!isInCheck) return null;
-    for (let r = 0; r < 8; r++) {
-      for (let f = 0; f < 8; f++) {
-        const sq = (FILES[f] + RANKS[r]) as Square;
-        const p = game.get(sq);
-        if (p && p.type === "k" && p.color === game.turn()) return sq;
-      }
-    }
-    return null;
-  }, [game, isInCheck]);
+  // Move pairs
+  const displayMoves = isOnline && online.gameData?.moves
+    ? (online.gameData.moves as any[]).map((m: any) => m.san)
+    : moveHistory;
 
-  // Format move history into pairs
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
-    for (let i = 0; i < moveHistory.length; i += 2) {
+    for (let i = 0; i < displayMoves.length; i += 2) {
       pairs.push({
         num: Math.floor(i / 2) + 1,
-        white: moveHistory[i],
-        black: moveHistory[i + 1],
+        white: displayMoves[i],
+        black: displayMoves[i + 1],
       });
     }
     return pairs;
-  }, [moveHistory]);
+  }, [displayMoves]);
+
+  // Derive last move for online
+  const derivedLastMove = useMemo(() => {
+    if (isOnline && online.gameData?.moves) {
+      const moves = online.gameData.moves as any[];
+      if (moves.length > 0) {
+        const last = moves[moves.length - 1];
+        return { from: last.from as Square, to: last.to as Square };
+      }
+    }
+    return lastMove;
+  }, [isOnline, online.gameData, lastMove]);
+
+  const flipped = isOnline && online.playerColor === "b";
+
+  if (isOnline && online.loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
+        <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
@@ -139,92 +129,14 @@ const Play = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="relative w-full max-w-[min(80vw,560px)] aspect-square"
             >
-              {/* Promotion overlay */}
-              <AnimatePresence>
-                {promotionPending && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-20 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-xl"
-                  >
-                    <div className="glass-card p-6 border-glow">
-                      <p className="font-display text-sm font-bold mb-4 text-center">Promote to:</p>
-                      <div className="flex gap-3">
-                        {["q", "r", "b", "n"].map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => handlePromotion(p)}
-                            className="w-14 h-14 rounded-lg bg-secondary hover:bg-primary/20 hover:border-primary/40 border border-border flex items-center justify-center text-3xl transition-colors"
-                          >
-                            {PIECE_UNICODE[(game.turn() + p)]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border-2 border-glass-border/50 shadow-2xl">
-                {RANKS.map((rank, ri) =>
-                  FILES.map((file, fi) => {
-                    const square = (file + rank) as Square;
-                    const piece = game.get(square);
-                    const isLight = (ri + fi) % 2 === 0;
-                    const isSelected = selectedSquare === square;
-                    const isLegal = legalMoves.includes(square);
-                    const isLastMove = lastMove?.from === square || lastMove?.to === square;
-                    const isKingInCheck = kingSquare === square;
-
-                    return (
-                      <button
-                        key={square}
-                        onClick={() => handleSquareClick(square)}
-                        className={`relative flex items-center justify-center transition-colors ${
-                          isLight ? "chess-board-light" : "chess-board-dark"
-                        } ${isSelected ? "!bg-primary/50" : ""} ${
-                          isLastMove ? (isLight ? "!bg-yellow-300/50" : "!bg-yellow-700/50") : ""
-                        } ${isKingInCheck ? "!bg-destructive/60" : ""}`}
-                      >
-                        {/* Legal move indicator */}
-                        {isLegal && !piece && (
-                          <div className="absolute w-[30%] h-[30%] rounded-full bg-foreground/20" />
-                        )}
-                        {isLegal && piece && (
-                          <div className="absolute inset-[5%] rounded-full border-[3px] border-foreground/30" />
-                        )}
-
-                        {/* Piece */}
-                        {piece && (
-                          <span
-                            className={`text-[clamp(1.5rem,5vw,3rem)] leading-none select-none drop-shadow-md ${
-                              piece.color === "w" ? "text-white" : "text-gray-900"
-                            }`}
-                            style={{ filter: piece.color === "w" ? "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" : "drop-shadow(0 1px 2px rgba(255,255,255,0.3))" }}
-                          >
-                            {PIECE_UNICODE[piece.color + piece.type]}
-                          </span>
-                        )}
-
-                        {/* Coordinates */}
-                        {fi === 0 && (
-                          <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/50" : "text-amber-100/50"}`}>
-                            {rank}
-                          </span>
-                        )}
-                        {ri === 7 && (
-                          <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/50" : "text-amber-100/50"}`}>
-                            {file}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+              <ChessBoard
+                game={game}
+                onMove={isOnline ? handleOnlineMove : handleLocalMove}
+                flipped={flipped}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver : false}
+                lastMove={derivedLastMove}
+              />
             </motion.div>
 
             {/* Status bar */}
@@ -235,17 +147,30 @@ const Play = () => {
               className="mt-4 flex items-center justify-between w-full max-w-[min(80vw,560px)]"
             >
               <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
-                <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
+                {!isOnline && (
+                  <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
+                )}
                 {gameStatus}
               </div>
               <div className="flex gap-2">
-                <button
-                  onClick={resetGame}
-                  className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
-                  title="New Game"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
+                {isOnline && !online.isGameOver && (
+                  <button
+                    onClick={online.resign}
+                    className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive"
+                    title="Resign"
+                  >
+                    <Flag className="w-4 h-4" />
+                  </button>
+                )}
+                {!isOnline && (
+                  <button
+                    onClick={resetLocalGame}
+                    className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                    title="New Game"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>
@@ -261,10 +186,12 @@ const Play = () => {
             <div className="glass-card p-5 border-glow">
               <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
-                Local Game
+                {isOnline ? `vs ${online.opponentName}` : "Local Game"}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Play against a friend on the same device. Take turns making moves on the board.
+                {isOnline
+                  ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}`
+                  : "Play against a friend on the same device."}
               </p>
             </div>
 
@@ -285,7 +212,7 @@ const Play = () => {
               </div>
             </div>
 
-            {/* Game over actions */}
+            {/* Game over */}
             {isGameOver && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -295,10 +222,10 @@ const Play = () => {
                 <Crown className="w-8 h-8 text-primary mx-auto mb-2" />
                 <p className="font-display font-bold text-lg mb-3">{gameStatus}</p>
                 <button
-                  onClick={resetGame}
+                  onClick={isOnline ? () => navigate("/lobby") : resetLocalGame}
                   className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform"
                 >
-                  PLAY AGAIN
+                  {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
                 </button>
               </motion.div>
             )}

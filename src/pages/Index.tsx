@@ -81,7 +81,7 @@ const Index = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link
-              to="/play"
+              to="/lobby"
               className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider px-8 py-4 rounded-xl gold-glow hover:scale-105 transition-transform"
             >
               <Swords className="w-5 h-5" />
