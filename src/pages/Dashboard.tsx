@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet, IndianRupee } from "lucide-react";
+import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -63,30 +63,10 @@ const Dashboard = () => {
   const [registeredTournamentIds, setRegisteredTournamentIds] = useState<string[]>([]);
   const [newTournamentName, setNewTournamentName] = useState("");
   const [newPrizePool, setNewPrizePool] = useState("500");
+  const [newMaxRegistrations, setNewMaxRegistrations] = useState("128");
+  const [createTournamentLoading, setCreateTournamentLoading] = useState(false);
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
-  const [topupAmount, setTopupAmount] = useState("50");
-  const [upiReference, setUpiReference] = useState("");
-  const [topupLoading, setTopupLoading] = useState(false);
   const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
-  const upiId = import.meta.env.VITE_UPI_ID || "crownxarena@upi";
-
-  const openUpiApp = () => {
-    const amount = Number(topupAmount) || 0;
-    if (amount <= 0) {
-      toast.error("Enter a valid amount before opening UPI app");
-      return;
-    }
-
-    const params = new URLSearchParams({
-      pa: upiId,
-      pn: "CrownX Arena",
-      tn: "Wallet topup",
-      am: amount.toFixed(2),
-      cu: "INR",
-    });
-
-    window.open(`upi://pay?${params.toString()}`, "_self");
-  };
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
@@ -197,14 +177,30 @@ const Dashboard = () => {
   const createTournament = async () => {
     if (!user || !newTournamentName.trim()) return;
 
+    const parsedPrize = Number(newPrizePool);
+    const parsedMaxRegistrations = Number(newMaxRegistrations);
+
+    if (!Number.isFinite(parsedPrize) || parsedPrize < 0) {
+      toast.error("Enter a valid prize pool amount");
+      return;
+    }
+
+    if (!Number.isInteger(parsedMaxRegistrations) || parsedMaxRegistrations < 2) {
+      toast.error("Registration limit should be at least 2");
+      return;
+    }
+
+    setCreateTournamentLoading(true);
+
     const { error } = await supabase.from("tournaments").insert({
       name: newTournamentName.trim(),
-      prize_pool: Number(newPrizePool) || 0,
-      max_players: 128,
+      prize_pool: parsedPrize,
+      max_players: parsedMaxRegistrations,
       created_by: user.id,
       status: "open",
       starts_at: new Date(Date.now() + 1000 * 60 * 45).toISOString(),
     });
+    setCreateTournamentLoading(false);
 
     if (error) {
       toast.error(error.message);
@@ -213,39 +209,9 @@ const Dashboard = () => {
 
     setNewTournamentName("");
     setNewPrizePool("500");
+    setNewMaxRegistrations("128");
+    loadTournaments();
     toast.success("Tournament created and ready for registrations");
-  };
-
-  const topupWallet = async () => {
-    if (!user) return;
-    const amount = Number(topupAmount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error("Enter a valid top up amount");
-      return;
-    }
-
-    if (!upiReference.trim()) {
-      toast.error("Enter your UPI transaction reference");
-      return;
-    }
-
-    setTopupLoading(true);
-    const { data, error } = await supabase.rpc("topup_wallet_via_upi", {
-      topup_rupees: amount,
-      upi_ref: upiReference.trim(),
-      upi_provider: "upi",
-    });
-    setTopupLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    const newBalance = data?.[0]?.wallet_balance;
-    toast.success(`Top up successful. Wallet balance: ${newBalance} crowns`);
-    setUpiReference("");
-    loadProfile(user.id);
   };
 
   const registerTournament = async (tournamentId: string) => {
@@ -328,21 +294,9 @@ const Dashboard = () => {
                 <Wallet className="w-4 h-4 text-primary" />
                 {Number(profile?.wallet_crowns || 0).toFixed(2)} Crowns
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-2">
-                <div className="relative">
-                  <IndianRupee className="w-3.5 h-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
-                  <input value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} type="number" min={1} placeholder="Amount" className="bg-secondary border border-border rounded-lg pl-7 pr-2 py-2 text-xs w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-primary" />
-                </div>
-                <input value={upiReference} onChange={(e) => setUpiReference(e.target.value.toUpperCase())} placeholder="UPI transaction ref" className="bg-secondary border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary" />
-                <div className="flex gap-2">
-                  <button onClick={openUpiApp} className="bg-secondary border border-border px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide">
-                    Open UPI
-                  </button>
-                  <button onClick={topupWallet} disabled={topupLoading} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide disabled:opacity-60">
-                    {topupLoading ? "Processing" : "Top up"}
-                  </button>
-                </div>
-              </div>
+              <button onClick={() => navigate("/crown-topup")} className="w-full bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide">
+                Manage Crown Balance
+              </button>
             </div>
             <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
               <Zap className="w-3.5 h-3.5 text-primary" />
@@ -374,10 +328,11 @@ const Dashboard = () => {
             </div>
             <div className="rounded-lg border border-border/60 p-4 bg-secondary/20 mb-4">
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Create Tournament</p>
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2">
                 <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Tournament name" className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="Prize" type="number" min={0} className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm w-full sm:w-28 focus:outline-none focus:ring-2 focus:ring-primary" />
-                <button onClick={createTournament} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-1"><Plus className="w-3.5 h-3.5" /> CREATE</button>
+                <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="Max regs" type="number" min={2} className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm w-full sm:w-28 focus:outline-none focus:ring-2 focus:ring-primary" />
+                <button onClick={createTournament} disabled={createTournamentLoading} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-1 disabled:opacity-60"><Plus className="w-3.5 h-3.5" /> {createTournamentLoading ? "CREATING" : "CREATE"}</button>
               </div>
             </div>
             <div className="space-y-2 max-h-[20rem] overflow-y-auto pr-1">
