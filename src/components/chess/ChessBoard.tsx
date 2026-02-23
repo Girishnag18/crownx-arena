@@ -16,9 +16,10 @@ interface ChessBoardProps {
   flipped?: boolean;
   disabled?: boolean;
   lastMove?: { from: Square; to: Square } | null;
+  sizeClassName?: string;
 }
 
-const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove }: ChessBoardProps) => {
+const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName }: ChessBoardProps) => {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
@@ -86,7 +87,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove 
   }, [promotionPending, onMove]);
 
   return (
-    <div className="relative w-full max-w-[min(80vw,560px)] aspect-square">
+    <div className={`relative w-full aspect-square ${sizeClassName || "max-w-[min(80vw,560px)]"}`}>
       <AnimatePresence>
         {promotionPending && (
           <motion.div

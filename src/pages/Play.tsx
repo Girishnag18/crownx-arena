@@ -12,16 +12,19 @@ const Play = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const onlineGameId = searchParams.get("game");
+  const mode = searchParams.get("mode");
 
   // Local game state
   const [localGame, setLocalGame] = useState(new Chess());
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [syncAgo, setSyncAgo] = useState("just now");
+  const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
 
   // Online game
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
+  const isComputerGame = !isOnline && mode === "computer";
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -76,6 +79,20 @@ const Play = () => {
   const isInCheck = game.isCheck();
   const isGameOver = isOnline ? online.isGameOver : game.isGameOver();
 
+  useEffect(() => {
+    if (!isComputerGame || isGameOver) return;
+    if (game.turn() !== computerColor) return;
+
+    const timer = window.setTimeout(() => {
+      const moves = game.moves({ verbose: true });
+      if (moves.length === 0) return;
+      const pick = moves[Math.floor(Math.random() * moves.length)];
+      handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [computerColor, game, handleLocalMove, isComputerGame, isGameOver]);
+
   const gameStatus = useMemo(() => {
     if (isOnline && online.gameData) {
       const rt = online.gameData.result_type;
@@ -129,7 +146,8 @@ const Play = () => {
     return lastMove;
   }, [isOnline, online.gameData, lastMove]);
 
-  const flipped = isOnline && online.playerColor === "b";
+  const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w");
+  const boardSizeClass = isOnline ? "max-w-[min(90vw,760px)]" : "max-w-[min(92vw,820px)]";
 
   if (isOnline && online.loading) {
     return (
@@ -141,10 +159,10 @@ const Play = () => {
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-[1500px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Board */}
-          <div className="lg:col-span-8 flex flex-col items-center">
+          <div className="lg:col-span-9 flex flex-col items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -153,8 +171,9 @@ const Play = () => {
                 game={game}
                 onMove={isOnline ? handleOnlineMove : handleLocalMove}
                 flipped={flipped}
-                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : false}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (isComputerGame ? game.turn() === computerColor : false)}
                 lastMove={derivedLastMove}
+                sizeClassName={boardSizeClass}
               />
             </motion.div>
 
@@ -163,13 +182,13 @@ const Play = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mt-4 flex items-center justify-between w-full max-w-[min(80vw,560px)]"
+              className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
             >
               <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
                 {!isOnline && (
                   <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
-                {isOnline && online.pendingMove && <LoaderCircle className="w-4 h-4 animate-spin text-primary" />}
+                {(isOnline && online.pendingMove) && <LoaderCircle className="w-4 h-4 animate-spin text-primary" />}
                 {gameStatus}
               </div>
               <div className="flex gap-2">
@@ -200,7 +219,7 @@ const Play = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-4 space-y-4"
+            className="lg:col-span-3 space-y-4"
           >
             {/* Game info */}
             <div className="glass-card p-5 border-glow space-y-3">
@@ -211,7 +230,9 @@ const Play = () => {
               <p className="text-xs text-muted-foreground">
                 {isOnline
                   ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}`
-                  : "Play against a friend on the same device."}
+                  : isComputerGame
+                    ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}.`
+                    : "Play against a friend on the same device."}
               </p>
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
