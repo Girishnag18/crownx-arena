@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X } from "lucide-react";
+import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
@@ -93,6 +93,7 @@ const Navbar = () => {
                         { icon: History, label: "Game History", to: "/dashboard" },
                         { icon: BarChart3, label: "Ratings", to: "/dashboard" },
                         { icon: Settings, label: "Settings", to: "/dashboard" },
+                        { icon: Wallet, label: "Crown Balance", to: "/crown-topup" },
                       ].map((item) => (
                         <Link
                           key={item.label}

@@ -12,6 +12,7 @@ import Play from "./pages/Play";
 import Lobby from "./pages/Lobby";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import CrownTopup from "./pages/CrownTopup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/rules" element={<Rules />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/crown-topup" element={<CrownTopup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
