@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap } from "lucide-react";
+import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet, IndianRupee } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Profile {
   username: string | null;
@@ -15,6 +16,7 @@ interface Profile {
   draws: number;
   level: number;
   win_streak: number;
+  wallet_crowns: number;
 }
 
 interface Tournament {
@@ -62,11 +64,34 @@ const Dashboard = () => {
   const [newTournamentName, setNewTournamentName] = useState("");
   const [newPrizePool, setNewPrizePool] = useState("500");
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
+  const [topupAmount, setTopupAmount] = useState("50");
+  const [upiReference, setUpiReference] = useState("");
+  const [topupLoading, setTopupLoading] = useState(false);
+  const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
+  const upiId = import.meta.env.VITE_UPI_ID || "crownxarena@upi";
+
+  const openUpiApp = () => {
+    const amount = Number(topupAmount) || 0;
+    if (amount <= 0) {
+      toast.error("Enter a valid amount before opening UPI app");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: "CrownX Arena",
+      tn: "Wallet topup",
+      am: amount.toFixed(2),
+      cu: "INR",
+    });
+
+    window.open(`upi://pay?${params.toString()}`, "_self");
+  };
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak")
+      .select("username, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns")
       .eq("id", userId)
       .single();
     if (data) setProfile(data as Profile);
@@ -172,7 +197,7 @@ const Dashboard = () => {
   const createTournament = async () => {
     if (!user || !newTournamentName.trim()) return;
 
-    await supabase.from("tournaments").insert({
+    const { error } = await supabase.from("tournaments").insert({
       name: newTournamentName.trim(),
       prize_pool: Number(newPrizePool) || 0,
       max_players: 128,
@@ -181,19 +206,65 @@ const Dashboard = () => {
       starts_at: new Date(Date.now() + 1000 * 60 * 45).toISOString(),
     });
 
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
     setNewTournamentName("");
     setNewPrizePool("500");
-    loadTournaments();
+    toast.success("Tournament created and ready for registrations");
+  };
+
+  const topupWallet = async () => {
+    if (!user) return;
+    const amount = Number(topupAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a valid top up amount");
+      return;
+    }
+
+    if (!upiReference.trim()) {
+      toast.error("Enter your UPI transaction reference");
+      return;
+    }
+
+    setTopupLoading(true);
+    const { data, error } = await supabase.rpc("topup_wallet_via_upi", {
+      topup_rupees: amount,
+      upi_ref: upiReference.trim(),
+      upi_provider: "upi",
+    });
+    setTopupLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    const newBalance = data?.[0]?.wallet_balance;
+    toast.success(`Top up successful. Wallet balance: ${newBalance} crowns`);
+    setUpiReference("");
+    loadProfile(user.id);
   };
 
   const registerTournament = async (tournamentId: string) => {
     if (!user) return;
-    await supabase.from("tournament_registrations").insert({
-      tournament_id: tournamentId,
-      player_id: user.id,
+    setRegisteringTournamentId(tournamentId);
+    const { error } = await supabase.rpc("register_tournament_with_wallet", {
+      target_tournament: tournamentId,
     });
+    setRegisteringTournamentId(null);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Registered! 2 crowns deducted from wallet.");
     loadMyRegistrations(user.id);
     loadTournaments();
+    loadProfile(user.id);
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
@@ -242,15 +313,41 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-            <div className="bg-secondary/30 rounded-lg p-4">
+            <div className="bg-secondary/30 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Crown Score</span>
                 <span className="font-display text-lg font-bold text-primary">{(profile?.crown_score || 1200).toLocaleString()}</span>
               </div>
-              <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-primary" />
-                Live profile updates enabled
+            </div>
+            <div className="bg-secondary/40 border border-border rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs uppercase tracking-wider text-muted-foreground">Wallet</span>
+                <span className="text-xs text-muted-foreground">1 Crown = ₹1</span>
               </div>
+              <div className="flex items-center gap-2 text-lg font-display font-bold mb-3">
+                <Wallet className="w-4 h-4 text-primary" />
+                {Number(profile?.wallet_crowns || 0).toFixed(2)} Crowns
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-2">
+                <div className="relative">
+                  <IndianRupee className="w-3.5 h-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
+                  <input value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} type="number" min={1} placeholder="Amount" className="bg-secondary border border-border rounded-lg pl-7 pr-2 py-2 text-xs w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-primary" />
+                </div>
+                <input value={upiReference} onChange={(e) => setUpiReference(e.target.value.toUpperCase())} placeholder="UPI transaction ref" className="bg-secondary border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary" />
+                <div className="flex gap-2">
+                  <button onClick={openUpiApp} className="bg-secondary border border-border px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide">
+                    Open UPI
+                  </button>
+                  <button onClick={topupWallet} disabled={topupLoading} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide disabled:opacity-60">
+                    {topupLoading ? "Processing" : "Top up"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-primary" />
+              Live profile updates enabled
+            </div>
             </div>
           </motion.div>
 
@@ -294,9 +391,10 @@ const Dashboard = () => {
                   <div key={tournament.id} className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
                     <div>
                       <div className="font-semibold text-sm">{tournament.name}</div>
-                      <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ${tournament.prize_pool}</div>
+                      <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ₹{tournament.prize_pool}</div>
+                      <div className="text-[11px] text-primary/90 mt-0.5">Ready for registrations • Entry: 2 crowns</div>
                     </div>
-                    <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground">{isRegistered ? "Registered" : isFull ? "Full" : "Register"}</button>
+                    <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? "Joining..." : "Register (2C)"}</button>
                   </div>
                 );
               })}

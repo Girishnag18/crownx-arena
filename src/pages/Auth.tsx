@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
 type AuthMode = "login" | "signup" | "forgot";
@@ -207,8 +206,9 @@ const Auth = () => {
 
               <button
                 onClick={async () => {
-                  const { error } = await lovable.auth.signInWithOAuth("google", {
-                    redirect_uri: window.location.origin,
+                  const { error } = await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: { redirectTo: `${window.location.origin}/dashboard` },
                   });
                   if (error) toast.error(error.message);
                 }}
