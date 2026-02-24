@@ -1,0 +1,11 @@
+{
+  "name": "CrownX Arena",
+  "short_name": "CrownX",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#a78bfa",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}
