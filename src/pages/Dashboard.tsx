@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { publishInGameNotification } from "@/components/InGameNotificationBar";
 
 interface Profile {
   username: string | null;
@@ -26,9 +27,16 @@ interface Tournament {
   name: string;
   prize_pool: number;
   max_players: number;
-  status: "open" | "full" | "live" | "completed";
+  created_by?: string;
+  status: "open" | "full" | "live" | "completed" | "cancelled";
   starts_at: string | null;
   registration_count?: { count: number }[];
+}
+
+interface TournamentLeaderboardRow {
+  playerId: string;
+  wins: number;
+  matches: number;
 }
 
 interface RecentGame {
@@ -132,7 +140,7 @@ const Dashboard = () => {
   const loadTournaments = async () => {
     const { data } = await (supabase as any)
       .from("tournaments")
-      .select("id, name, prize_pool, max_players, status, starts_at, registration_count:tournament_registrations(count)")
+      .select("id, name, prize_pool, max_players, created_by, status, starts_at, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -271,6 +279,60 @@ const Dashboard = () => {
     loadProfile(user.id);
   };
 
+  const getTournamentLeaderboard = async (tournamentId: string): Promise<TournamentLeaderboardRow[]> => {
+    const { data: registrations } = await (supabase as any)
+      .from("tournament_registrations")
+      .select("player_id")
+      .eq("tournament_id", tournamentId);
+
+    const playerIds = (registrations || []).map((r: { player_id: string }) => r.player_id);
+    if (!playerIds.length) return [];
+
+    const { data: games } = await (supabase as any)
+      .from("games")
+      .select("winner_id, player_white, player_black, result_type")
+      .in("player_white", playerIds)
+      .in("player_black", playerIds)
+      .in("result_type", ["checkmate", "resignation", "draw", "stalemate"])
+      .limit(300);
+
+    const board = new Map<string, TournamentLeaderboardRow>();
+    playerIds.forEach((id: string) => board.set(id, { playerId: id, wins: 0, matches: 0 }));
+
+    (games || []).forEach((g: any) => {
+      if (board.has(g.player_white)) board.get(g.player_white)!.matches += 1;
+      if (board.has(g.player_black)) board.get(g.player_black)!.matches += 1;
+      if (g.winner_id && board.has(g.winner_id)) board.get(g.winner_id)!.wins += 1;
+    });
+
+    return Array.from(board.values()).sort((a, b) => b.wins - a.wins || b.matches - a.matches).slice(0, 10);
+  };
+
+  const cancelTournament = async (tournament: Tournament) => {
+    if (!user || tournament.created_by !== user.id) return;
+    if (!window.confirm("Call off this tournament and refund all players 2 crowns?")) return;
+
+    const { data: regs } = await (supabase as any)
+      .from("tournament_registrations")
+      .select("id, player_id")
+      .eq("tournament_id", tournament.id);
+
+    for (const reg of regs || []) {
+      const { data: profileData } = await supabase.from("profiles").select("wallet_crowns").eq("id", reg.player_id).single();
+      await supabase.from("profiles").update({ wallet_crowns: Number(profileData?.wallet_crowns || 0) + 2 }).eq("id", reg.player_id);
+      await supabase.from("wallet_transactions").insert({ player_id: reg.player_id, amount: 2, txn_type: "tournament_refund" });
+    }
+
+    await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
+    await (supabase as any).from("tournaments").update({ status: "cancelled" }).eq("id", tournament.id);
+
+    publishInGameNotification(`Sorry! Tournament "${tournament.name}" was called off. Crowns have been refunded.`, "warning");
+    toast.success("Tournament called off, refunds issued and in-game apology notice sent.");
+
+    loadTournaments();
+    loadProfile(user.id);
+  };
+
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
   const winRate = profile && profile.games_played > 0
     ? ((profile.wins / profile.games_played) * 100).toFixed(1)
@@ -301,7 +363,7 @@ const Dashboard = () => {
   }, [location.search]);
 
   const liveTournamentCount = useMemo(
-    () => tournaments.filter((t) => t.status === "live" || t.status === "open").length,
+    () => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled").length,
     [tournaments],
   );
 
@@ -450,17 +512,45 @@ const Dashboard = () => {
                 const count = tournament.registration_count?.[0]?.count || 0;
                 const isRegistered = registeredTournamentIds.includes(tournament.id);
                 const isFull = count >= tournament.max_players;
+                const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
+                const isReady = startsAtMs > 0 && Date.now() >= startsAtMs && tournament.status !== "cancelled";
+
                 return (
-                  <div key={tournament.id} className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
-                    <div>
-                      <div className="font-semibold text-sm">{tournament.name}</div>
-                      <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ₹{tournament.prize_pool}</div>
-                      {tournament.starts_at && (
-                        <div className="text-[11px] text-muted-foreground mt-0.5">📅 {new Date(tournament.starts_at).toLocaleString()}</div>
-                      )}
-                      <div className="text-[11px] text-primary/90 mt-0.5">Ready for registrations • Entry: 2 crowns</div>
+                  <div key={tournament.id} className="py-3 border-b border-border last:border-0 space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-sm">{tournament.name}</div>
+                        <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ₹{tournament.prize_pool}</div>
+                        {tournament.starts_at && (
+                          <div className="text-[11px] text-muted-foreground mt-0.5">📅 {new Date(tournament.starts_at).toLocaleString()}</div>
+                        )}
+                        <div className="text-[11px] text-primary/90 mt-0.5">
+                          {tournament.status === "cancelled" ? "Tournament cancelled" : isReady ? "Tournament ready to start • realtime qualifier analysis active" : "Ready for registrations • Entry: 2 crowns"}
+                        </div>
+                      </div>
+                      <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id || tournament.status === "cancelled"} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2C)"}</button>
                     </div>
-                    <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2C)"}</button>
+
+                    {isReady && (
+                      <button
+                        onClick={async () => {
+                          const leaders = await getTournamentLeaderboard(tournament.id);
+                          const leaderText = leaders.length > 0
+                            ? leaders.map((l, i) => `#${i + 1} ${l.playerId.slice(0, 6)} (${l.wins}W/${l.matches}M)`).join(" | ")
+                            : "No qualifying match data yet";
+                          toast.message(`Qualifier Top 10: ${leaderText}`);
+                        }}
+                        className="text-[11px] px-2 py-1 rounded bg-secondary"
+                      >
+                        View realtime Top 10 qualifiers
+                      </button>
+                    )}
+
+                    {tournament.created_by === user?.id && tournament.status !== "cancelled" && (
+                      <button onClick={() => cancelTournament(tournament)} className="text-[11px] px-2 py-1 rounded bg-destructive/10 text-destructive font-semibold">
+                        Call off tournament + refund crowns
+                      </button>
+                    )}
                   </div>
                 );
               })}

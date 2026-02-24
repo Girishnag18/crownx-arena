@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,8 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { usePrivateRoom } from "@/hooks/usePrivateRoom";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Mode = null | "quick_play" | "world_arena" | "private";
+
+interface WorldChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  createdAt: number;
+}
 
 const Lobby = () => {
   const { user, loading: authLoading } = useAuth();
@@ -15,6 +23,9 @@ const Lobby = () => {
   const [mode, setMode] = useState<Mode>(null);
   const [joinCode, setJoinCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [worldChatInput, setWorldChatInput] = useState("");
+  const [worldChatMessages, setWorldChatMessages] = useState<WorldChatMessage[]>([]);
+  const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const matchmaking = useMatchmaking();
   const privateRoom = usePrivateRoom();
@@ -42,6 +53,46 @@ const Lobby = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+
+
+  useEffect(() => {
+    if (mode !== "world_arena") return;
+
+    const channel = supabase.channel("world-matchmaking-chat")
+      .on("broadcast", { event: "message" }, ({ payload }) => {
+        setWorldChatMessages((prev) => [...prev.slice(-39), payload as WorldChatMessage]);
+      })
+      .subscribe();
+
+    worldChatChannelRef.current = channel;
+
+    return () => {
+      worldChatChannelRef.current = null;
+      supabase.removeChannel(channel);
+    };
+  }, [mode]);
+
+  const sendWorldMessage = async () => {
+    const text = worldChatInput.trim();
+    if (!text) return;
+
+    const message: WorldChatMessage = {
+      id: crypto.randomUUID(),
+      sender: user?.user_metadata?.username || "Player",
+      text,
+      createdAt: Date.now(),
+    };
+
+    setWorldChatMessages((prev) => [...prev.slice(-39), message]);
+    setWorldChatInput("");
+
+    await worldChatChannelRef.current?.send({
+      type: "broadcast",
+      event: "message",
+      payload: message,
+    });
   };
 
   const handleBack = () => {
@@ -284,6 +335,27 @@ const Lobby = () => {
                   >
                     TRY AGAIN
                   </button>
+                </div>
+              )}
+
+              {mode === "world_arena" && (
+                <div className="glass-card p-4">
+                  <p className="font-display font-bold text-sm mb-2">World Matchmaking Chat</p>
+                  <div className="h-36 overflow-y-auto bg-secondary/40 rounded-md p-2 space-y-1 text-xs">
+                    {worldChatMessages.length === 0 && <p className="text-muted-foreground">No messages yet.</p>}
+                    {worldChatMessages.map((msg) => (
+                      <p key={msg.id}><span className="text-primary font-semibold">{msg.sender}:</span> {msg.text}</p>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      value={worldChatInput}
+                      onChange={(e) => setWorldChatInput(e.target.value)}
+                      placeholder="Chat while finding your match..."
+                      className="flex-1 bg-secondary border border-border rounded-lg px-3 py-2 text-xs"
+                    />
+                    <button onClick={sendWorldMessage} className="bg-primary/20 text-primary px-3 rounded-lg text-xs font-display font-bold">SEND</button>
+                  </div>
                 </div>
               )}
             </motion.div>
