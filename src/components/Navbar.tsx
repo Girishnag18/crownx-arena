@@ -18,7 +18,7 @@ const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: History, label: "Match History", to: "/dashboard?section=history" },
   { icon: BarChart3, label: "Rating Overview", to: "/dashboard?section=ratings" },
-  { icon: Settings, label: "Profile Settings", to: "/dashboard?section=settings" },
+  { icon: Settings, label: "Profile Settings", to: "/settings" },
   { icon: Wallet, label: "Wallet", to: "/crown-topup" },
 ];
 
@@ -248,7 +248,7 @@ const Navbar = () => {
                 <>
                   <button
                     onClick={() => {
-                      navigate("/dashboard?section=settings");
+                      navigate("/settings");
                       setMobileOpen(false);
                     }}
                     className="w-full text-center py-3 rounded-xl text-sm font-semibold bg-secondary/40 hover:bg-secondary/70"

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, ChevronDown, Plus, Zap, Wallet, Loader2, User, Save, Mail, KeyRound } from "lucide-react";
+import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -67,17 +67,11 @@ const Dashboard = () => {
   const [newTournamentName, setNewTournamentName] = useState("");
   const [newPrizePool, setNewPrizePool] = useState("500");
   const [newMaxRegistrations, setNewMaxRegistrations] = useState("128");
+  const [newStartsAt, setNewStartsAt] = useState("");
   const [createTournamentLoading, setCreateTournamentLoading] = useState(false);
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
   const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
-  const [settingsSaving, setSettingsSaving] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [email, setEmail] = useState("");
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [emailOtp, setEmailOtp] = useState("");
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
-  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
 
@@ -213,12 +207,6 @@ const Dashboard = () => {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (!profile || !user) return;
-    setAvatarUrl(profile.avatar_url || "");
-    setDateOfBirth((user.user_metadata?.date_of_birth as string) || "");
-    setEmail(user.email || "");
-  }, [profile, user]);
 
   const createTournament = async () => {
     if (!user || !newTournamentName.trim()) return;
@@ -244,22 +232,19 @@ const Dashboard = () => {
       max_players: parsedMaxRegistrations,
       created_by: user.id,
       status: "open",
-      starts_at: new Date(Date.now() + 1000 * 60 * 45).toISOString(),
+      starts_at: newStartsAt ? new Date(newStartsAt).toISOString() : new Date(Date.now() + 1000 * 60 * 45).toISOString(),
     }).select("id, name, prize_pool, max_players, status, starts_at").single();
     setCreateTournamentLoading(false);
 
     if (error) {
-      if (error.message.toLowerCase().includes("public.tournaments") || error.message.toLowerCase().includes("schema cache")) {
-        toast.error("Tournament table is missing in Supabase schema cache. Run migrations/create table then refresh.");
-      } else {
-        toast.error(error.message);
-      }
+      toast.error(error.message);
       return;
     }
 
     setNewTournamentName("");
     setNewPrizePool("500");
     setNewMaxRegistrations("128");
+    setNewStartsAt("");
     if (data) {
       setTournaments((prev) => [{ ...(data as any), registration_count: [{ count: 0 }] } as Tournament, ...prev]);
     }
@@ -286,75 +271,6 @@ const Dashboard = () => {
     loadProfile(user.id);
   };
 
-  const saveSettings = async () => {
-    if (!user) return;
-    setSettingsSaving(true);
-
-    const [{ error: profileError }, { error: metadataError }] = await Promise.all([
-      supabase.from("profiles").update({ avatar_url: avatarUrl || null }).eq("id", user.id),
-      supabase.auth.updateUser({
-        data: {
-          ...(user.user_metadata || {}),
-          date_of_birth: dateOfBirth || null,
-        },
-      }),
-    ]);
-
-    setSettingsSaving(false);
-
-    if (profileError || metadataError) {
-      toast.error(profileError?.message || metadataError?.message || "Failed to save settings");
-      return;
-    }
-
-    toast.success("Profile settings updated");
-    loadProfile(user.id);
-  };
-
-  const requestEmailOtp = async () => {
-    if (!pendingEmail.trim()) {
-      toast.error("Enter a new email address");
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({ email: pendingEmail.trim() });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("OTP sent to your new email. Enter it below to verify.");
-  };
-
-  const verifyEmailOtp = async () => {
-    if (!pendingEmail || !emailOtp) {
-      toast.error("Enter email and OTP code");
-      return;
-    }
-    const { error } = await supabase.auth.verifyOtp({
-      type: "email_change",
-      email: pendingEmail,
-      token: emailOtp,
-    });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setEmail(pendingEmail);
-    setEmailOtp("");
-    toast.success("Email verified and updated");
-  };
-
-  const sendPasswordOtp = async () => {
-    if (!email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Password reset OTP/link sent to your email");
-  };
-
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
   const winRate = profile && profile.games_played > 0
     ? ((profile.wins / profile.games_played) * 100).toFixed(1)
@@ -366,13 +282,12 @@ const Dashboard = () => {
     if (!section) return;
 
     if (section === "settings") {
-      setSettingsPanelOpen(true);
-      setWalletPanelOpen(true);
+      navigate("/settings");
+      return;
     }
 
     const sectionMap: Record<string, string> = {
       ratings: "ratings-section",
-      settings: "settings-section",
       history: "history-section",
     };
 
@@ -469,50 +384,17 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <div id="settings-section" className="scroll-mt-28 space-y-4">
+            <div id="settings-section" className="scroll-mt-28">
               <button
-                onClick={() => setSettingsPanelOpen((prev) => !prev)}
-                className="w-full bg-secondary/40 border border-border rounded-xl p-4 flex items-center justify-between text-left"
+                onClick={() => navigate("/settings")}
+                className="w-full bg-secondary/40 border border-border rounded-xl p-4 flex items-center justify-between text-left hover:border-primary/30 transition-colors"
               >
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">Profile & Security</p>
                   <p className="text-sm font-semibold mt-1">Update profile, email and password</p>
                 </div>
-                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${settingsPanelOpen ? "rotate-180" : ""}`} />
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </button>
-
-              {settingsPanelOpen && (
-                <>
-                  <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                    <Zap className="w-3.5 h-3.5 text-primary" />
-                    Live profile & ranking updates enabled
-                  </div>
-
-                  <div className="bg-secondary/30 rounded-lg p-4 space-y-3">
-                    <h4 className="font-display text-sm font-bold">Profile settings</h4>
-                    <input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="Profile picture URL" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-                    <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-                    <button onClick={saveSettings} disabled={settingsSaving} className="w-full bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide disabled:opacity-60 inline-flex items-center justify-center gap-2">
-                      {settingsSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save profile
-                    </button>
-                  </div>
-
-                  <div className="bg-secondary/30 rounded-lg p-4 space-y-3">
-                    <h4 className="font-display text-sm font-bold">Email change with OTP verification</h4>
-                    <p className="text-[11px] text-muted-foreground">Current email: {email || "Not available"}</p>
-                    <input type="email" value={pendingEmail} onChange={(e) => setPendingEmail(e.target.value)} placeholder="New email address" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-                    <button onClick={requestEmailOtp} className="w-full bg-primary/15 text-primary px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide inline-flex items-center justify-center gap-2"><Mail className="w-3.5 h-3.5" /> Send OTP</button>
-                    <input value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} placeholder="Enter OTP" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-                    <button onClick={verifyEmailOtp} className="w-full bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide">Verify email</button>
-                  </div>
-
-                  <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
-                    <h4 className="font-display text-sm font-bold">Password security</h4>
-                    <p className="text-[11px] text-muted-foreground">To keep your account secure, verify via your email OTP before resetting password.</p>
-                    <button onClick={sendPasswordOtp} className="w-full bg-primary/15 text-primary px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide inline-flex items-center justify-center gap-2"><KeyRound className="w-3.5 h-3.5" /> Send password reset OTP</button>
-                  </div>
-                </>
-              )}
             </div>
           </motion.div>
 
@@ -549,9 +431,13 @@ const Dashboard = () => {
                   <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Prize Pool (₹)</label>
                   <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="500" type="number" min={0} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
-                <div className="space-y-1">
+              <div className="space-y-1">
                   <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Max Registrations</label>
                   <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="128" type="number" min={2} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Start Date & Time</label>
+                  <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <button onClick={createTournament} disabled={createTournamentLoading} className="md:col-span-2 w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-60 transition-all duration-300">
                   {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating Tournament...</> : <><Plus className="w-3.5 h-3.5" /> Create Tournament</>}
@@ -569,6 +455,9 @@ const Dashboard = () => {
                     <div>
                       <div className="font-semibold text-sm">{tournament.name}</div>
                       <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ₹{tournament.prize_pool}</div>
+                      {tournament.starts_at && (
+                        <div className="text-[11px] text-muted-foreground mt-0.5">📅 {new Date(tournament.starts_at).toLocaleString()}</div>
+                      )}
                       <div className="text-[11px] text-primary/90 mt-0.5">Ready for registrations • Entry: 2 crowns</div>
                     </div>
                     <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2C)"}</button>
