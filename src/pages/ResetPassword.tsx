@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { authService } from "@/features/auth/authService";
 import { toast } from "sonner";
 
 const ResetPassword = () => {
@@ -19,7 +19,7 @@ const ResetPassword = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await authService.resetPassword(password);
     setLoading(false);
     if (error) {
       toast.error(error.message);
@@ -50,7 +50,7 @@ const ResetPassword = () => {
                   placeholder="••••••••"
                   className="w-full bg-secondary/50 border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -68,7 +68,7 @@ const ResetPassword = () => {
                   placeholder="••••••••"
                   className="w-full bg-secondary/50 border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
               </div>
             </div>

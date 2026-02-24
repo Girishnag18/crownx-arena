@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/lobby", label: "Play Online" },
+  { to: "/ratings", label: "Ratings" },
   { to: "/dashboard", label: "Arena Hub" },
   { to: "/rules", label: "How to Play" },
 ];
@@ -17,7 +18,7 @@ const navLinks = [
 const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: History, label: "Match History", to: "/dashboard?section=history" },
-  { icon: BarChart3, label: "Rating Overview", to: "/dashboard?section=ratings" },
+  { icon: BarChart3, label: "Rating Overview", to: "/ratings" },
   { icon: Settings, label: "Profile Settings", to: "/settings" },
   { icon: Wallet, label: "Wallet", to: "/crown-topup" },
 ];
