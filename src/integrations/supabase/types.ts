@@ -188,125 +188,6 @@ export type Database = {
           },
         ]
       }
-
-      tournament_registrations: {
-        Row: {
-          created_at: string
-          id: string
-          player_id: string
-          tournament_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          player_id: string
-          tournament_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          player_id?: string
-          tournament_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tournament_registrations_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tournament_registrations_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tournaments: {
-        Row: {
-          created_at: string
-          created_by: string
-          id: string
-          max_players: number
-          name: string
-          prize_pool: number
-          starts_at: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          id?: string
-          max_players?: number
-          name: string
-          prize_pool?: number
-          starts_at?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          max_players?: number
-          name?: string
-          prize_pool?: number
-          starts_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tournaments_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      wallet_transactions: {
-        Row: {
-          amount_rupees: number
-          crowns_credited: number
-          created_at: string
-          id: string
-          player_id: string
-          status: string
-          upi_app: string | null
-          upi_txn_ref: string
-        }
-        Insert: {
-          amount_rupees: number
-          crowns_credited: number
-          created_at?: string
-          id?: string
-          player_id: string
-          status?: string
-          upi_app?: string | null
-          upi_txn_ref: string
-        }
-        Update: {
-          amount_rupees?: number
-          crowns_credited?: number
-          created_at?: string
-          id?: string
-          player_id?: string
-          status?: string
-          upi_app?: string | null
-          upi_txn_ref?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "wallet_transactions_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -324,7 +205,6 @@ export type Database = {
           username: string | null
           win_streak: number
           wins: number
-          wallet_crowns: number
           xp: number
         }
         Insert: {
@@ -343,7 +223,6 @@ export type Database = {
           username?: string | null
           win_streak?: number
           wins?: number
-          wallet_crowns?: number
           xp?: number
         }
         Update: {
@@ -362,7 +241,6 @@ export type Database = {
           username?: string | null
           win_streak?: number
           wins?: number
-          wallet_crowns?: number
           xp?: number
         }
         Relationships: []
@@ -372,21 +250,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      register_tournament_with_wallet: {
-        Args: { target_tournament: string }
-        Returns: {
-          charged_crowns: number
-          registration_id: string
-          wallet_balance: number
-        }[]
-      }
-      topup_wallet_via_upi: {
-        Args: { topup_rupees: number; upi_provider?: string; upi_ref: string }
-        Returns: {
-          credited_crowns: number
-          wallet_balance: number
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

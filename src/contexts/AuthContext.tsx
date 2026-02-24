@@ -78,9 +78,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!session?.user?.id) return;
-    supabase.from("profiles").update({ online_status: true, rank_tier: getRankTier(profile?.crown_score || 1200) }).eq("id", session.user.id);
+    supabase.from("profiles").update({ rank_tier: getRankTier(profile?.crown_score || 1200) }).eq("id", session.user.id);
     return () => {
-      supabase.from("profiles").update({ online_status: false }).eq("id", session.user.id);
+      // cleanup on unmount
     };
   }, [session?.user?.id, profile?.crown_score]);
 
