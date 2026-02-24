@@ -78,6 +78,8 @@ const Dashboard = () => {
   const [emailOtp, setEmailOtp] = useState("");
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
+  const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
@@ -118,6 +120,21 @@ const Dashboard = () => {
     );
   };
 
+
+  const loadRatingOverview = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .order("crown_score", { ascending: false })
+      .limit(500);
+
+    if (error || !data) return;
+
+    setLiveLeaderboardSize(data.length);
+    const rankIndex = data.findIndex((entry) => entry.id === userId);
+    setGlobalRank(rankIndex >= 0 ? rankIndex + 1 : null);
+  };
+
   const loadTournaments = async () => {
     const { data } = await supabase
       .from("tournaments")
@@ -149,6 +166,7 @@ const Dashboard = () => {
     loadTournaments();
     loadMyRegistrations(user.id);
     loadRecentGames(user.id);
+    loadRatingOverview(user.id);
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -166,6 +184,15 @@ const Dashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => {
         loadProfile(user.id);
         loadRecentGames(user.id);
+        loadRatingOverview(user.id);
+      })
+      .subscribe();
+
+    const ratingChannel = supabase
+      .channel(`rating-overview-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        loadProfile(user.id);
+        loadRatingOverview(user.id);
       })
       .subscribe();
 
@@ -181,6 +208,7 @@ const Dashboard = () => {
     return () => {
       supabase.removeChannel(profileChannel);
       supabase.removeChannel(gameChannel);
+      supabase.removeChannel(ratingChannel);
       supabase.removeChannel(tournamentChannel);
     };
   }, [user]);
@@ -221,8 +249,8 @@ const Dashboard = () => {
     setCreateTournamentLoading(false);
 
     if (error) {
-      if (error.message.toLowerCase().includes("public.tournments")) {
-        toast.error("Tournament schema is syncing. Please refresh once and try again.");
+      if (error.message.toLowerCase().includes("public.tournaments") || error.message.toLowerCase().includes("schema cache")) {
+        toast.error("Tournament table is missing in Supabase schema cache. Run migrations/create table then refresh.");
       } else {
         toast.error(error.message);
       }
@@ -405,6 +433,13 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Crown Score</span>
                 <span className="font-display text-lg font-bold text-primary">{(profile?.crown_score || 1200).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Global Rank</span>
+                <span className="font-semibold text-foreground">{globalRank ? `#${globalRank}` : "Unranked"}</span>
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-1">
+                Live rating pool: {liveLeaderboardSize} players (auto-refresh via realtime updates)
               </div>
             </div>
             <div className="space-y-3 mb-6">
