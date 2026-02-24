@@ -34,6 +34,19 @@ const CrownTopup = () => {
     { key: "upi" as const, label: "Any UPI App" },
   ];
 
+  const getUpiLink = (params: URLSearchParams) => {
+    const payload = params.toString();
+    if (selectedUpiApp === "upi") return `upi://pay?${payload}`;
+
+    const packageName = selectedUpiApp === "gpay"
+      ? "com.google.android.apps.nbu.paisa.user"
+      : selectedUpiApp === "phonepe"
+        ? "com.phonepe.app"
+        : "net.one97.paytm";
+
+    return `intent://pay?${payload}#Intent;scheme=upi;package=${packageName};end`;
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
@@ -94,15 +107,7 @@ const CrownTopup = () => {
       mc: "5816",
     });
 
-    const paymentUrl = selectedUpiApp === "upi"
-      ? `upi://pay?${params.toString()}`
-      : `intent://pay?${params.toString()}#Intent;scheme=upi;package=${
-        selectedUpiApp === "gpay"
-          ? "com.google.android.apps.nbu.paisa.user"
-          : selectedUpiApp === "phonepe"
-            ? "com.phonepe.app"
-            : "net.one97.paytm"
-      };end`;
+    const paymentUrl = getUpiLink(params);
 
     setPaymentLink(paymentUrl);
 
@@ -118,7 +123,7 @@ const CrownTopup = () => {
       }
     }
 
-    window.location.href = paymentUrl;
+    window.open(paymentUrl, "_self");
 
     setTimeout(async () => {
       if (document.visibilityState === "visible") {
@@ -288,17 +293,17 @@ const CrownTopup = () => {
                       toast.error("Could not copy link. Please try opening UPI app again.");
                     }
                   }}
-                  className="bg-secondary border border-border px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide transition-all duration-300 hover:border-primary/40"
-                >
-                  Copy payment link
-                </button>
-              )}
-            </div>
+                    className="bg-secondary border border-border px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide transition-all duration-300 hover:border-primary/40"
+                  >
+                    Copy UPI deep link
+                  </button>
+                )}
+              </div>
           </div>
 
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-primary" />
-            Real-time credit policy: ₹1 = 1 Crown. UPI request is sent to admin number {adminUpiPhoneNumber}, then submit your UTR to credit wallet instantly.
+            Real-time credit policy: ₹1 = 1 Crown. Use Google Pay / PhonePe / Paytm via deep link, complete payment to {adminUpiPhoneNumber}, then submit UTR for instant wallet credit.
           </div>
         </div>
       </div>
