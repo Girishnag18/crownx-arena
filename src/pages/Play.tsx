@@ -22,7 +22,9 @@ const Play = () => {
   const [resignPending, setResignPending] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
-  const [aiAccuracy, setAiAccuracy] = useState(80);
+  const [aiAccuracy, setAiAccuracy] = useState(92);
+  const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
+  const [showPostGameReview, setShowPostGameReview] = useState(false);
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -90,6 +92,37 @@ const Play = () => {
     return evaluation;
   }, [computerColor]);
 
+  const searchBestMove = useCallback((position: Chess, depth: number, alpha: number, beta: number, maximizing: boolean): number => {
+    if (depth === 0 || position.isGameOver()) return scorePosition(position);
+
+    const moves = position.moves({ verbose: true });
+    if (maximizing) {
+      let best = -Infinity;
+      for (const candidate of moves) {
+        const simulated = new Chess(position.fen());
+        simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+        const tacticalBoost = (candidate.captured ? 35 : 0) + (candidate.san.includes("+") ? 25 : 0);
+        const val = searchBestMove(simulated, depth - 1, alpha, beta, false) + tacticalBoost;
+        best = Math.max(best, val);
+        alpha = Math.max(alpha, val);
+        if (beta <= alpha) break;
+      }
+      return best;
+    }
+
+    let best = Infinity;
+    for (const candidate of moves) {
+      const simulated = new Chess(position.fen());
+      simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+      const tacticalPenalty = (candidate.captured ? 30 : 0) + (candidate.san.includes("+") ? 20 : 0);
+      const val = searchBestMove(simulated, depth - 1, alpha, beta, true) - tacticalPenalty;
+      best = Math.min(best, val);
+      beta = Math.min(beta, val);
+      if (beta <= alpha) break;
+    }
+    return best;
+  }, [scorePosition]);
+
   const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
     const gameCopy = new Chess(localGame.fen());
     try {
@@ -114,6 +147,8 @@ const Play = () => {
     setLocalGame(new Chess());
     setLastMove(null);
     setMoveHistory([]);
+    setShowCheckmateBanner(false);
+    setShowPostGameReview(false);
   };
 
   const game = isOnline && online.game ? online.game : localGame;
@@ -127,27 +162,45 @@ const Play = () => {
     const timer = window.setTimeout(() => {
       const moves = game.moves({ verbose: true });
       if (moves.length === 0) return;
+      const searchDepth = aiAccuracy >= 95 ? 3 : 2;
       const evaluated = moves.map((candidate) => {
         const simulated = new Chess(game.fen());
         simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
         return {
           move: candidate,
-          score: scorePosition(simulated),
+          score: searchBestMove(simulated, searchDepth, -Infinity, Infinity, false),
         };
       }).sort((a, b) => b.score - a.score);
 
-      const bestWindow = Math.max(1, Math.ceil(((100 - aiAccuracy) / 100) * Math.min(6, evaluated.length)));
+      const bestWindow = Math.max(1, Math.ceil(((100 - aiAccuracy) / 140) * Math.min(3, evaluated.length)));
       const pick = evaluated[Math.floor(Math.random() * bestWindow)].move;
       handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
-    }, 500);
+    }, 350);
 
     return () => window.clearTimeout(timer);
-  }, [aiAccuracy, computerColor, game, handleLocalMove, isComputerGame, isGameOver, scorePosition]);
+  }, [aiAccuracy, computerColor, game, handleLocalMove, isComputerGame, isGameOver, searchBestMove]);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
-    setAiAccuracy(Math.floor(Math.random() * 41) + 50);
+    setAiAccuracy(Math.floor(Math.random() * 11) + 88);
   }, [game, isComputerGame, isGameOver]);
+
+
+  useEffect(() => {
+    if (!game.isCheckmate()) {
+      setShowCheckmateBanner(false);
+      setShowPostGameReview(false);
+      return;
+    }
+
+    setShowCheckmateBanner(true);
+    const timer = window.setTimeout(() => {
+      setShowCheckmateBanner(false);
+      setShowPostGameReview(true);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [game]);
 
   const gameStatus = useMemo(() => {
     if (isOnline && online.gameData) {
@@ -297,7 +350,7 @@ const Play = () => {
               />
             </motion.div>
 
-            {game.isCheckmate() && (
+            {showCheckmateBanner && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -438,6 +491,32 @@ const Play = () => {
                 >
                   {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
                 </button>
+              </motion.div>
+            )}
+
+            {isGameOver && showPostGameReview && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-5 border border-primary/30"
+              >
+                <p className="font-display font-bold text-sm">Quick Review Suggestion</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">Review the final 8 moves to spot tactical misses, then pick your next step.</p>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => navigate("/dashboard?section=history")} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">QUICK REVIEW</button>
+                  <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Need a rematch?")) {
+                        if (isOnline) navigate("/lobby");
+                        else resetLocalGame();
+                      }
+                    }}
+                    className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md"
+                  >
+                    ASK REMATCH
+                  </button>
+                </div>
               </motion.div>
             )}
           </motion.div>

@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Ratings from "./pages/Ratings";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import InGameNotificationBar from "./components/InGameNotificationBar";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Navbar />
+          <InGameNotificationBar />
           <RouteAnimator />
         </AuthProvider>
       </BrowserRouter>
