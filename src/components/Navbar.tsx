@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -23,6 +24,7 @@ const profileMenuItems = [
 interface NavbarProfile {
   username: string | null;
   wallet_crowns: number | null;
+  avatar_url: string | null;
 }
 
 const Navbar = () => {
@@ -71,7 +73,7 @@ const Navbar = () => {
     const loadNavbarProfile = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("username, wallet_crowns")
+        .select("username, wallet_crowns, avatar_url")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -100,6 +102,7 @@ const Navbar = () => {
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
+  const visibleNavLinks = user ? navLinks : navLinks.filter((link) => link.to === "/");
 
   return (
     <>
@@ -116,7 +119,7 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -147,9 +150,12 @@ const Navbar = () => {
                   className="flex items-center gap-2 glass-card px-3 py-1.5 hover:border-primary/30 transition-colors"
                 >
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    </div>
+                    <Avatar className="w-8 h-8 border border-border/60">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                      <AvatarFallback className="bg-secondary text-muted-foreground">
+                        <User className="w-4 h-4" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card bg-success" />
                   </div>
                   <span className="hidden sm:block text-sm font-semibold">
@@ -229,7 +235,7 @@ const Navbar = () => {
               exit={{ opacity: 0, y: 20 }}
               className="flex flex-col items-center gap-2 p-6"
             >
-              {navLinks.map((link) => (
+              {visibleNavLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}

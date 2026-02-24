@@ -19,6 +19,7 @@ interface PlayerSummary {
   id: string;
   username: string;
   crown_score: number;
+  avatar_url: string | null;
 }
 
 export const useOnlineGame = (gameId: string | null) => {
@@ -56,7 +57,7 @@ export const useOnlineGame = (gameId: string | null) => {
         if (playerIds.length > 0) {
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, username, crown_score")
+            .select("id, username, crown_score, avatar_url")
             .in("id", playerIds);
 
           if (profiles) {
@@ -67,6 +68,7 @@ export const useOnlineGame = (gameId: string | null) => {
                   id: profile.id,
                   username: profile.username || "Player",
                   crown_score: profile.crown_score || 1200,
+                  avatar_url: profile.avatar_url || null,
                 } satisfies PlayerSummary,
               ]),
             );
@@ -135,7 +137,7 @@ export const useOnlineGame = (gameId: string | null) => {
 
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, username, crown_score")
+            .select("id, username, crown_score, avatar_url")
             .in("id", playerIds);
 
           if (!profiles) return;
@@ -147,6 +149,7 @@ export const useOnlineGame = (gameId: string | null) => {
                 id: profile.id,
                 username: profile.username || "Player",
                 crown_score: profile.crown_score || 1200,
+                  avatar_url: profile.avatar_url || null,
               } satisfies PlayerSummary,
             ]),
           );

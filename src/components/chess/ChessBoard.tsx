@@ -132,7 +132,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
               <button
                 key={square}
                 onClick={() => handleSquareClick(square)}
-                className={`relative flex items-center justify-center transition-all duration-200 ${
+                className={`board-square relative flex items-center justify-center transition-all duration-300 ${
                   isLight ? "chess-board-light" : "chess-board-dark"
                 } ${isSelected ? "!bg-primary/50" : ""} ${
                   isLastMove ? (isLight ? "!bg-slate-500/70" : "!bg-slate-900/85") : ""
@@ -157,7 +157,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                     layout
                     initial={{ scale: 0.9, opacity: 0.85 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 280, damping: 20 }}
+                    transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
                     className={`text-[clamp(1.5rem,5vw,3rem)] leading-none select-none drop-shadow-md ${
                       piece.color === "w" ? "text-white" : "text-gray-900"
                     }`}
