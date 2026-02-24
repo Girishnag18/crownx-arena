@@ -21,6 +21,7 @@ const Play = () => {
   const [syncAgo, setSyncAgo] = useState("just now");
   const [resignPending, setResignPending] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
+  const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -47,6 +48,23 @@ const Play = () => {
 
     return () => window.clearInterval(interval);
   }, [isOnline, online.lastSyncedAt]);
+
+  useEffect(() => {
+    const calculateBoardSize = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const horizontalPadding = viewportWidth >= 1024 ? 220 : 32;
+      const verticalReserved = viewportWidth >= 1024 ? 220 : 280;
+      const sizeFromWidth = viewportWidth - horizontalPadding;
+      const sizeFromHeight = viewportHeight - verticalReserved;
+      const computed = Math.max(280, Math.min(sizeFromWidth, sizeFromHeight, 980));
+      setMaxBoardSizePx(computed);
+    };
+
+    calculateBoardSize();
+    window.addEventListener("resize", calculateBoardSize);
+    return () => window.removeEventListener("resize", calculateBoardSize);
+  }, []);
 
   const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
     const gameCopy = new Chess(localGame.fen());
@@ -173,7 +191,7 @@ const Play = () => {
   }, [game]);
 
   const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w");
-  const boardSizeClass = isOnline ? "max-w-[min(94vw,900px)]" : "max-w-[min(96vw,980px)]";
+  const boardSizeClass = "max-w-[96vw]";
 
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 1200})`
@@ -236,6 +254,7 @@ const Play = () => {
                 disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (isComputerGame ? game.turn() === computerColor : false)}
                 lastMove={derivedLastMove}
                 sizeClassName={boardSizeClass}
+                maxBoardSizePx={maxBoardSizePx || undefined}
               />
             </motion.div>
 

@@ -123,7 +123,7 @@ const Dashboard = () => {
       .from("tournaments")
       .select("id, name, prize_pool, max_players, status, starts_at, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
-      .limit(8);
+      .limit(50);
 
     if (data) setTournaments(data as unknown as Tournament[]);
   };
@@ -210,14 +210,14 @@ const Dashboard = () => {
 
     setCreateTournamentLoading(true);
 
-    const { error } = await supabase.from("tournaments").insert({
+    const { data, error } = await supabase.from("tournaments").insert({
       name: newTournamentName.trim(),
       prize_pool: parsedPrize,
       max_players: parsedMaxRegistrations,
       created_by: user.id,
       status: "open",
       starts_at: new Date(Date.now() + 1000 * 60 * 45).toISOString(),
-    });
+    }).select("id, name, prize_pool, max_players, status, starts_at").single();
     setCreateTournamentLoading(false);
 
     if (error) {
@@ -232,8 +232,11 @@ const Dashboard = () => {
     setNewTournamentName("");
     setNewPrizePool("500");
     setNewMaxRegistrations("128");
+    if (data) {
+      setTournaments((prev) => [{ ...data, registration_count: [{ count: 0 }] } as Tournament, ...prev]);
+    }
     loadTournaments();
-    toast.success("Tournament created and ready for registrations");
+    toast.success("Tournament created and synced live for all players");
   };
 
   const registerTournament = async (tournamentId: string) => {

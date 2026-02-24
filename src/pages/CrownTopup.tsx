@@ -18,6 +18,7 @@ const CrownTopup = () => {
   const [topupAmount, setTopupAmount] = useState("50");
   const [topupLoading, setTopupLoading] = useState(false);
   const [paymentIntentRef, setPaymentIntentRef] = useState<string | null>(null);
+  const [userTxnRef, setUserTxnRef] = useState("");
   const [selectedUpiApp, setSelectedUpiApp] = useState<"gpay" | "phonepe" | "paytm" | "upi">("upi");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
 
@@ -50,8 +51,16 @@ const CrownTopup = () => {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, loadProfile)
       .subscribe();
 
+    const transactionChannel = supabase
+      .channel(`wallet-transactions-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "wallet_transactions", filter: `player_id=eq.${user.id}` }, () => {
+        loadProfile();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(profileChannel);
+      supabase.removeChannel(transactionChannel);
     };
   }, [user, authLoading, navigate]);
 
@@ -102,10 +111,16 @@ const CrownTopup = () => {
       return;
     }
 
+    const normalizedTxnRef = userTxnRef.trim().toUpperCase();
+    if (!/^[A-Z0-9]{8,35}$/.test(normalizedTxnRef)) {
+      toast.error("Enter a valid UPI transaction reference (8-35 letters/numbers)");
+      return;
+    }
+
     setTopupLoading(true);
     const { data, error } = await supabase.rpc("topup_wallet_via_upi", {
       topup_rupees: amount,
-      upi_ref: paymentIntentRef,
+      upi_ref: normalizedTxnRef,
       upi_provider: selectedUpiApp,
     });
     setTopupLoading(false);
@@ -118,6 +133,7 @@ const CrownTopup = () => {
     const newBalance = data?.[0]?.wallet_balance;
     toast.success(`Top up successful. Wallet balance: ${newBalance} crowns`);
     setPaymentIntentRef(null);
+    setUserTxnRef("");
     setPaymentInitiated(false);
 
     const { data: latest } = await supabase.from("profiles").select("wallet_crowns, username").eq("id", user.id).single();
@@ -191,12 +207,22 @@ const CrownTopup = () => {
               </div>
             )}
 
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground uppercase tracking-wide">UPI Transaction Reference (UTR)</label>
+              <input
+                value={userTxnRef}
+                onChange={(e) => setUserTxnRef(e.target.value.toUpperCase())}
+                placeholder="Enter UTR after successful payment"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
             <div className="flex flex-wrap gap-2 pt-2">
               <button onClick={openUpiApp} className="bg-secondary border border-border px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide transition-all duration-300 hover:border-primary/40 flex items-center gap-2">
                 <Smartphone className="w-4 h-4" />
                 Open UPI App
               </button>
-              <button onClick={topupWallet} disabled={topupLoading || !paymentInitiated} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide disabled:opacity-60 transition-all duration-300 flex items-center gap-2">
+              <button onClick={topupWallet} disabled={topupLoading || !paymentInitiated || !userTxnRef.trim()} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide disabled:opacity-60 transition-all duration-300 flex items-center gap-2">
                 {topupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {topupLoading ? "Processing" : "I have paid • credit now"}
               </button>
@@ -205,7 +231,7 @@ const CrownTopup = () => {
 
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-primary" />
-            No manual transaction reference needed. We generate a secure payment intent automatically and apply wallet updates in real time.
+            Real-time credit policy: ₹1 = 1 Crown. After successful payment, submit your UTR to credit wallet instantly and notify admin records.
           </div>
         </div>
       </div>
