@@ -15,6 +15,10 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import CrownTopup from "./pages/CrownTopup";
 import NotFound from "./pages/NotFound";
+import Leaderboard from "./pages/Leaderboard";
+import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
+import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -32,13 +36,17 @@ const RouteAnimator = () => {
       >
         <Routes location={location}>
           <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/play" element={<Play />} />
-          <Route path="/lobby" element={<Lobby />} />
-          <Route path="/rules" element={<Rules />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/crown-topup" element={<CrownTopup />} />
+
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/play" element={<ProtectedRoute><Play /></ProtectedRoute>} />
+          <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
+          <Route path="/rules" element={<Rules />} />
+          <Route path="/crown-topup" element={<ProtectedRoute><CrownTopup /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Admin /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
