@@ -18,6 +18,7 @@ const CrownTopup = () => {
   const [topupAmount, setTopupAmount] = useState("50");
   const [topupLoading, setTopupLoading] = useState(false);
   const [paymentIntentRef, setPaymentIntentRef] = useState<string | null>(null);
+  const [paymentLink, setPaymentLink] = useState<string | null>(null);
   const [userTxnRef, setUserTxnRef] = useState("");
   const [selectedUpiApp, setSelectedUpiApp] = useState<"gpay" | "phonepe" | "paytm" | "upi">("upi");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
@@ -66,7 +67,7 @@ const CrownTopup = () => {
     };
   }, [user, authLoading, navigate]);
 
-  const openUpiApp = () => {
+  const openUpiApp = async () => {
     const amount = Number(topupAmount) || 0;
     if (amount <= 0) {
       toast.error("Enter a valid amount before opening UPI app");
@@ -95,7 +96,7 @@ const CrownTopup = () => {
 
     const paymentUrl = selectedUpiApp === "upi"
       ? `upi://pay?${params.toString()}`
-      : `intent://${params.toString()}#Intent;scheme=upi;package=${
+      : `intent://pay?${params.toString()}#Intent;scheme=upi;package=${
         selectedUpiApp === "gpay"
           ? "com.google.android.apps.nbu.paisa.user"
           : selectedUpiApp === "phonepe"
@@ -103,7 +104,35 @@ const CrownTopup = () => {
             : "net.one97.paytm"
       };end`;
 
-    window.open(paymentUrl, "_self");
+    setPaymentLink(paymentUrl);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "CrownX Arena UPI Payment",
+          text: `Pay ₹${amount.toFixed(2)} via UPI for CrownX Arena`,
+          url: paymentUrl,
+        });
+      } catch {
+        // User cancelled share sheet; continue with URL redirect fallback.
+      }
+    }
+
+    window.location.href = paymentUrl;
+
+    setTimeout(async () => {
+      if (document.visibilityState === "visible") {
+        toast.error("Could not open UPI app automatically. Use the payment link button below.");
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(paymentUrl);
+            toast.success("UPI payment link copied to clipboard");
+          } catch {
+            // Clipboard can fail in insecure contexts; no action needed.
+          }
+        }
+      }
+    }, 1200);
   };
 
   const topupWallet = async () => {
@@ -248,6 +277,22 @@ const CrownTopup = () => {
                 {topupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {topupLoading ? "Processing" : "I have paid • credit now"}
               </button>
+              {paymentLink && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(paymentLink);
+                      toast.success("Payment link copied");
+                    } catch {
+                      toast.error("Could not copy link. Please try opening UPI app again.");
+                    }
+                  }}
+                  className="bg-secondary border border-border px-4 py-2 rounded-lg text-sm font-display font-bold tracking-wide transition-all duration-300 hover:border-primary/40"
+                >
+                  Copy payment link
+                </button>
+              )}
             </div>
           </div>
 
