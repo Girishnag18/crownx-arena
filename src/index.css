@@ -95,16 +95,16 @@
   }
 
   .chess-board-shell {
-    background: linear-gradient(145deg, hsl(43 34% 22%), hsl(225 18% 14%));
-    box-shadow: inset 0 0 34px hsl(45 55% 10% / 0.45), 0 16px 40px hsl(225 45% 2% / 0.58);
+    background: hsl(31 36% 26%);
+    box-shadow: inset 0 0 24px hsl(30 50% 16% / 0.35), 0 12px 30px hsl(225 45% 2% / 0.52);
   }
 
   .chess-board-light {
-    background: linear-gradient(145deg, hsl(46 62% 78%), hsl(43 68% 62%));
+    background: hsl(37 46% 74%);
   }
 
   .chess-board-dark {
-    background: linear-gradient(145deg, hsl(221 10% 72%), hsl(220 12% 52%));
+    background: hsl(24 36% 44%);
   }
 
   .board-square {
