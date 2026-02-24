@@ -22,6 +22,7 @@ const Play = () => {
   const [resignPending, setResignPending] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
+  const [aiAccuracy, setAiAccuracy] = useState(80);
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -66,6 +67,29 @@ const Play = () => {
     return () => window.removeEventListener("resize", calculateBoardSize);
   }, []);
 
+  const scorePosition = useCallback((position: Chess) => {
+    const pieceValues: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20_000 };
+    if (position.isCheckmate()) {
+      return position.turn() === computerColor ? -100_000 : 100_000;
+    }
+    if (position.isDraw() || position.isStalemate() || position.isInsufficientMaterial()) {
+      return 0;
+    }
+
+    let evaluation = 0;
+    for (const row of position.board()) {
+      for (const piece of row) {
+        if (!piece) continue;
+        const value = pieceValues[piece.type] || 0;
+        evaluation += piece.color === computerColor ? value : -value;
+      }
+    }
+
+    const mobility = position.moves().length;
+    evaluation += position.turn() === computerColor ? mobility * 2 : -mobility * 2;
+    return evaluation;
+  }, [computerColor]);
+
   const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
     const gameCopy = new Chess(localGame.fen());
     try {
@@ -103,12 +127,27 @@ const Play = () => {
     const timer = window.setTimeout(() => {
       const moves = game.moves({ verbose: true });
       if (moves.length === 0) return;
-      const pick = moves[Math.floor(Math.random() * moves.length)];
+      const evaluated = moves.map((candidate) => {
+        const simulated = new Chess(game.fen());
+        simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+        return {
+          move: candidate,
+          score: scorePosition(simulated),
+        };
+      }).sort((a, b) => b.score - a.score);
+
+      const bestWindow = Math.max(1, Math.ceil(((100 - aiAccuracy) / 100) * Math.min(6, evaluated.length)));
+      const pick = evaluated[Math.floor(Math.random() * bestWindow)].move;
       handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
     }, 500);
 
     return () => window.clearTimeout(timer);
-  }, [computerColor, game, handleLocalMove, isComputerGame, isGameOver]);
+  }, [aiAccuracy, computerColor, game, handleLocalMove, isComputerGame, isGameOver, scorePosition]);
+
+  useEffect(() => {
+    if (!isComputerGame || isGameOver) return;
+    setAiAccuracy(Math.floor(Math.random() * 41) + 50);
+  }, [game, isComputerGame, isGameOver]);
 
   const gameStatus = useMemo(() => {
     if (isOnline && online.gameData) {
@@ -258,6 +297,24 @@ const Play = () => {
               />
             </motion.div>
 
+            {game.isCheckmate() && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/45 backdrop-blur-sm"
+              >
+                <motion.div
+                  initial={{ y: 20 }}
+                  animate={{ y: [0, -8, 0], boxShadow: ["0 0 10px rgba(255,215,0,.2)", "0 0 45px rgba(255,215,0,.8)", "0 0 10px rgba(255,215,0,.2)"] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="rounded-2xl border border-primary/50 bg-card/95 px-12 py-8 text-center"
+                >
+                  <p className="font-display text-4xl md:text-6xl font-black text-primary tracking-wide">CHECKMATE</p>
+                  <p className="text-sm text-muted-foreground mt-2">Tactical finish!</p>
+                </motion.div>
+              </motion.div>
+            )}
+
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
@@ -326,7 +383,7 @@ const Play = () => {
                 {isOnline
                   ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
                   : isComputerGame
-                    ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}.`
+                    ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
                     : "Play against a friend on the same device."}
               </p>
               {isOnline && (

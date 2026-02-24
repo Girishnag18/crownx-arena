@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const OTP_KEY = "crownx_password_otp";
+const buildRedirect = (path: string) => `${window.location.origin}${path}`;
+
+const passwordPolicyValid = (password: string) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(password);
 
 export const authService = {
   signInWithPassword: async (email: string, password: string) =>
@@ -9,33 +11,52 @@ export const authService = {
   signInWithGoogle: async () =>
     supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    }),
-
-  signUp: async (email: string, password: string, username: string) =>
-    supabase.auth.signUp({
-      email,
-      password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { username },
+        redirectTo: buildRedirect("/dashboard"),
+        queryParams: {
+          prompt: "select_account",
+          access_type: "offline",
+        },
       },
     }),
 
-  sendForgotPasswordOtp: async (email: string) => {
-    const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
-    localStorage.setItem(OTP_KEY, JSON.stringify({ email, otp, expiresAt: Date.now() + 10 * 60_000 }));
-    return otp;
+  signUp: async (email: string, password: string, username: string) => {
+    if (!passwordPolicyValid(password)) {
+      return {
+        data: { user: null, session: null },
+        error: {
+          message: "Password must be at least 8 characters and include upper, lower, and a number.",
+        },
+      };
+    }
+
+    return supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: buildRedirect("/dashboard"),
+        data: { username },
+      },
+    });
   },
 
-  verifyForgotPasswordOtp: (email: string, otp: string) => {
-    const payload = localStorage.getItem(OTP_KEY);
-    if (!payload) return false;
-    const parsed = JSON.parse(payload) as { email: string; otp: string; expiresAt: number };
-    return parsed.email === email && parsed.otp === otp && parsed.expiresAt > Date.now();
-  },
+  requestPasswordReset: async (email: string) =>
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: buildRedirect("/reset-password"),
+    }),
 
-  resetPassword: async (newPassword: string) => supabase.auth.updateUser({ password: newPassword }),
+  resetPassword: async (newPassword: string) => {
+    if (!passwordPolicyValid(newPassword)) {
+      return {
+        data: { user: null },
+        error: {
+          message: "Password must be at least 8 characters and include upper, lower, and a number.",
+        },
+      };
+    }
+
+    return supabase.auth.updateUser({ password: newPassword });
+  },
 
   signOutCurrent: async () => supabase.auth.signOut({ scope: "local" }),
 

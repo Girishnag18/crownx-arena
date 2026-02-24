@@ -19,6 +19,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Ratings from "./pages/Ratings";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const RouteAnimator = () => {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/ratings" element={<ProtectedRoute><Ratings /></ProtectedRoute>} />
           <Route path="/play" element={<ProtectedRoute><Play /></ProtectedRoute>} />
           <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />

@@ -13,8 +13,6 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user) navigate("/dashboard");
@@ -22,8 +20,9 @@ const Auth = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (mode === "login") {
-      const { error } = await authService.signInWithPassword(email, password);
+      const { error } = await authService.signInWithPassword(email.trim(), password);
       if (error) return toast.error(error.message);
       toast.success("Welcome back");
       navigate("/dashboard");
@@ -31,27 +30,23 @@ const Auth = () => {
     }
 
     if (mode === "signup") {
-      const { error } = await authService.signUp(email, password, username);
+      const { error } = await authService.signUp(email.trim(), password, username.trim());
       if (error) return toast.error(error.message);
       toast.success("Account created. Check your email for verification.");
       return;
     }
 
-    if (!otpSent) {
-      const generated = await authService.sendForgotPasswordOtp(email);
-      setOtpSent(true);
-      toast.success(`Demo OTP sent: ${generated}`);
-      return;
-    }
-
-    if (!authService.verifyForgotPasswordOtp(email, otp)) {
-      return toast.error("Invalid or expired OTP");
-    }
-
-    const { error } = await authService.resetPassword(password);
+    const { error } = await authService.requestPasswordReset(email.trim());
     if (error) return toast.error(error.message);
-    toast.success("Password updated. Please log in.");
+    toast.success("Password reset link sent. Check your inbox.");
     setMode("login");
+  };
+
+  const continueWithGoogle = async () => {
+    const { error } = await authService.signInWithGoogle();
+    if (error) {
+      toast.error(error.message || "Google sign-in is not available. Check your OAuth provider settings.");
+    }
   };
 
   return (
@@ -60,13 +55,15 @@ const Auth = () => {
         <h1 className="text-3xl font-bold">{mode === "login" ? "Login" : mode === "signup" ? "Create account" : "Reset password"}</h1>
         {mode === "signup" && <input className="w-full rounded-lg border bg-card p-3" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required />}
         <input className="w-full rounded-lg border bg-card p-3" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-        {(mode !== "forgot" || otpSent) && <input className="w-full rounded-lg border bg-card p-3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "forgot" ? "New password" : "Password"} required />}
-        {mode === "forgot" && otpSent && <input className="w-full rounded-lg border bg-card p-3" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" required />}
+        {mode !== "forgot" && <input className="w-full rounded-lg border bg-card p-3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />}
+        {mode === "signup" && (
+          <p className="text-xs text-muted-foreground">Password must have 8+ characters, uppercase, lowercase, and a number.</p>
+        )}
         <button className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold">Continue</button>
-        <button type="button" onClick={() => authService.signInWithGoogle()} className="w-full border rounded-lg py-3">Continue with Google</button>
+        <button type="button" onClick={continueWithGoogle} className="w-full border rounded-lg py-3">Continue with Google</button>
         <div className="text-sm text-muted-foreground flex justify-between">
           <button type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "Need account?" : "Have account?"}</button>
-          <button type="button" onClick={() => { setMode("forgot"); setOtpSent(false); }}>Forgot password</button>
+          <button type="button" onClick={() => setMode("forgot")}>Forgot password</button>
         </div>
         <Link to="/" className="text-primary text-sm">Back to landing</Link>
       </form>
