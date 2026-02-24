@@ -21,8 +21,10 @@ const CrownTopup = () => {
   const [userTxnRef, setUserTxnRef] = useState("");
   const [selectedUpiApp, setSelectedUpiApp] = useState<"gpay" | "phonepe" | "paytm" | "upi">("upi");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
+  const [payerUpiPhone, setPayerUpiPhone] = useState("");
 
-  const upiId = import.meta.env.VITE_UPI_ID || "crownxarena@upi";
+  const adminUpiPhoneNumber = "6300427079";
+  const upiId = import.meta.env.VITE_UPI_ID || `${adminUpiPhoneNumber}@upi`;
 
   const upiApps = [
     { key: "gpay" as const, label: "Google Pay" },
@@ -71,14 +73,20 @@ const CrownTopup = () => {
       return;
     }
 
+    const normalizedPhone = payerUpiPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      toast.error("Enter your 10-digit UPI phone number to continue");
+      return;
+    }
+
     const intentReference = `CRX${Date.now().toString().slice(-8)}`;
     setPaymentIntentRef(intentReference);
     setPaymentInitiated(true);
 
     const params = new URLSearchParams({
       pa: upiId,
-      pn: "CrownX Arena",
-      tn: `Wallet topup ${intentReference}`,
+      pn: "CrownX Arena Admin",
+      tn: `Wallet topup ${intentReference} from ${normalizedPhone}`,
       am: amount.toFixed(2),
       cu: "INR",
       tr: intentReference,
@@ -121,7 +129,7 @@ const CrownTopup = () => {
     const { data, error } = await supabase.rpc("topup_wallet_via_upi", {
       topup_rupees: amount,
       upi_ref: normalizedTxnRef,
-      upi_provider: selectedUpiApp,
+      upi_provider: `${selectedUpiApp}:${payerUpiPhone.replace(/\D/g, "")}`,
     });
     setTopupLoading(false);
 
@@ -200,6 +208,20 @@ const CrownTopup = () => {
               ))}
             </div>
 
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground uppercase tracking-wide">Your UPI phone number</label>
+              <input
+                value={payerUpiPhone}
+                onChange={(e) => setPayerUpiPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="Enter 10-digit phone number"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+              Payment recipient admin number: <span className="font-semibold text-foreground">{adminUpiPhoneNumber}</span>
+            </div>
+
             {paymentIntentRef && (
               <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
@@ -231,7 +253,7 @@ const CrownTopup = () => {
 
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-primary" />
-            Real-time credit policy: ₹1 = 1 Crown. After successful payment, submit your UTR to credit wallet instantly and notify admin records.
+            Real-time credit policy: ₹1 = 1 Crown. UPI request is sent to admin number {adminUpiPhoneNumber}, then submit your UTR to credit wallet instantly.
           </div>
         </div>
       </div>
