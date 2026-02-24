@@ -87,7 +87,7 @@ const Dashboard = () => {
       .select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns")
       .eq("id", userId)
       .single();
-    if (data) setProfile(data as Profile);
+    if (data) setProfile(data as unknown as Profile);
   };
 
   const loadRecentGames = async (userId: string) => {
@@ -136,22 +136,22 @@ const Dashboard = () => {
   };
 
   const loadTournaments = async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("tournaments")
       .select("id, name, prize_pool, max_players, status, starts_at, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (data) setTournaments(data as unknown as Tournament[]);
+    if (data) setTournaments(data as Tournament[]);
   };
 
   const loadMyRegistrations = async (userId: string) => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("tournament_registrations")
       .select("tournament_id")
       .eq("player_id", userId);
 
-    if (data) setRegisteredTournamentIds(data.map((entry) => entry.tournament_id));
+    if (data) setRegisteredTournamentIds((data as any[]).map((entry: any) => entry.tournament_id));
   };
 
   useEffect(() => {
@@ -238,7 +238,7 @@ const Dashboard = () => {
 
     setCreateTournamentLoading(true);
 
-    const { data, error } = await supabase.from("tournaments").insert({
+    const { data, error } = await (supabase as any).from("tournaments").insert({
       name: newTournamentName.trim(),
       prize_pool: parsedPrize,
       max_players: parsedMaxRegistrations,
@@ -261,7 +261,7 @@ const Dashboard = () => {
     setNewPrizePool("500");
     setNewMaxRegistrations("128");
     if (data) {
-      setTournaments((prev) => [{ ...data, registration_count: [{ count: 0 }] } as Tournament, ...prev]);
+      setTournaments((prev) => [{ ...(data as any), registration_count: [{ count: 0 }] } as Tournament, ...prev]);
     }
     loadTournaments();
     toast.success("Tournament created and synced live for all players");
@@ -270,7 +270,7 @@ const Dashboard = () => {
   const registerTournament = async (tournamentId: string) => {
     if (!user) return;
     setRegisteringTournamentId(tournamentId);
-    const { error } = await supabase.rpc("register_tournament_with_wallet", {
+    const { error } = await (supabase as any).rpc("register_tournament_with_wallet", {
       target_tournament: tournamentId,
     });
     setRegisteringTournamentId(null);
