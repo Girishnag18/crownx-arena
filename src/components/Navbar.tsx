@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -11,18 +12,94 @@ const navLinks = [
   { to: "/rules", label: "Rules" },
 ];
 
+const profileMenuItems = [
+  { icon: LayoutDashboard, label: "My Dashboard", to: "/dashboard" },
+  { icon: History, label: "Game History", to: "/dashboard?section=history" },
+  { icon: BarChart3, label: "Ratings", to: "/dashboard?section=ratings" },
+  { icon: Settings, label: "Settings", to: "/dashboard?section=settings" },
+  { icon: Wallet, label: "Crown Balance", to: "/crown-topup" },
+];
+
+interface NavbarProfile {
+  username: string | null;
+  wallet_crowns: number | null;
+}
+
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profile, setProfile] = useState<NavbarProfile | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    setProfileOpen(false);
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setProfileOpen(false);
+        setMobileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
+    const loadNavbarProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, wallet_crowns")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setProfile(data);
+      }
+    };
+
+    loadNavbarProfile();
+
+    const profileChannel = supabase
+      .channel(`navbar-profile-${user.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, loadNavbarProfile)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+    };
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
     setProfileOpen(false);
+    setMobileOpen(false);
     navigate("/");
   };
+
+  const displayName = profile?.username || user?.user_metadata?.username || "Player";
 
   return (
     <>
@@ -62,9 +139,11 @@ const Navbar = () => {
 
           <div className="flex items-center gap-2">
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => setProfileOpen(!profileOpen)}
+                  onClick={() => setProfileOpen((open) => !open)}
+                  aria-expanded={profileOpen}
+                  aria-haspopup="menu"
                   className="flex items-center gap-2 glass-card px-3 py-1.5 hover:border-primary/30 transition-colors"
                 >
                   <div className="relative">
@@ -74,7 +153,7 @@ const Navbar = () => {
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card bg-success" />
                   </div>
                   <span className="hidden sm:block text-sm font-semibold">
-                    {user.user_metadata?.username || "Player"}
+                    {displayName}
                   </span>
                   <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -86,15 +165,13 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-52 glass-card border-glow p-2 space-y-1"
+                      className="absolute right-0 mt-2 w-60 glass-card border-glow p-2 space-y-1"
                     >
-                      {[
-                        { icon: LayoutDashboard, label: "My Dashboard", to: "/dashboard" },
-                        { icon: History, label: "Game History", to: "/dashboard" },
-                        { icon: BarChart3, label: "Ratings", to: "/dashboard" },
-                        { icon: Settings, label: "Settings", to: "/dashboard" },
-                        { icon: Wallet, label: "Crown Balance", to: "/crown-topup" },
-                      ].map((item) => (
+                      <div className="px-3 py-2 border-b border-border/70 mb-1">
+                        <p className="text-sm font-semibold leading-tight">{displayName}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{Number(profile?.wallet_crowns || 0).toFixed(2)} Crowns</p>
+                      </div>
+                      {profileMenuItems.map((item) => (
                         <Link
                           key={item.label}
                           to={item.to}
@@ -166,7 +243,30 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-              {!user && (
+              {user ? (
+                <>
+                  <div className="w-full rounded-xl border border-border/70 p-4 mt-3 bg-card/60">
+                    <p className="text-sm font-semibold">{displayName}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{Number(profile?.wallet_crowns || 0).toFixed(2)} Crowns</p>
+                  </div>
+                  {profileMenuItems.map((item) => (
+                    <Link
+                      key={item.label}
+                      to={item.to}
+                      onClick={() => setMobileOpen(false)}
+                      className="w-full text-center py-3 rounded-xl text-sm font-semibold bg-secondary/40 hover:bg-secondary/70 transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-center py-3 rounded-xl text-sm font-bold text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors"
+                  >
+                    LOGOUT
+                  </button>
+                </>
+              ) : (
                 <Link
                   to="/auth"
                   onClick={() => setMobileOpen(false)}
