@@ -7,6 +7,21 @@ const PIECE_UNICODE: Record<string, string> = {
   bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
 };
 
+const PIECE_SPRITES: Record<string, string> = {
+  wp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wp.png",
+  wn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wn.png",
+  wb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wb.png",
+  wr: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wr.png",
+  wq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wq.png",
+  wk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
+  bp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bp.png",
+  bn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bn.png",
+  bb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bb.png",
+  br: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/br.png",
+  bq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bq.png",
+  bk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bk.png",
+};
+
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
@@ -114,7 +129,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
         )}
       </AnimatePresence>
 
-      <div className="chess-board-shell grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border-2 border-glass-border/60 shadow-2xl">
+      <div className="chess-board-shell grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl">
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
             const square = (file + rank) as Square;
@@ -134,45 +149,44 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                 onClick={() => handleSquareClick(square)}
                 className={`board-square relative flex items-center justify-center transition-all duration-300 ${
                   isLight ? "chess-board-light" : "chess-board-dark"
-                } ${isSelected ? "!bg-primary/50" : ""} ${
-                  isLastMove ? (isLight ? "!bg-slate-500/70" : "!bg-slate-900/85") : ""
-                } ${isKingInCheck ? "!bg-destructive/60" : ""}`}
+                } ${isSelected ? "!bg-primary/35" : ""} ${
+                  isLastMove ? "!bg-amber-200/35" : ""
+                } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
               >
                 {isMoveDestination && (
                   <motion.div
-                    className="absolute inset-[15%] rounded-full border-2 border-slate-200/70"
+                    className="absolute inset-[14%] rounded-full border-2 border-amber-100/70"
                     initial={{ scale: 0.7, opacity: 0.2 }}
-                    animate={{ scale: 1.25, opacity: 0 }}
+                    animate={{ scale: 1.15, opacity: 0 }}
                     transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
                   />
                 )}
                 {isLegal && !piece && (
-                  <div className="absolute w-[30%] h-[30%] rounded-full bg-foreground/20" />
+                  <div className="absolute w-[28%] h-[28%] rounded-full bg-black/15" />
                 )}
                 {isLegal && piece && (
-                  <div className="absolute inset-[5%] rounded-full border-[3px] border-foreground/30" />
+                  <div className="absolute inset-[5%] rounded-full border-[3px] border-amber-900/25" />
                 )}
                 {piece && (
-                  <motion.span
+                  <motion.img
                     layout
                     initial={{ scale: 0.9, opacity: 0.85 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
-                    className={`text-[clamp(1.5rem,5vw,3rem)] leading-none select-none drop-shadow-md ${
-                      piece.color === "w" ? "text-white" : "text-gray-900"
-                    }`}
-                    style={{ filter: piece.color === "w" ? "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" : "drop-shadow(0 1px 2px rgba(255,255,255,0.3))" }}
-                  >
-                    {PIECE_UNICODE[piece.color + piece.type]}
-                  </motion.span>
+                    src={PIECE_SPRITES[piece.color + piece.type]}
+                    alt={`${piece.color === "w" ? "white" : "black"} ${piece.type}`}
+                    draggable={false}
+                    className="w-[82%] h-[82%] object-contain select-none"
+                    style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
+                  />
                 )}
                 {fi === 0 && (
-                  <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/50" : "text-amber-100/50"}`}>
+                  <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
                     {rank}
                   </span>
                 )}
                 {ri === 7 && (
-                  <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/50" : "text-amber-100/50"}`}>
+                  <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
                     {file}
                   </span>
                 )}
