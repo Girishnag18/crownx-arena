@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
@@ -172,7 +173,7 @@ const Play = () => {
   }, [game]);
 
   const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w");
-  const boardSizeClass = isOnline ? "max-w-[min(90vw,760px)]" : "max-w-[min(92vw,820px)]";
+  const boardSizeClass = isOnline ? "max-w-[min(94vw,900px)]" : "max-w-[min(96vw,980px)]";
 
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 1200})`
@@ -185,6 +186,23 @@ const Play = () => {
     : isComputerGame
       ? `${computerColor === "w" ? "Computer" : "You"} (${computerColor === "w" ? 1300 : 1200})`
       : "White (1200)";
+
+  const topAvatar = isOnline
+    ? (online.playerColor === "w" ? online.blackPlayer?.avatar_url : online.whitePlayer?.avatar_url)
+    : null;
+  const bottomAvatar = isOnline
+    ? (online.playerColor === "w" ? online.whitePlayer?.avatar_url : online.blackPlayer?.avatar_url)
+    : null;
+
+  const PlayerLabel = ({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) => (
+    <div className="flex items-center gap-2">
+      <Avatar className="w-7 h-7 border border-border/70">
+        <AvatarImage src={avatarUrl || undefined} alt={name} />
+        <AvatarFallback className="text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
+      </Avatar>
+      <span className="font-display font-bold">{name}</span>
+    </div>
+  );
 
   if (isOnline && online.loading) {
     return (
@@ -201,7 +219,7 @@ const Play = () => {
           <div className="lg:col-span-9 flex flex-col items-center">
             <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
-                <div className="font-display font-bold">{topPlayerName}</div>
+                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} />
                 <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                   {capturedPieces.capturedByBlack.length === 0
                     ? <span className="text-xs text-muted-foreground">No captures</span>
@@ -223,7 +241,7 @@ const Play = () => {
 
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
-                <div className="font-display font-bold">{bottomPlayerName}</div>
+                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
                 <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                   {capturedPieces.capturedByWhite.length === 0
                     ? <span className="text-xs text-muted-foreground">No captures</span>

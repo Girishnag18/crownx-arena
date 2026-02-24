@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet, Loader2 } from "lucide-react";
+import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet, Loader2, User, Save, Mail, KeyRound } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
   username: string | null;
+  avatar_url: string | null;
   crown_score: number;
   rank_tier: string;
   games_played: number;
@@ -68,11 +70,17 @@ const Dashboard = () => {
   const [createTournamentLoading, setCreateTournamentLoading] = useState(false);
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
   const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [email, setEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns")
+      .select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns")
       .eq("id", userId)
       .single();
     if (data) setProfile(data as Profile);
@@ -175,6 +183,13 @@ const Dashboard = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!profile || !user) return;
+    setAvatarUrl(profile.avatar_url || "");
+    setDateOfBirth((user.user_metadata?.date_of_birth as string) || "");
+    setEmail(user.email || "");
+  }, [profile, user]);
+
   const createTournament = async () => {
     if (!user || !newTournamentName.trim()) return;
 
@@ -238,6 +253,75 @@ const Dashboard = () => {
     loadProfile(user.id);
   };
 
+  const saveSettings = async () => {
+    if (!user) return;
+    setSettingsSaving(true);
+
+    const [{ error: profileError }, { error: metadataError }] = await Promise.all([
+      supabase.from("profiles").update({ avatar_url: avatarUrl || null }).eq("id", user.id),
+      supabase.auth.updateUser({
+        data: {
+          ...(user.user_metadata || {}),
+          date_of_birth: dateOfBirth || null,
+        },
+      }),
+    ]);
+
+    setSettingsSaving(false);
+
+    if (profileError || metadataError) {
+      toast.error(profileError?.message || metadataError?.message || "Failed to save settings");
+      return;
+    }
+
+    toast.success("Profile settings updated");
+    loadProfile(user.id);
+  };
+
+  const requestEmailOtp = async () => {
+    if (!pendingEmail.trim()) {
+      toast.error("Enter a new email address");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ email: pendingEmail.trim() });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("OTP sent to your new email. Enter it below to verify.");
+  };
+
+  const verifyEmailOtp = async () => {
+    if (!pendingEmail || !emailOtp) {
+      toast.error("Enter email and OTP code");
+      return;
+    }
+    const { error } = await supabase.auth.verifyOtp({
+      type: "email_change",
+      email: pendingEmail,
+      token: emailOtp,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setEmail(pendingEmail);
+    setEmailOtp("");
+    toast.success("Email verified and updated");
+  };
+
+  const sendPasswordOtp = async () => {
+    if (!email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Password reset OTP/link sent to your email");
+  };
+
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
   const winRate = profile && profile.games_played > 0
     ? ((profile.wins / profile.games_played) * 100).toFixed(1)
@@ -283,9 +367,12 @@ const Dashboard = () => {
           <motion.div variants={fadeUp} className="lg:col-span-4 glass-card p-6 border-glow">
             <div className="flex items-center gap-4 mb-6">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center gold-glow">
-                  <Crown className="w-8 h-8 text-primary" />
-                </div>
+                <Avatar className="w-16 h-16 border border-primary/30 gold-glow">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                  <AvatarFallback className="bg-secondary text-primary">
+                    <User className="w-7 h-7" />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card" style={{ background: "hsl(142 71% 45%)" }} />
               </div>
               <div>
@@ -323,9 +410,35 @@ const Dashboard = () => {
                 Manage Crown Balance
               </button>
             </div>
-            <div id="settings-section" className="text-xs text-muted-foreground mt-1 flex items-center gap-2 scroll-mt-28">
-              <Zap className="w-3.5 h-3.5 text-primary" />
-              Live profile updates enabled
+            <div id="settings-section" className="scroll-mt-28 space-y-4">
+              <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-primary" />
+                Live profile & ranking updates enabled
+              </div>
+
+              <div className="bg-secondary/30 rounded-lg p-4 space-y-3">
+                <h4 className="font-display text-sm font-bold">Profile settings</h4>
+                <input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="Profile picture URL" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                <button onClick={saveSettings} disabled={settingsSaving} className="w-full bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide disabled:opacity-60 inline-flex items-center justify-center gap-2">
+                  {settingsSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save profile
+                </button>
+              </div>
+
+              <div className="bg-secondary/30 rounded-lg p-4 space-y-3">
+                <h4 className="font-display text-sm font-bold">Email change with OTP verification</h4>
+                <p className="text-[11px] text-muted-foreground">Current email: {email || "Not available"}</p>
+                <input type="email" value={pendingEmail} onChange={(e) => setPendingEmail(e.target.value)} placeholder="New email address" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                <button onClick={requestEmailOtp} className="w-full bg-primary/15 text-primary px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide inline-flex items-center justify-center gap-2"><Mail className="w-3.5 h-3.5" /> Send OTP</button>
+                <input value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} placeholder="Enter OTP" className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                <button onClick={verifyEmailOtp} className="w-full bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide">Verify email</button>
+              </div>
+
+              <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
+                <h4 className="font-display text-sm font-bold">Password security</h4>
+                <p className="text-[11px] text-muted-foreground">To keep your account secure, verify via your email OTP before resetting password.</p>
+                <button onClick={sendPasswordOtp} className="w-full bg-primary/15 text-primary px-3 py-2 rounded-lg text-xs font-display font-bold tracking-wide inline-flex items-center justify-center gap-2"><KeyRound className="w-3.5 h-3.5" /> Send password reset OTP</button>
+              </div>
             </div>
           </motion.div>
 

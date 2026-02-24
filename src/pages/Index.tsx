@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Crown, Swords, Trophy, Zap, Shield, Globe, Star, ChevronRight } from "lucide-react";
 import heroImage from "@/assets/hero-chess.jpg";
 
@@ -32,6 +33,8 @@ const fadeUp = {
 };
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
@@ -81,20 +84,6 @@ const Index = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link
-              to="/lobby"
-              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider px-8 py-4 rounded-xl gold-glow hover:scale-105 transition-transform"
-            >
-              <Swords className="w-5 h-5" />
-              PLAY NOW
-            </Link>
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center justify-center gap-2 glass-card border-glow font-display font-bold text-sm tracking-wider text-foreground px-8 py-4 hover:scale-105 transition-transform"
-            >
-              <Trophy className="w-5 h-5 text-primary" />
-              JOIN TOURNAMENT
-            </Link>
-            <Link
               to="/auth"
               className="inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-display font-bold text-sm tracking-wider px-8 py-4 rounded-xl hover:bg-secondary/80 transition-colors"
             >
@@ -120,6 +109,7 @@ const Index = () => {
         </motion.div>
       </section>
 
+      {user && (
       {/* Features */}
       <section className="py-24 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -185,7 +175,7 @@ const Index = () => {
             viewport={{ once: true }}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
           >
-            {rankTiers.map((tier, i) => (
+            {rankTiers.map((tier) => (
               <motion.div
                 key={tier.name}
                 variants={fadeUp}
@@ -225,6 +215,8 @@ const Index = () => {
           </Link>
         </motion.div>
       </section>
+
+      )}
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
