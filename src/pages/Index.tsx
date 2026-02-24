@@ -110,6 +110,7 @@ const Index = () => {
       </section>
 
       {user && (
+        <>
       {/* Features */}
       <section className="py-24 px-4">
         <div className="container mx-auto max-w-6xl">
@@ -215,7 +216,7 @@ const Index = () => {
           </Link>
         </motion.div>
       </section>
-
+        </>
       )}
 
       {/* Footer */}
