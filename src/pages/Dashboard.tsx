@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, Plus, Zap, Wallet, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface Profile {
@@ -57,6 +57,7 @@ const rankEmoji: Record<string, string> = {
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -242,6 +243,26 @@ const Dashboard = () => {
     ? ((profile.wins / profile.games_played) * 100).toFixed(1)
     : "0.0";
 
+
+  useEffect(() => {
+    const section = new URLSearchParams(location.search).get("section");
+    if (!section) return;
+
+    const sectionMap: Record<string, string> = {
+      ratings: "ratings-section",
+      settings: "settings-section",
+      history: "history-section",
+    };
+
+    const targetId = sectionMap[section];
+    if (!targetId) return;
+
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.search]);
+
   const liveTournamentCount = useMemo(
     () => tournaments.filter((t) => t.status === "live" || t.status === "open").length,
     [tournaments],
@@ -283,7 +304,7 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-            <div className="bg-secondary/30 rounded-lg p-4 mb-4">
+            <div id="ratings-section" className="bg-secondary/30 rounded-lg p-4 mb-4 scroll-mt-28">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Crown Score</span>
                 <span className="font-display text-lg font-bold text-primary">{(profile?.crown_score || 1200).toLocaleString()}</span>
@@ -302,7 +323,7 @@ const Dashboard = () => {
                 Manage Crown Balance
               </button>
             </div>
-            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+            <div id="settings-section" className="text-xs text-muted-foreground mt-1 flex items-center gap-2 scroll-mt-28">
               <Zap className="w-3.5 h-3.5 text-primary" />
               Live profile updates enabled
             </div>
@@ -359,7 +380,7 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="lg:col-span-12 glass-card p-6">
+          <motion.div id="history-section" variants={fadeUp} className="lg:col-span-12 glass-card p-6 scroll-mt-28">
             <h3 className="font-display font-bold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Recent Games</h3>
             <div className="space-y-1">
               {recentGames.length === 0 && <p className="text-sm text-muted-foreground">No completed games yet.</p>}
