@@ -57,7 +57,7 @@ const CrownTopup = () => {
 
     const loadProfile = async () => {
       const { data } = await supabase.from("profiles").select("wallet_crowns, username").eq("id", user.id).single();
-      if (data) setProfile(data as WalletProfile);
+      if (data) setProfile(data as unknown as WalletProfile);
     };
 
     loadProfile();
@@ -160,7 +160,7 @@ const CrownTopup = () => {
     }
 
     setTopupLoading(true);
-    const { data, error } = await supabase.rpc("topup_wallet_via_upi", {
+    const { data, error } = await (supabase as any).rpc("topup_wallet_via_upi", {
       topup_rupees: amount,
       upi_ref: normalizedTxnRef,
       upi_provider: `${selectedUpiApp}:${payerUpiPhone.replace(/\D/g, "")}`,
@@ -172,14 +172,14 @@ const CrownTopup = () => {
       return;
     }
 
-    const newBalance = data?.[0]?.wallet_balance;
+    const newBalance = (data as any)?.[0]?.wallet_balance;
     toast.success(`Top up successful. Wallet balance: ${newBalance} crowns`);
     setPaymentIntentRef(null);
     setUserTxnRef("");
     setPaymentInitiated(false);
 
     const { data: latest } = await supabase.from("profiles").select("wallet_crowns, username").eq("id", user.id).single();
-    if (latest) setProfile(latest as WalletProfile);
+    if (latest) setProfile(latest as unknown as WalletProfile);
   };
 
   if (authLoading) {

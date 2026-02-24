@@ -79,7 +79,7 @@ const Navbar = () => {
         .maybeSingle();
 
       if (data) {
-        setProfile(data);
+        setProfile(data as unknown as NavbarProfile);
       }
     };
 

@@ -203,6 +203,7 @@ export type Database = {
           rank_tier: string
           updated_at: string
           username: string | null
+          wallet_crowns: number
           win_streak: number
           wins: number
           xp: number
@@ -221,6 +222,7 @@ export type Database = {
           rank_tier?: string
           updated_at?: string
           username?: string | null
+          wallet_crowns?: number
           win_streak?: number
           wins?: number
           xp?: number
@@ -239,9 +241,102 @@ export type Database = {
           rank_tier?: string
           updated_at?: string
           username?: string | null
+          wallet_crowns?: number
           win_streak?: number
           wins?: number
           xp?: number
+        }
+        Relationships: []
+      }
+      tournament_registrations: {
+        Row: {
+          id: string
+          player_id: string
+          registered_at: string
+          tournament_id: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          registered_at?: string
+          tournament_id: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          registered_at?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_registrations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournaments: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          max_players: number
+          name: string
+          prize_pool: number
+          starts_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          max_players?: number
+          name: string
+          prize_pool?: number
+          starts_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          max_players?: number
+          name?: string
+          prize_pool?: number
+          starts_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          player_id: string
+          txn_type: string
+          upi_provider: string | null
+          upi_ref: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          player_id: string
+          txn_type?: string
+          upi_provider?: string | null
+          upi_ref?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          player_id?: string
+          txn_type?: string
+          upi_provider?: string | null
+          upi_ref?: string | null
         }
         Relationships: []
       }
@@ -250,7 +345,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      register_tournament_with_wallet: {
+        Args: { target_tournament: string }
+        Returns: undefined
+      }
+      topup_wallet_via_upi: {
+        Args: { topup_rupees: number; upi_provider: string; upi_ref: string }
+        Returns: {
+          wallet_balance: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
