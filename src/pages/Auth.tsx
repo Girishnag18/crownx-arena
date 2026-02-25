@@ -68,7 +68,7 @@ const Auth = () => {
         )}
         <button className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold">Continue</button>
         <button type="button" onClick={continueWithGoogle} className="w-full border rounded-lg py-3">Continue with Google</button>
-        <button type="button" onClick={continueWithFacebook} className="w-full border rounded-lg py-3">Continue with Facebook</button>
+        
         <div className="text-sm text-muted-foreground flex justify-between">
           <button type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "Need account?" : "Have account?"}</button>
           <button type="button" onClick={() => setMode("forgot")}>Forgot password</button>

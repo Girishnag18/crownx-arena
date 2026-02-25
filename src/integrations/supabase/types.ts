@@ -17,7 +17,6 @@ export type Database = {
       game_rooms: {
         Row: {
           created_at: string
-          duration_seconds: number | null
           game_id: string | null
           guest_id: string | null
           host_id: string
@@ -27,7 +26,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id: string
@@ -37,7 +35,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id?: string
@@ -159,7 +156,6 @@ export type Database = {
       matchmaking_queue: {
         Row: {
           created_at: string
-          duration_seconds: number | null
           game_mode: string
           id: string
           player_id: string
@@ -168,7 +164,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id: string
@@ -177,7 +172,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id?: string
@@ -285,7 +279,6 @@ export type Database = {
       }
       tournaments: {
         Row: {
-          cancelled_at: string | null
           created_at: string
           created_by: string
           id: string
@@ -296,7 +289,6 @@ export type Database = {
           status: string
         }
         Insert: {
-          cancelled_at?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -307,7 +299,6 @@ export type Database = {
           status?: string
         }
         Update: {
-          cancelled_at?: string | null
           created_at?: string
           created_by?: string
           id?: string

@@ -26,7 +26,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds })
+        .insert({ room_code: code, host_id: user.id })
         .select()
         .single();
 
@@ -79,7 +79,7 @@ export const usePrivateRoom = () => {
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? room.host_id : user.id;
     const blackId = isWhite ? user.id : room.host_id;
-    const durationSeconds = room.duration_seconds ?? selectedDurationSeconds ?? null;
+    const durationSeconds = selectedDurationSeconds ?? null;
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
