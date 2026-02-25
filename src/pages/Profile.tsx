@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { uploadAvatarImage } from "@/lib/avatar";
 
 type PublicProfile = {
   id: string;
@@ -40,6 +41,7 @@ const Profile = () => {
     player_uid: "",
   });
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [searchUid, setSearchUid] = useState("");
   const [searchResult, setSearchResult] = useState<PublicProfile | null>(null);
   const [friends, setFriends] = useState<PublicProfile[]>([]);
@@ -139,7 +141,8 @@ const Profile = () => {
     toast.success("Profile saved and visible to all players.");
   };
 
-  const onAvatarUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const onAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!user) return;
     const file = event.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -147,14 +150,17 @@ const Profile = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === "string") {
-        setForm((prev) => ({ ...prev, avatar_url: result }));
-      }
-    };
-    reader.readAsDataURL(file);
+    setAvatarUploading(true);
+    try {
+      const publicUrl = await uploadAvatarImage(user.id, file);
+      setForm((prev) => ({ ...prev, avatar_url: publicUrl }));
+      toast.success("Avatar uploaded. Save profile to make it public.");
+    } catch (error: any) {
+      toast.error(error?.message || "Avatar upload failed.");
+    } finally {
+      setAvatarUploading(false);
+      event.target.value = "";
+    }
   };
 
   const performUidSearch = async () => {
@@ -249,7 +255,7 @@ const Profile = () => {
             <AvatarFallback>{(form.username || "P").slice(0, 1).toUpperCase()}</AvatarFallback>
           </Avatar>
           <label className="text-sm font-medium">Upload Avatar</label>
-          <input type="file" accept="image/*" onChange={onAvatarUpload} className="w-full text-sm" />
+          <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp" onChange={onAvatarUpload} className="w-full text-sm" disabled={avatarUploading} />
           <p className="text-xs text-muted-foreground">Your profile image is saved and shown to other players.</p>
         </div>
 
@@ -347,7 +353,7 @@ const Profile = () => {
         </div>
       </section>
 
-      <section className="glass-card p-6 space-y-3">
+      <section id="notifications" className="glass-card p-6 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Notification Center</h2>
           <span className="text-sm text-muted-foreground">Unread: {unreadCount}</span>

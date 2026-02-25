@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const buildRedirect = (path: string) => `${window.location.origin}${path}`;
+const oauthCallbackPath = "/auth/callback";
 
 const passwordPolicyValid = (password: string) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(password);
 
@@ -12,11 +13,19 @@ export const authService = {
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: buildRedirect("/auth"),
+        redirectTo: buildRedirect(oauthCallbackPath),
         queryParams: {
           prompt: "select_account",
           access_type: "offline",
         },
+      },
+    }),
+
+  signInWithFacebook: async () =>
+    supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: buildRedirect(oauthCallbackPath),
       },
     }),
 

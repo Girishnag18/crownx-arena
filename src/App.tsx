@@ -12,6 +12,7 @@ import Rules from "./pages/Rules";
 import Play from "./pages/Play";
 import Lobby from "./pages/Lobby";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import CrownTopup from "./pages/CrownTopup";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const RouteAnimator = () => {
         <Routes location={location}>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

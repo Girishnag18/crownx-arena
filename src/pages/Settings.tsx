@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Save, Mail, KeyRound, Loader2, User, Zap, ArrowLeft } from "lucide-react";
@@ -8,12 +8,14 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { uploadAvatarImage } from "@/lib/avatar";
 
 const Settings = () => {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -61,6 +63,29 @@ const Settings = () => {
 
     toast.success("Profile updated successfully");
     refreshProfile();
+  };
+
+  const onAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!user) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose a JPG, JPEG, PNG, or another image file.");
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const publicUrl = await uploadAvatarImage(user.id, file);
+      setAvatarUrl(publicUrl);
+      toast.success("Avatar uploaded. Save profile to apply it.");
+    } catch (error: any) {
+      toast.error(error?.message || "Avatar upload failed.");
+    } finally {
+      setAvatarUploading(false);
+      event.target.value = "";
+    }
   };
 
   const requestEmailOtp = async () => {
@@ -159,8 +184,9 @@ const Settings = () => {
                 <Input value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself" />
               </div>
               <div className="space-y-1.5">
-                <Label>Avatar URL</Label>
-                <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://example.com/avatar.png" />
+                <Label>Avatar Upload</Label>
+                <Input type="file" accept="image/*,.jpg,.jpeg,.png,.webp" onChange={onAvatarUpload} disabled={avatarUploading} />
+                <p className="text-xs text-muted-foreground">Upload from your local device. JPG, JPEG, PNG, WEBP and other image formats are supported.</p>
               </div>
               <div className="space-y-1.5">
                 <Label>Date of Birth</Label>
