@@ -11,14 +11,14 @@ export const useMatchmaking = () => {
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const startSearch = useCallback(async (gameMode = "quick_play") => {
+  const startSearch = useCallback(async (gameMode = "quick_play", durationSeconds: number | null = null) => {
     if (!user) return;
     setState("searching");
     setError(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("matchmake", {
-        body: { game_mode: gameMode },
+        body: { game_mode: gameMode, duration_seconds: durationSeconds },
       });
 
       if (fnError) throw fnError;
@@ -32,13 +32,19 @@ export const useMatchmaking = () => {
       // Poll for match via realtime on games table
       pollingRef.current = setInterval(async () => {
         // Check if we got matched (a game was created with us as a player)
-        const { data: games } = await supabase
+        let gamesQuery = supabase
           .from("games")
           .select("id")
           .eq("result_type", "in_progress")
           .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
           .order("created_at", { ascending: false })
           .limit(1);
+
+        gamesQuery = durationSeconds === null
+          ? gamesQuery.is("duration_seconds", null)
+          : gamesQuery.eq("duration_seconds", durationSeconds);
+
+        const { data: games } = await gamesQuery;
 
         if (games && games.length > 0) {
           setState("matched");

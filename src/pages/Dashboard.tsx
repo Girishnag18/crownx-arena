@@ -30,6 +30,7 @@ interface Tournament {
   created_by?: string;
   status: "open" | "full" | "live" | "completed" | "cancelled";
   starts_at: string | null;
+  cancelled_at?: string | null;
   registration_count?: { count: number }[];
 }
 
@@ -138,9 +139,10 @@ const Dashboard = () => {
   };
 
   const loadTournaments = async () => {
+    await (supabase as any).rpc("cleanup_cancelled_tournaments");
     const { data } = await (supabase as any)
       .from("tournaments")
-      .select("id, name, prize_pool, max_players, created_by, status, starts_at, registration_count:tournament_registrations(count)")
+      .select("id, name, prize_pool, max_players, created_by, status, starts_at, cancelled_at, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -324,7 +326,7 @@ const Dashboard = () => {
     }
 
     await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
-    await (supabase as any).from("tournaments").update({ status: "cancelled" }).eq("id", tournament.id);
+    await (supabase as any).from("tournaments").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", tournament.id);
 
     publishInGameNotification(`Sorry! Tournament "${tournament.name}" was called off. Crowns have been refunded.`, "warning");
     toast.success("Tournament called off, refunds issued and in-game apology notice sent.");
@@ -349,7 +351,6 @@ const Dashboard = () => {
     }
 
     const sectionMap: Record<string, string> = {
-      ratings: "ratings-section",
       history: "history-section",
     };
 
@@ -405,19 +406,6 @@ const Dashboard = () => {
                   <div className="text-xs text-muted-foreground">{stat.label}</div>
                 </div>
               ))}
-            </div>
-            <div id="ratings-section" className="bg-secondary/30 rounded-lg p-4 mb-4 scroll-mt-28">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Crown Score</span>
-                <span className="font-display text-lg font-bold text-primary">{(profile?.crown_score || 1200).toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Global Rank</span>
-                <span className="font-semibold text-foreground">{globalRank ? `#${globalRank}` : "Unranked"}</span>
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-1">
-                Live rating pool: {liveLeaderboardSize} players (auto-refresh via realtime updates)
-              </div>
             </div>
             <div className="space-y-3 mb-6">
               <button
@@ -525,7 +513,7 @@ const Dashboard = () => {
                           <div className="text-[11px] text-muted-foreground mt-0.5">📅 {new Date(tournament.starts_at).toLocaleString()}</div>
                         )}
                         <div className="text-[11px] text-primary/90 mt-0.5">
-                          {tournament.status === "cancelled" ? "Tournament cancelled" : isReady ? "Tournament ready to start • realtime qualifier analysis active" : "Ready for registrations • Entry: 2 crowns"}
+                          {tournament.status === "cancelled" ? `Tournament cancelled${tournament.cancelled_at ? ` • auto-delete at ${new Date(new Date(tournament.cancelled_at).getTime() + 1000 * 60 * 60).toLocaleTimeString()}` : ""}` : isReady ? "Tournament ready to start • realtime qualifier analysis active" : "Ready for registrations • Entry: 2 crowns"}
                         </div>
                       </div>
                       <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id || tournament.status === "cancelled"} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2C)"}</button>

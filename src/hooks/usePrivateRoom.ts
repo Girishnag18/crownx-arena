@@ -17,7 +17,7 @@ export const usePrivateRoom = () => {
     return code;
   };
 
-  const createRoom = useCallback(async () => {
+  const createRoom = useCallback(async (durationSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
     let createdRoom: any = null;
@@ -26,7 +26,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id })
+        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds })
         .select()
         .single();
 
@@ -46,7 +46,7 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
-  const joinRoom = useCallback(async (code: string) => {
+  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
 
@@ -79,6 +79,7 @@ export const usePrivateRoom = () => {
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? room.host_id : user.id;
     const blackId = isWhite ? user.id : room.host_id;
+    const durationSeconds = room.duration_seconds ?? selectedDurationSeconds ?? null;
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
@@ -88,6 +89,7 @@ export const usePrivateRoom = () => {
         player_white: whiteId,
         player_black: blackId,
         game_mode: "private",
+        duration_seconds: durationSeconds,
         result_type: "in_progress",
         current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         moves: [],
