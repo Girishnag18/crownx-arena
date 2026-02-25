@@ -323,6 +323,12 @@ const Dashboard = () => {
       const { data: profileData } = await supabase.from("profiles").select("wallet_crowns").eq("id", reg.player_id).single();
       await supabase.from("profiles").update({ wallet_crowns: Number(profileData?.wallet_crowns || 0) + 2 }).eq("id", reg.player_id);
       await supabase.from("wallet_transactions").insert({ player_id: reg.player_id, amount: 2, txn_type: "tournament_refund" });
+      await (supabase as any).from("player_notifications").insert({
+        user_id: reg.player_id,
+        title: "Tournament cancelled",
+        message: `Your tournament "${tournament.name}" was cancelled. Refund has been issued.`,
+        kind: "tournament_cancelled",
+      });
     }
 
     await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
