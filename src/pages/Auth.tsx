@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/features/auth/authService";
+import { supabase } from "@/integrations/supabase/client";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -17,6 +18,34 @@ const Auth = () => {
   useEffect(() => {
     if (!loading && user) navigate("/dashboard");
   }, [loading, user, navigate]);
+
+  useEffect(() => {
+    const completeOAuthSession = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.replace("#", ""));
+      const hasTokenInHash = hashParams.has("access_token") || hashParams.has("refresh_token");
+      const queryParams = new URLSearchParams(window.location.search);
+      const authCode = queryParams.get("code");
+
+      if (authCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(authCode);
+        if (error) {
+          toast.error(error.message || "Google login callback failed.");
+        }
+        window.history.replaceState({}, document.title, "/auth");
+        return;
+      }
+
+      if (hasTokenInHash) {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          toast.error(error.message || "Google login callback failed.");
+        }
+        window.history.replaceState({}, document.title, "/auth");
+      }
+    };
+
+    completeOAuthSession();
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

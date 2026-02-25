@@ -12,7 +12,7 @@ export const authService = {
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: buildRedirect("/dashboard"),
+        redirectTo: buildRedirect("/auth"),
         queryParams: {
           prompt: "select_account",
           access_type: "offline",

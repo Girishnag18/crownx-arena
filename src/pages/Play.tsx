@@ -284,18 +284,20 @@ const Play = () => {
 
   const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w") || (!isOnline && !isComputerGame && game.turn() === "b");
   const boardSizeClass = "max-w-[96vw]";
+  const localTopName = flipped ? "White (1200)" : "Black (1200)";
+  const localBottomName = flipped ? "Black (1200)" : "White (1200)";
 
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 1200})`
     : isComputerGame
       ? `${computerColor === "b" ? "Computer" : "You"} (${computerColor === "b" ? 1300 : 1200})`
-      : "Black (1200)";
+      : localTopName;
 
   const bottomPlayerName = isOnline
     ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 1200})`
     : isComputerGame
       ? `${computerColor === "w" ? "Computer" : "You"} (${computerColor === "w" ? 1300 : 1200})`
-      : "White (1200)";
+      : localBottomName;
 
   const topAvatar = isOnline
     ? (online.playerColor === "w" ? online.blackPlayer?.avatar_url : online.whitePlayer?.avatar_url)

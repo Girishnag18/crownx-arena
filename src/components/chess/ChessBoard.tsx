@@ -154,12 +154,12 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                 className={`board-square relative flex items-center justify-center transition-all duration-300 ${
                   isLight ? "chess-board-light" : "chess-board-dark"
                 } ${isSelected ? "!bg-primary/35" : ""} ${
-                  isLastMove ? "!bg-amber-200/35" : ""
+                  isLastMove ? "!bg-yellow-300/60" : ""
                 } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
               >
                 {isMoveDestination && (
                   <motion.div
-                    className="absolute inset-[14%] rounded-full border-2 border-amber-100/70"
+                    className="absolute inset-[14%] rounded-full border-2 border-yellow-400/80"
                     initial={{ scale: 0.7, opacity: 0.2 }}
                     animate={{ scale: 1.15, opacity: 0 }}
                     transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
@@ -169,7 +169,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                   <div className="absolute w-[28%] h-[28%] rounded-full bg-black/15" />
                 )}
                 {isLegal && piece && (
-                  <div className="absolute inset-[5%] rounded-full border-[3px] border-amber-900/25" />
+                  <div className="absolute inset-[5%] rounded-full border-[3px] border-yellow-500/45" />
                 )}
                 {piece && (
                   <motion.img
