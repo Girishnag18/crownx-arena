@@ -25,6 +25,7 @@ const Play = () => {
   const [aiAccuracy, setAiAccuracy] = useState(92);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
+  const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -149,6 +150,7 @@ const Play = () => {
     setMoveHistory([]);
     setShowCheckmateBanner(false);
     setShowPostGameReview(false);
+    setLocalBottomColor("w");
   };
 
   const game = isOnline && online.game ? online.game : localGame;
@@ -282,10 +284,10 @@ const Play = () => {
     return { capturedByWhite, capturedByBlack };
   }, [game]);
 
-  const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w") || (!isOnline && !isComputerGame && game.turn() === "b");
+  const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w") || (!isOnline && !isComputerGame && localBottomColor === "b");
   const boardSizeClass = "max-w-[96vw]";
-  const localTopName = flipped ? "White (1200)" : "Black (1200)";
-  const localBottomName = flipped ? "Black (1200)" : "White (1200)";
+  const localTopName = localBottomColor === "w" ? "Black Player (1200)" : "White Player (1200)";
+  const localBottomName = localBottomColor === "w" ? "White Player (1200)" : "Black Player (1200)";
 
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 1200})`
@@ -439,7 +441,7 @@ const Play = () => {
                   ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
                   : isComputerGame
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
-                    : "Play against a friend on the same device."}
+                    : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} pieces are at the bottom for the current player.`}
               </p>
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
@@ -461,6 +463,14 @@ const Play = () => {
             <div className="glass-card p-5 border border-primary/20">
               <h3 className="font-display font-bold text-sm mb-2 flex items-center gap-2"><Swords className="w-4 h-4 text-primary" />Latest move</h3>
               <p className="text-xs text-muted-foreground">The most recent move is highlighted in yellow on the board so you can instantly see your opponent's last move.</p>
+              {!isOnline && !isComputerGame && (
+                <button
+                  onClick={() => setLocalBottomColor((prev) => (prev === "w" ? "b" : "w"))}
+                  className="mt-3 w-full border rounded-lg px-3 py-2 text-xs font-display font-bold"
+                >
+                  Switch Seat (show {localBottomColor === "w" ? "Black" : "White"} at bottom)
+                </button>
+              )}
             </div>
 
             <div className="glass-card p-5">

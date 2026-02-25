@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/features/auth/authService";
-import { supabase } from "@/integrations/supabase/client";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -18,34 +17,6 @@ const Auth = () => {
   useEffect(() => {
     if (!loading && user) navigate("/dashboard");
   }, [loading, user, navigate]);
-
-  useEffect(() => {
-    const completeOAuthSession = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.replace("#", ""));
-      const hasTokenInHash = hashParams.has("access_token") || hashParams.has("refresh_token");
-      const queryParams = new URLSearchParams(window.location.search);
-      const authCode = queryParams.get("code");
-
-      if (authCode) {
-        const { error } = await supabase.auth.exchangeCodeForSession(authCode);
-        if (error) {
-          toast.error(error.message || "Google login callback failed.");
-        }
-        window.history.replaceState({}, document.title, "/auth");
-        return;
-      }
-
-      if (hasTokenInHash) {
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          toast.error(error.message || "Google login callback failed.");
-        }
-        window.history.replaceState({}, document.title, "/auth");
-      }
-    };
-
-    completeOAuthSession();
-  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +49,13 @@ const Auth = () => {
     }
   };
 
+  const continueWithFacebook = async () => {
+    const { error } = await authService.signInWithFacebook();
+    if (error) {
+      toast.error(error.message || "Facebook sign-in is not available. Check your OAuth provider settings.");
+    }
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
       <form onSubmit={submit} className="w-full max-w-md glass-card p-6 space-y-4">
@@ -90,6 +68,7 @@ const Auth = () => {
         )}
         <button className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold">Continue</button>
         <button type="button" onClick={continueWithGoogle} className="w-full border rounded-lg py-3">Continue with Google</button>
+        <button type="button" onClick={continueWithFacebook} className="w-full border rounded-lg py-3">Continue with Facebook</button>
         <div className="text-sm text-muted-foreground flex justify-between">
           <button type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "Need account?" : "Have account?"}</button>
           <button type="button" onClick={() => setMode("forgot")}>Forgot password</button>

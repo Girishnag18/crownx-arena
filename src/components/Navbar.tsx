@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X, Wallet } from "lucide-react";
+import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X, Wallet, Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ const profileMenuItems = [
   { icon: BarChart3, label: "Rating Overview", to: "/ratings" },
   { icon: Settings, label: "Profile Settings", to: "/settings" },
   { icon: Wallet, label: "Wallet", to: "/crown-topup" },
+  { icon: Bell, label: "Notification Center", to: "/profile#notifications" },
 ];
 
 interface NavbarProfile {
@@ -255,6 +256,15 @@ const Navbar = () => {
                     className="w-full text-center py-3 rounded-xl text-sm font-semibold bg-secondary/40 hover:bg-secondary/70"
                   >
                     Open Profile & Wallet
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/profile#notifications");
+                      setMobileOpen(false);
+                    }}
+                    className="w-full text-center py-3 rounded-xl text-sm font-semibold bg-secondary/40 hover:bg-secondary/70"
+                  >
+                    Open Notification Center
                   </button>
                   <button
                     onClick={handleSignOut}
