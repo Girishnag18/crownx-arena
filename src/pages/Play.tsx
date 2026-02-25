@@ -282,7 +282,7 @@ const Play = () => {
     return { capturedByWhite, capturedByBlack };
   }, [game]);
 
-  const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w");
+  const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w") || (!isOnline && !isComputerGame && game.turn() === "b");
   const boardSizeClass = "max-w-[96vw]";
 
   const topPlayerName = isOnline

@@ -84,6 +84,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [session?.user?.id, profile?.crown_score]);
 
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const profileChannel = supabase
+      .channel(`auth-profile-live-${session.user.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${session.user.id}` }, () => {
+        refreshProfile();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+    };
+  }, [session?.user?.id]);
   const signOut = async () => {
     await supabase.auth.signOut({ scope: "local" });
   };
