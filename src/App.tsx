@@ -18,9 +18,10 @@ import CrownTopup from "./pages/CrownTopup";
 import NotFound from "./pages/NotFound";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
-import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Ratings from "./pages/Ratings";
+import Notifications from "./pages/Notifications";
+import { Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
@@ -45,8 +46,9 @@ const RouteAnimator = () => {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Navigate to="/settings" replace /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
           <Route path="/ratings" element={<ProtectedRoute><Ratings /></ProtectedRoute>} />
           <Route path="/play" element={<ProtectedRoute><Play /></ProtectedRoute>} />

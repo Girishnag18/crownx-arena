@@ -18,6 +18,7 @@ const navLinks = [
 
 const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
+  { icon: Bell, label: "Notifications", to: "/notifications" },
   { icon: History, label: "Match History", to: "/dashboard?section=history" },
   { icon: BarChart3, label: "Rating Overview", to: "/ratings" },
   { icon: Settings, label: "Profile Settings", to: "/settings" },
@@ -250,7 +251,7 @@ const Navbar = () => {
                       )}
 
                       <Link
-                        to="/profile#notifications"
+                        to="/notifications"
                         onClick={() => setNotifOpen(false)}
                         className="block text-center text-xs text-primary font-semibold py-2 mt-1 border-t border-border/70 hover:bg-secondary/30 rounded-b-lg"
                       >
@@ -370,7 +371,7 @@ const Navbar = () => {
                     Profile & Settings
                   </button>
                   <button
-                    onClick={() => { navigate("/profile#notifications"); setMobileOpen(false); }}
+                    onClick={() => { navigate("/notifications"); setMobileOpen(false); }}
                     className="w-full text-center py-3 rounded-xl text-sm font-semibold bg-secondary/40 hover:bg-secondary/70 flex items-center justify-center gap-2"
                   >
                     <Bell className="w-4 h-4" />

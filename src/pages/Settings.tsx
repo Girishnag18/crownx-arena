@@ -23,6 +23,7 @@ const Settings = () => {
   const [pendingEmail, setPendingEmail] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uid, setUid] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,18 +38,20 @@ const Settings = () => {
     setBio(profile.bio || "");
     setDateOfBirth((user.user_metadata?.date_of_birth as string) || "");
     setEmail(user.email || "");
+    setUid(profile.player_uid || "");
   }, [profile, user]);
 
   const saveSettings = async () => {
     if (!user) return;
     setSaving(true);
 
-    const [{ error: profileError }, { error: metadataError }] = await Promise.all([
-      supabase.from("profiles").update({
+    const [{ data: profileData, error: profileError }, { error: metadataError }] = await Promise.all([
+      (supabase as any).from("profiles").update({
         avatar_url: avatarUrl || null,
         username: username || null,
         bio: bio || null,
-      }).eq("id", user.id),
+        player_uid: uid && /^\d{10}$/.test(uid) ? uid : null,
+      }).eq("id", user.id).select("player_uid").single(),
       supabase.auth.updateUser({
         data: { ...(user.user_metadata || {}), date_of_birth: dateOfBirth || null },
       }),
@@ -59,6 +62,10 @@ const Settings = () => {
     if (profileError || metadataError) {
       toast.error(profileError?.message || metadataError?.message || "Failed to save");
       return;
+    }
+
+    if (profileData?.player_uid) {
+      setUid(profileData.player_uid);
     }
 
     toast.success("Profile updated successfully");
@@ -93,7 +100,10 @@ const Settings = () => {
       toast.error("Enter a new email address");
       return;
     }
-    const { error } = await supabase.auth.updateUser({ email: pendingEmail.trim() });
+    const { error } = await supabase.auth.updateUser({
+      email: pendingEmail.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/settings` },
+    });
     if (error) {
       toast.error(error.message);
       return;
@@ -187,6 +197,11 @@ const Settings = () => {
                 <Label>Avatar Upload</Label>
                 <Input type="file" accept="image/*,.jpg,.jpeg,.png,.webp" onChange={onAvatarUpload} disabled={avatarUploading} />
                 <p className="text-xs text-muted-foreground">Upload from your local device. JPG, JPEG, PNG, WEBP and other image formats are supported.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>UID</Label>
+                <Input value={uid} disabled />
+                <p className="text-xs text-muted-foreground">This 10-digit in-game ID is generated and kept synced whenever you save your profile.</p>
               </div>
               <div className="space-y-1.5">
                 <Label>Date of Birth</Label>
