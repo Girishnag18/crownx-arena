@@ -17,6 +17,7 @@ export type Database = {
       game_rooms: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           game_id: string | null
           guest_id: string | null
           host_id: string
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id: string
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id?: string
@@ -156,6 +159,7 @@ export type Database = {
       matchmaking_queue: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           game_mode: string
           id: string
           player_id: string
@@ -164,6 +168,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id: string
@@ -172,6 +177,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id?: string
@@ -200,6 +206,7 @@ export type Database = {
           id: string
           level: number
           losses: number
+          player_uid: string
           rank_tier: string
           updated_at: string
           username: string | null
@@ -219,6 +226,7 @@ export type Database = {
           id: string
           level?: number
           losses?: number
+          player_uid?: string
           rank_tier?: string
           updated_at?: string
           username?: string | null
@@ -238,6 +246,7 @@ export type Database = {
           id?: string
           level?: number
           losses?: number
+          player_uid?: string
           rank_tier?: string
           updated_at?: string
           username?: string | null
@@ -247,6 +256,86 @@ export type Database = {
           xp?: number
         }
         Relationships: []
+      }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_addressee_id_fkey"
+            columns: ["addressee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          kind: string
+          message: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          kind?: string
+          message: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          kind?: string
+          message?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tournament_registrations: {
         Row: {

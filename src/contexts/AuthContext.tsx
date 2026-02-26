@@ -14,6 +14,7 @@ interface AuthContextType {
     bio: string | null;
     avatar_url: string | null;
     crown_score: number;
+    player_uid?: string;
   } | null;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -45,16 +46,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setRole("player");
       return;
     }
-    const { data } = await supabase
+
+    let { data } = await supabase
       .from("profiles")
-      .select("username,bio,avatar_url,crown_score,role")
+      .select("username,bio,avatar_url,crown_score,role,player_uid")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
+
+    if (!data) {
+      const username = (session.user.user_metadata?.username as string | undefined)?.trim() || null;
+      await supabase
+        .from("profiles")
+        .upsert({ id: session.user.id, username }, { onConflict: "id" });
+
+      const { data: inserted } = await supabase
+        .from("profiles")
+        .select("username,bio,avatar_url,crown_score,role,player_uid")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      data = inserted;
+    }
 
     if (data) {
-      const profileData = data as any;
-      setProfile(profileData);
-      setRole((profileData.role as UserRole) || "player");
+      const profileData = data as { username: string | null; bio: string | null; avatar_url: string | null; crown_score: number; role: UserRole | null; player_uid?: string | null };
+      setProfile({
+        username: profileData.username || "",
+        bio: profileData.bio,
+        avatar_url: profileData.avatar_url,
+        crown_score: profileData.crown_score || 1200,
+        player_uid: profileData.player_uid || undefined,
+      });
+      setRole(profileData.role || "player");
     }
   };
 

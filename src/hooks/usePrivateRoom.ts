@@ -20,13 +20,13 @@ export const usePrivateRoom = () => {
   const createRoom = useCallback(async (durationSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
-    let createdRoom: any = null;
+    let createdRoom: { room_code: string; id: string } | null = null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id })
+        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds })
         .select()
         .single();
 
@@ -75,11 +75,25 @@ export const usePrivateRoom = () => {
       return;
     }
 
-    // Create game
+    // Claim the room first so host can see guest connected in realtime.
+    const { data: claimedRoom, error: claimErr } = await supabase
+      .from("game_rooms")
+      .update({ guest_id: user.id, status: "joined" })
+      .eq("id", room.id)
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .select("*")
+      .single();
+
+    if (claimErr || !claimedRoom) {
+      setError("Room was claimed by another player. Please try a different code.");
+      return;
+    }
+
     const isWhite = Math.random() > 0.5;
-    const whiteId = isWhite ? room.host_id : user.id;
-    const blackId = isWhite ? user.id : room.host_id;
-    const durationSeconds = selectedDurationSeconds ?? null;
+    const whiteId = isWhite ? claimedRoom.host_id : user.id;
+    const blackId = isWhite ? user.id : claimedRoom.host_id;
+    const durationSeconds = selectedDurationSeconds ?? claimedRoom.duration_seconds ?? null;
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
@@ -98,14 +112,20 @@ export const usePrivateRoom = () => {
       .single();
 
     if (gameErr || !game) {
+      await supabase
+        .from("game_rooms")
+        .update({ guest_id: null, status: "waiting" })
+        .eq("id", room.id)
+        .eq("guest_id", user.id);
       setError("Failed to create game");
       return;
     }
 
     const { error: roomUpdateErr } = await supabase
       .from("game_rooms")
-      .update({ guest_id: user.id, game_id: game.id, status: "playing" })
-      .eq("id", room.id);
+      .update({ game_id: game.id, status: "playing" })
+      .eq("id", room.id)
+      .eq("guest_id", user.id);
 
     if (roomUpdateErr) {
       setError(roomUpdateErr.message || "Unable to join this room right now");
@@ -131,7 +151,12 @@ export const usePrivateRoom = () => {
           filter: `id=eq.${roomId}`,
         },
         (payload) => {
-          const updated = payload.new as any;
+          const updated = payload.new as { status: string; guest_id: string | null; game_id: string | null };
+
+          if (updated.status === "joined" && updated.guest_id) {
+            setStatus("joined");
+          }
+
           if (updated.status === "playing" && updated.game_id) {
             setGameId(updated.game_id);
             setStatus("ready");

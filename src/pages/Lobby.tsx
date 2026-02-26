@@ -203,11 +203,11 @@ const Lobby = () => {
                 </div>
               )}
 
-              {privateRoom.status === "waiting" && privateRoom.roomCode && (
+              {(privateRoom.status === "waiting" || privateRoom.status === "joined") && privateRoom.roomCode && (
                 <div className="glass-card p-8 border-glow text-center">
                   <Loader2 className="w-8 h-8 text-primary mx-auto mb-4 animate-spin" />
-                  <h3 className="font-display font-bold mb-2">Waiting for opponent...</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Share this code with a friend</p>
+                  <h3 className="font-display font-bold mb-2">{privateRoom.status === "joined" ? "Opponent connected" : "Waiting for opponent..."}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{privateRoom.status === "joined" ? "Launching the game room in real-time..." : "Share this code with a friend"}</p>
                   <div className="flex items-center justify-center gap-3">
                     <span className="font-mono text-3xl tracking-[0.3em] font-bold text-primary">{privateRoom.roomCode}</span>
                     <button onClick={handleCopyCode} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors">{copied ? <Check className="w-5 h-5 text-success" /> : <Copy className="w-5 h-5" />}</button>
