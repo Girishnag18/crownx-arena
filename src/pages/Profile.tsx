@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,15 +22,6 @@ type Friendship = {
   status: "pending" | "accepted" | "declined";
 };
 
-type PlayerNotification = {
-  id: string;
-  title: string;
-  message: string;
-  kind: string;
-  is_read: boolean;
-  created_at: string;
-};
-
 const Profile = () => {
   const { user, role, profile, refreshProfile } = useAuth();
   const [form, setForm] = useState({
@@ -46,7 +37,7 @@ const Profile = () => {
   const [searchResult, setSearchResult] = useState<PublicProfile | null>(null);
   const [friends, setFriends] = useState<PublicProfile[]>([]);
   const [incoming, setIncoming] = useState<(Friendship & { requester?: PublicProfile })[]>([]);
-  const [notifications, setNotifications] = useState<PlayerNotification[]>([]);
+  const [outgoing, setOutgoing] = useState<(Friendship & { addressee?: PublicProfile })[]>([]);
 
   const elo = profile?.crown_score ?? 1200;
   const wins = Math.floor(elo / 15);
@@ -54,11 +45,16 @@ const Profile = () => {
 
   const loadMyProfile = async () => {
     if (!user) return;
-    const { data } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from("profiles")
       .select("username,bio,country,avatar_url,player_uid")
       .eq("id", user.id)
       .single();
+
+    if (error) {
+      toast.error("Unable to load profile. Please run latest migrations.");
+      return;
+    }
 
     if (data) {
       setForm((prev) => ({
@@ -82,10 +78,12 @@ const Profile = () => {
     const rows = (friendships || []) as Friendship[];
     const accepted = rows.filter((row) => row.status === "accepted");
     const incomingRows = rows.filter((row) => row.status === "pending" && row.addressee_id === user.id);
+    const outgoingRows = rows.filter((row) => row.status === "pending" && row.requester_id === user.id);
 
     const friendIds = accepted.map((row) => (row.requester_id === user.id ? row.addressee_id : row.requester_id));
     const requesterIds = incomingRows.map((row) => row.requester_id);
-    const allIds = Array.from(new Set([...friendIds, ...requesterIds]));
+    const addresseeIds = outgoingRows.map((row) => row.addressee_id);
+    const allIds = Array.from(new Set([...friendIds, ...requesterIds, ...addresseeIds]));
 
     const profileMap = new Map<string, PublicProfile>();
     if (allIds.length > 0) {
@@ -98,24 +96,12 @@ const Profile = () => {
 
     setFriends(friendIds.map((id) => profileMap.get(id)).filter(Boolean) as PublicProfile[]);
     setIncoming(incomingRows.map((entry) => ({ ...entry, requester: profileMap.get(entry.requester_id) })));
-  };
-
-  const loadNotifications = async () => {
-    if (!user) return;
-    const { data } = await (supabase as any)
-      .from("player_notifications")
-      .select("id,title,message,kind,is_read,created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(25);
-
-    setNotifications((data || []) as PlayerNotification[]);
+    setOutgoing(outgoingRows.map((entry) => ({ ...entry, addressee: profileMap.get(entry.addressee_id) })));
   };
 
   useEffect(() => {
     loadMyProfile();
     loadSocialData();
-    loadNotifications();
   }, [user?.id]);
 
   const saveProfile = async () => {
@@ -138,7 +124,7 @@ const Profile = () => {
     }
 
     await refreshProfile();
-    toast.success("Profile saved and visible to all players.");
+    toast.success("Player profile saved.");
   };
 
   const onAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +140,7 @@ const Profile = () => {
     try {
       const publicUrl = await uploadAvatarImage(user.id, file);
       setForm((prev) => ({ ...prev, avatar_url: publicUrl }));
-      toast.success("Avatar uploaded. Save profile to make it public.");
+      toast.success("Avatar uploaded. Save profile to publish it.");
     } catch (error: any) {
       toast.error(error?.message || "Avatar upload failed.");
     } finally {
@@ -192,9 +178,20 @@ const Profile = () => {
       return;
     }
 
-    const { error } = await (supabase as any)
+    const { data: existing } = await (supabase as any)
       .from("friendships")
-      .upsert({ requester_id: user.id, addressee_id: searchResult.id, status: "pending" }, { onConflict: "requester_id,addressee_id" });
+      .select("id")
+      .or(
+        `and(requester_id.eq.${user.id},addressee_id.eq.${searchResult.id}),and(requester_id.eq.${searchResult.id},addressee_id.eq.${user.id})`,
+      )
+      .maybeSingle();
+
+    if (existing) {
+      toast.error("Friendship request already exists.");
+      return;
+    }
+
+    const { error } = await (supabase as any).from("friendships").insert({ requester_id: user.id, addressee_id: searchResult.id, status: "pending" });
 
     if (error) {
       toast.error(error.message);
@@ -204,20 +201,16 @@ const Profile = () => {
     await (supabase as any).from("player_notifications").insert({
       user_id: searchResult.id,
       title: "New friend request",
-      message: `${form.username || "A player"} kept a friend request to you.`,
+      message: `${form.username || "A player"} sent you a friend request.`,
       kind: "friend_request",
     });
 
+    await loadSocialData();
     toast.success("Friend request sent.");
   };
 
   const updateFriendRequest = async (request: Friendship, status: "accepted" | "declined") => {
-    if (!user) return;
-
-    const { error } = await (supabase as any)
-      .from("friendships")
-      .update({ status })
-      .eq("id", request.id);
+    const { error } = await (supabase as any).from("friendships").update({ status }).eq("id", request.id);
 
     if (error) {
       toast.error(error.message);
@@ -237,11 +230,31 @@ const Profile = () => {
     toast.success(status === "accepted" ? "Friend request accepted." : "Friend request declined.");
   };
 
-  const unreadCount = useMemo(() => notifications.filter((item) => !item.is_read).length, [notifications]);
+  const deleteFriendship = async (friendshipId: string, successMessage: string) => {
+    const { error } = await (supabase as any).from("friendships").delete().eq("id", friendshipId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await loadSocialData();
+    toast.success(successMessage);
+  };
 
-  const markNotificationRead = async (notificationId: string) => {
-    await (supabase as any).from("player_notifications").update({ is_read: true }).eq("id", notificationId);
-    setNotifications((prev) => prev.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item)));
+  const unfriendPlayer = async (friendId: string) => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("friendships")
+      .select("id")
+      .eq("status", "accepted")
+      .or(`and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`)
+      .maybeSingle();
+
+    if (!data?.id) {
+      toast.error("Friendship not found.");
+      return;
+    }
+
+    await deleteFriendship(data.id, "Friend removed.");
   };
 
   return (
@@ -256,7 +269,7 @@ const Profile = () => {
           </Avatar>
           <label className="text-sm font-medium">Upload Avatar</label>
           <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp" onChange={onAvatarUpload} className="w-full text-sm" disabled={avatarUploading} />
-          <p className="text-xs text-muted-foreground">Your profile image is saved and shown to other players.</p>
+          <p className="text-xs text-muted-foreground">Your player UID is generated automatically and is read-only.</p>
         </div>
 
         <div className="space-y-3 lg:col-span-2">
@@ -319,9 +332,9 @@ const Profile = () => {
         )}
       </section>
 
-      <section className="grid lg:grid-cols-2 gap-6">
+      <section className="grid lg:grid-cols-3 gap-6">
         <div className="glass-card p-6 space-y-3">
-          <h2 className="text-2xl font-bold">Friend Requests</h2>
+          <h2 className="text-2xl font-bold">Incoming Requests</h2>
           {incoming.length === 0 ? <p className="text-sm text-muted-foreground">No pending requests.</p> : incoming.map((item) => (
             <div key={item.id} className="rounded-lg border p-3 flex items-center justify-between gap-3">
               <div>
@@ -337,38 +350,36 @@ const Profile = () => {
         </div>
 
         <div className="glass-card p-6 space-y-3">
-          <h2 className="text-2xl font-bold">Friends List</h2>
-          {friends.length === 0 ? <p className="text-sm text-muted-foreground">No friends yet.</p> : friends.map((friend) => (
-            <div key={friend.id} className="rounded-lg border p-3 flex items-center gap-3">
-              <Avatar>
-                <AvatarImage src={friend.avatar_url || undefined} alt={friend.username || "Player"} />
-                <AvatarFallback>{(friend.username || "P").slice(0, 1).toUpperCase()}</AvatarFallback>
-              </Avatar>
+          <h2 className="text-2xl font-bold">Outgoing Requests</h2>
+          {outgoing.length === 0 ? <p className="text-sm text-muted-foreground">No outgoing requests.</p> : outgoing.map((item) => (
+            <div key={item.id} className="rounded-lg border p-3 flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold">{friend.username || "Player"}</p>
-                <p className="text-xs text-muted-foreground">UID: {friend.player_uid}</p>
+                <p className="font-semibold">{item.addressee?.username || "Player"}</p>
+                <p className="text-xs text-muted-foreground">UID: {item.addressee?.player_uid || "-"}</p>
               </div>
+              <button className="border rounded px-3 py-1" onClick={() => deleteFriendship(item.id, "Friend request cancelled.")}>Cancel</button>
             </div>
           ))}
         </div>
-      </section>
 
-      <section id="notifications" className="glass-card p-6 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Notification Center</h2>
-          <span className="text-sm text-muted-foreground">Unread: {unreadCount}</span>
+        <div className="glass-card p-6 space-y-3">
+          <h2 className="text-2xl font-bold">Friends List</h2>
+          {friends.length === 0 ? <p className="text-sm text-muted-foreground">No friends yet.</p> : friends.map((friend) => (
+            <div key={friend.id} className="rounded-lg border p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={friend.avatar_url || undefined} alt={friend.username || "Player"} />
+                  <AvatarFallback>{(friend.username || "P").slice(0, 1).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{friend.username || "Player"}</p>
+                  <p className="text-xs text-muted-foreground">UID: {friend.player_uid}</p>
+                </div>
+              </div>
+              <button className="border rounded px-3 py-1" onClick={() => unfriendPlayer(friend.id)}>Remove</button>
+            </div>
+          ))}
         </div>
-        {notifications.length === 0 ? <p className="text-sm text-muted-foreground">No notifications yet.</p> : notifications.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => markNotificationRead(item.id)}
-            className={`w-full text-left rounded-lg border p-3 ${item.is_read ? "opacity-70" : "border-primary/40"}`}
-          >
-            <p className="font-semibold">{item.title}</p>
-            <p className="text-sm">{item.message}</p>
-            <p className="text-xs text-muted-foreground mt-1">{new Date(item.created_at).toLocaleString()}</p>
-          </button>
-        ))}
       </section>
     </main>
   );
