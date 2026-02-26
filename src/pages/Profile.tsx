@@ -165,8 +165,8 @@ const Profile = () => {
 
   const performUidSearch = async () => {
     const clean = searchUid.trim();
-    if (!/^\d{8}$/.test(clean)) {
-      toast.error("Enter a valid 8-digit UID.");
+    if (!/^\d{10}$/.test(clean)) {
+      toast.error("Enter a valid 10-digit UID.");
       return;
     }
 
@@ -297,8 +297,8 @@ const Profile = () => {
           <input
             className="w-full rounded-lg border bg-card p-3"
             value={searchUid}
-            onChange={(e) => setSearchUid(e.target.value.replace(/\D/g, "").slice(0, 8))}
-            placeholder="Enter 8-digit UID"
+            onChange={(e) => setSearchUid(e.target.value.replace(/\D/g, "").slice(0, 10))}
+            placeholder="Enter 10-digit UID"
           />
           <button className="border rounded-lg px-4" onClick={performUidSearch}>Search</button>
         </div>

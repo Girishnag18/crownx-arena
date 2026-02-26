@@ -40,6 +40,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [role, setRole] = useState<UserRole>("player");
 
+  const ensureWelcomeNotification = async (userId: string) => {
+    const { data } = await (supabase as any)
+      .from("player_notifications")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("kind", "welcome")
+      .limit(1);
+
+    if ((data || []).length > 0) {
+      return;
+    }
+
+    await (supabase as any).from("player_notifications").insert({
+      user_id: userId,
+      title: "Welcome to CrownX Arena 👑",
+      message: "Great to have you here! Start a match, sharpen your strategy, and enjoy every move. Your chess journey starts now.",
+      kind: "welcome",
+    });
+  };
+
   const refreshProfile = async () => {
     if (!session?.user) {
       setProfile(null);
@@ -77,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         player_uid: profileData.player_uid || undefined,
       });
       setRole(profileData.role || "player");
+      await ensureWelcomeNotification(session.user.id);
     }
   };
 
