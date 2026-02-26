@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Bot, Globe, Users, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -456,7 +456,7 @@ const Dashboard = () => {
 
           <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
             <div className="space-y-3">
-              {[{ icon: Swords, title: "Quick Play", desc: "Jump into ranked match", to: "/lobby", accent: true }, { icon: Bot, title: "vs Computer", desc: "Practice with AI", to: "/play?mode=computer" }, { icon: Globe, title: "World Arena", desc: "Global matchmaking", to: "/lobby" }, { icon: Users, title: "Private Room", desc: "Invite a friend", to: "/lobby" }].map((mode) => (
+              {[{ icon: Globe, title: "Online Mode", desc: "Quick Play, World Arena and Private Rooms", to: "/lobby", accent: true }].map((mode) => (
                 <motion.button key={mode.title} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate(mode.to)} className={`glass-card p-5 text-left group transition-all duration-300 ${mode.accent ? "border-primary/30 gold-glow" : "hover:border-primary/20"}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${mode.accent ? "bg-primary/20" : "bg-secondary"}`}><mode.icon className={`w-5 h-5 ${mode.accent ? "text-primary" : "text-muted-foreground"}`} /></div>
