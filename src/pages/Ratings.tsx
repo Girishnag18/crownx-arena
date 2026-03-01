@@ -45,10 +45,11 @@ const Ratings = () => {
   const winRate = totalGames === 0 ? 0 : Math.round(((snapshot?.wins || 0) / totalGames) * 100);
   const tier = useMemo(() => {
     const score = snapshot?.crown_score || 0;
-    if (score >= 1800) return "Grand Crown";
-    if (score >= 1500) return "Elite";
-    if (score >= 1200) return "Contender";
-    return "Starter";
+    if (score >= 1600) return "Grand Master";
+    if (score >= 1200) return "Expert";
+    if (score >= 800) return "Intermediate";
+    if (score >= 500) return "Apprentice";
+    return "Beginner";
   }, [snapshot?.crown_score]);
 
   return (

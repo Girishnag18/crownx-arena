@@ -245,15 +245,32 @@ const Lobby = () => {
                 <div className="glass-card p-8 border-glow text-center">
                   <Loader2 className="w-10 h-10 text-primary mx-auto mb-4 animate-spin" />
                   <h3 className="font-display font-bold text-lg mb-2">Searching for opponent...</h3>
-                  <p className="text-sm text-muted-foreground mb-6">Looking for players near your rating and selected time control</p>
+                  <p className="text-sm text-muted-foreground mb-4">Looking for players near your rating and selected time control</p>
                   <button onClick={() => { matchmaking.cancelSearch(); }} className="text-sm text-muted-foreground hover:text-destructive transition-colors">Cancel</button>
+                  <div className="border-t border-border/50 mt-6 pt-4">
+                    <p className="text-xs text-muted-foreground mb-3">No opponents available?</p>
+                    <button
+                      onClick={() => { matchmaking.cancelSearch(); navigate("/play?mode=computer&ranked=true"); }}
+                      className="inline-flex items-center gap-2 border border-primary/30 text-primary px-4 py-2 rounded-lg text-sm font-display font-bold hover:bg-primary/10 transition-colors"
+                    >
+                      <Bot className="w-4 h-4" /> Play vs AI (Ranked)
+                    </button>
+                  </div>
                 </div>
               )}
 
               {matchmaking.state === "error" && (
                 <div className="glass-card p-8 text-center">
                   <p className="text-destructive mb-4">{matchmaking.error}</p>
-                  <button onClick={() => matchmaking.startSearch(mode!, durationSeconds)} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">TRY AGAIN</button>
+                  <div className="flex gap-3 justify-center">
+                    <button onClick={() => matchmaking.startSearch(mode!, durationSeconds)} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">TRY AGAIN</button>
+                    <button
+                      onClick={() => navigate("/play?mode=computer&ranked=true")}
+                      className="inline-flex items-center gap-2 border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10"
+                    >
+                      <Bot className="w-4 h-4" /> Play vs AI
+                    </button>
+                  </div>
                 </div>
               )}
 

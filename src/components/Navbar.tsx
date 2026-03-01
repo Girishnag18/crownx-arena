@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings, LogOut, Menu, X, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -125,6 +126,7 @@ const Navbar = () => {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <NotificationBell />
 
             {user ? (
               <div className="relative" ref={menuRef}>
