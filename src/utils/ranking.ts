@@ -1,10 +1,10 @@
 import { RankTier } from "@/types/domain";
 
 export const getRankTier = (elo: number): RankTier => {
-  if (elo >= 2200) return "Diamond";
-  if (elo >= 1900) return "Platinum";
-  if (elo >= 1600) return "Gold";
-  if (elo >= 1300) return "Silver";
+  if (elo >= 1600) return "Diamond";
+  if (elo >= 1200) return "Platinum";
+  if (elo >= 800) return "Gold";
+  if (elo >= 500) return "Silver";
   return "Bronze";
 };
 

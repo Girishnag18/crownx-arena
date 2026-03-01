@@ -1,8 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
@@ -14,6 +15,11 @@ const Play = () => {
   const [searchParams] = useSearchParams();
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
+  const isRankedAI = searchParams.get("ranked") === "true";
+
+  const { profile } = useAuth();
+  const playerElo = profile?.crown_score || 400;
+  const aiElo = playerElo + 20;
 
   const [localGame, setLocalGame] = useState(new Chess());
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
@@ -286,19 +292,19 @@ const Play = () => {
 
   const flipped = (isOnline && online.playerColor === "b") || (isComputerGame && computerColor === "w") || (!isOnline && !isComputerGame && localBottomColor === "b");
   const boardSizeClass = "max-w-[96vw]";
-  const localTopName = localBottomColor === "w" ? "Black Player (1200)" : "White Player (1200)";
-  const localBottomName = localBottomColor === "w" ? "White Player (1200)" : "Black Player (1200)";
+  const localTopName = localBottomColor === "w" ? "Black Player" : "White Player";
+  const localBottomName = localBottomColor === "w" ? "White Player" : "Black Player";
 
   const topPlayerName = isOnline
-    ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 1200})`
+    ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "b" ? "Computer" : "You"} (${computerColor === "b" ? 1300 : 1200})`
+      ? `${computerColor === "b" ? `AI (${aiElo})` : `You (${playerElo})`}`
       : localTopName;
 
   const bottomPlayerName = isOnline
-    ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 1200})`
+    ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "w" ? "Computer" : "You"} (${computerColor === "w" ? 1300 : 1200})`
+      ? `${computerColor === "w" ? `AI (${aiElo})` : `You (${playerElo})`}`
       : localBottomName;
 
   const topAvatar = isOnline
