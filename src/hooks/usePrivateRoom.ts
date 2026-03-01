@@ -93,7 +93,7 @@ export const usePrivateRoom = () => {
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
-    const durationSeconds = selectedDurationSeconds ?? claimedRoom.duration_seconds ?? null;
+    const durationSeconds = selectedDurationSeconds ?? null;
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
