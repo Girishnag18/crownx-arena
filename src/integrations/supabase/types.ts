@@ -14,10 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       game_rooms: {
         Row: {
           created_at: string
-          duration_seconds: number | null
           game_id: string | null
           guest_id: string | null
           host_id: string
@@ -27,7 +50,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id: string
@@ -37,7 +59,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id?: string
@@ -159,7 +180,6 @@ export type Database = {
       matchmaking_queue: {
         Row: {
           created_at: string
-          duration_seconds: number | null
           game_mode: string
           id: string
           player_id: string
@@ -168,7 +188,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id: string
@@ -177,7 +196,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id?: string
@@ -189,111 +207,6 @@ export type Database = {
             foreignKeyName: "matchmaking_queue_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          country: string | null
-          created_at: string
-          crown_score: number
-          draws: number
-          games_played: number
-          id: string
-          level: number
-          losses: number
-          player_uid: string
-          rank_tier: string
-          updated_at: string
-          username: string | null
-          wallet_crowns: number
-          win_streak: number
-          wins: number
-          xp: number
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          country?: string | null
-          created_at?: string
-          crown_score?: number
-          draws?: number
-          games_played?: number
-          id: string
-          level?: number
-          losses?: number
-          player_uid?: string
-          rank_tier?: string
-          updated_at?: string
-          username?: string | null
-          wallet_crowns?: number
-          win_streak?: number
-          wins?: number
-          xp?: number
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          country?: string | null
-          created_at?: string
-          crown_score?: number
-          draws?: number
-          games_played?: number
-          id?: string
-          level?: number
-          losses?: number
-          player_uid?: string
-          rank_tier?: string
-          updated_at?: string
-          username?: string | null
-          wallet_crowns?: number
-          win_streak?: number
-          wins?: number
-          xp?: number
-        }
-        Relationships: []
-      }
-      friendships: {
-        Row: {
-          addressee_id: string
-          created_at: string
-          id: string
-          requester_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          addressee_id: string
-          created_at?: string
-          id?: string
-          requester_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          addressee_id?: string
-          created_at?: string
-          id?: string
-          requester_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "friendships_addressee_id_fkey"
-            columns: ["addressee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "friendships_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -314,7 +227,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           kind?: string
-          message: string
+          message?: string
           title: string
           user_id: string
         }
@@ -327,15 +240,70 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "player_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          country: string | null
+          created_at: string
+          crown_score: number
+          draws: number
+          games_played: number
+          id: string
+          level: number
+          losses: number
+          player_uid: string | null
+          rank_tier: string
+          updated_at: string
+          username: string | null
+          wallet_crowns: number
+          win_streak: number
+          wins: number
+          xp: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          crown_score?: number
+          draws?: number
+          games_played?: number
+          id: string
+          level?: number
+          losses?: number
+          player_uid?: string | null
+          rank_tier?: string
+          updated_at?: string
+          username?: string | null
+          wallet_crowns?: number
+          win_streak?: number
+          wins?: number
+          xp?: number
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          country?: string | null
+          created_at?: string
+          crown_score?: number
+          draws?: number
+          games_played?: number
+          id?: string
+          level?: number
+          losses?: number
+          player_uid?: string | null
+          rank_tier?: string
+          updated_at?: string
+          username?: string | null
+          wallet_crowns?: number
+          win_streak?: number
+          wins?: number
+          xp?: number
+        }
+        Relationships: []
       }
       tournament_registrations: {
         Row: {
@@ -399,6 +367,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number
@@ -434,6 +420,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       register_tournament_with_wallet: {
         Args: { target_tournament: string }
         Returns: undefined
@@ -446,7 +439,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -573,6 +566,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

@@ -50,10 +50,9 @@ const Settings = () => {
         avatar_url: avatarUrl || null,
         username: username || null,
         bio: bio || null,
-        player_uid: uid && /^\d{10}$/.test(uid) ? uid : null,
       }).eq("id", user.id).select("player_uid").single(),
       supabase.auth.updateUser({
-        data: { ...(user.user_metadata || {}), date_of_birth: dateOfBirth || null },
+        data: { date_of_birth: dateOfBirth || null },
       }),
     ]);
 
@@ -102,7 +101,6 @@ const Settings = () => {
     }
     const { error } = await supabase.auth.updateUser({
       email: pendingEmail.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/settings` },
     });
     if (error) {
       toast.error(error.message);
@@ -201,7 +199,7 @@ const Settings = () => {
               <div className="space-y-1.5">
                 <Label>UID</Label>
                 <Input value={uid} disabled />
-                <p className="text-xs text-muted-foreground">This 10-digit in-game ID is generated and kept synced whenever you save your profile.</p>
+                <p className="text-xs text-muted-foreground">This 8-digit in-game ID is generated automatically.</p>
               </div>
               <div className="space-y-1.5">
                 <Label>Date of Birth</Label>

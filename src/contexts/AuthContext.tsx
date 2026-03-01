@@ -48,16 +48,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("kind", "welcome")
       .limit(1);
 
-    if ((data || []).length > 0) {
-      return;
-    }
+    if ((data || []).length > 0) return;
 
     await (supabase as any).from("player_notifications").insert({
       user_id: userId,
       title: "Welcome to CrownX Arena 👑",
-      message: "Great to have you here! Start a match, sharpen your strategy, and enjoy every move. Your chess journey starts now.",
+      message: "Great to have you here! Start a match, sharpen your strategy, and enjoy every move.",
       kind: "welcome",
     });
+  };
+
+  const fetchRole = async (userId: string) => {
+    const { data } = await (supabase as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    const roles = (data || []).map((r: any) => r.role as string);
+    if (roles.includes("admin")) return "admin" as UserRole;
+    if (roles.includes("moderator")) return "moderator" as UserRole;
+    return "player" as UserRole;
   };
 
   const refreshProfile = async () => {
@@ -69,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     let { data } = await supabase
       .from("profiles")
-      .select("username,bio,avatar_url,crown_score,role,player_uid")
+      .select("username,bio,avatar_url,crown_score,player_uid")
       .eq("id", session.user.id)
       .maybeSingle();
 
@@ -81,22 +91,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { data: inserted } = await supabase
         .from("profiles")
-        .select("username,bio,avatar_url,crown_score,role,player_uid")
+        .select("username,bio,avatar_url,crown_score,player_uid")
         .eq("id", session.user.id)
         .maybeSingle();
       data = inserted;
     }
 
     if (data) {
-      const profileData = data as { username: string | null; bio: string | null; avatar_url: string | null; crown_score: number; role: UserRole | null; player_uid?: string | null };
+      const d = data as any;
       setProfile({
-        username: profileData.username || "",
-        bio: profileData.bio,
-        avatar_url: profileData.avatar_url,
-        crown_score: profileData.crown_score || 1200,
-        player_uid: profileData.player_uid || undefined,
+        username: d.username || "",
+        bio: d.bio,
+        avatar_url: d.avatar_url,
+        crown_score: d.crown_score || 1200,
+        player_uid: d.player_uid || undefined,
       });
-      setRole(profileData.role || "player");
+      const userRole = await fetchRole(session.user.id);
+      setRole(userRole);
       await ensureWelcomeNotification(session.user.id);
     }
   };
@@ -122,11 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!session?.user?.id) return;
     supabase.from("profiles").update({ rank_tier: getRankTier(profile?.crown_score || 1200) }).eq("id", session.user.id);
-    return () => {
-      // cleanup on unmount
-    };
   }, [session?.user?.id, profile?.crown_score]);
-
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -142,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       supabase.removeChannel(profileChannel);
     };
   }, [session?.user?.id]);
+
   const signOut = async () => {
     await supabase.auth.signOut({ scope: "local" });
   };

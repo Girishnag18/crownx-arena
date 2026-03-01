@@ -139,10 +139,9 @@ const Dashboard = () => {
   };
 
   const loadTournaments = async () => {
-    await (supabase as any).rpc("cleanup_cancelled_tournaments");
     const { data } = await (supabase as any)
       .from("tournaments")
-      .select("id, name, prize_pool, max_players, created_by, status, starts_at, cancelled_at, registration_count:tournament_registrations(count)")
+      .select("id, name, prize_pool, max_players, created_by, status, starts_at, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
       .limit(50);
 
