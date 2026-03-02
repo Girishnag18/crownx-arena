@@ -31,6 +31,7 @@ const Lobby = () => {
   const [worldChatInput, setWorldChatInput] = useState("");
   const [worldChatMessages, setWorldChatMessages] = useState<WorldChatMessage[]>([]);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const matchmaking = useMatchmaking();
@@ -58,19 +59,29 @@ const Lobby = () => {
   useEffect(() => {
     if (mode !== "world_arena") return;
 
-    const channel = supabase.channel("world-matchmaking-chat")
+    const channel = supabase.channel("world-matchmaking-chat", {
+        config: { presence: { key: user?.id || "anon" } },
+      })
       .on("broadcast", { event: "message" }, ({ payload }) => {
         setWorldChatMessages((prev) => [...prev.slice(-59), payload as WorldChatMessage]);
       })
-      .subscribe(async () => {
-        const joinMessage: WorldChatMessage = {
-          id: crypto.randomUUID(),
-          sender: "Arena",
-          text: `${user?.user_metadata?.username || "Player"} entered World Arena`,
-          createdAt: Date.now(),
-          kind: "system",
-        };
-        await channel.send({ type: "broadcast", event: "message", payload: joinMessage });
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const ids = new Set<string>(Object.keys(state));
+        setOnlineUserIds(ids);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ user_id: user?.id, username: user?.user_metadata?.username });
+          const joinMessage: WorldChatMessage = {
+            id: crypto.randomUUID(),
+            sender: "Arena",
+            text: `${user?.user_metadata?.username || "Player"} entered World Arena`,
+            createdAt: Date.now(),
+            kind: "system",
+          };
+          await channel.send({ type: "broadcast", event: "message", payload: joinMessage });
+        }
       });
 
     worldChatChannelRef.current = channel;
@@ -276,7 +287,7 @@ const Lobby = () => {
                   <div className="h-36 overflow-y-auto bg-secondary/40 rounded-md p-2 space-y-1 text-xs">
                     {worldChatMessages.length === 0 && <p className="text-muted-foreground">No messages yet.</p>}
                     {worldChatMessages.map((msg) => (
-                      <WorldChatMessageItem key={msg.id} msg={msg} />
+                      <WorldChatMessageItem key={msg.id} msg={msg} onlineUserIds={onlineUserIds} />
                     ))}
                   </div>
                   <div className="flex gap-2 mt-2">
