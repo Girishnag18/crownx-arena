@@ -6,16 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { usePrivateRoom } from "@/hooks/usePrivateRoom";
 import { supabase } from "@/integrations/supabase/client";
+import WorldChatMessageItem, { type ChatMessage } from "@/components/chat/WorldChatMessage";
 
 type Mode = null | "quick_play" | "world_arena" | "private";
 
-interface WorldChatMessage {
-  id: string;
-  sender: string;
-  text: string;
-  createdAt: number;
-  kind?: "chat" | "system";
-}
+type WorldChatMessage = ChatMessage;
 
 const TIME_LIMIT_OPTIONS = [
   { label: "No limit", value: null },
@@ -36,6 +31,7 @@ const Lobby = () => {
   const [worldChatInput, setWorldChatInput] = useState("");
   const [worldChatMessages, setWorldChatMessages] = useState<WorldChatMessage[]>([]);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const matchmaking = useMatchmaking();
@@ -63,19 +59,29 @@ const Lobby = () => {
   useEffect(() => {
     if (mode !== "world_arena") return;
 
-    const channel = supabase.channel("world-matchmaking-chat")
+    const channel = supabase.channel("world-matchmaking-chat", {
+        config: { presence: { key: user?.id || "anon" } },
+      })
       .on("broadcast", { event: "message" }, ({ payload }) => {
         setWorldChatMessages((prev) => [...prev.slice(-59), payload as WorldChatMessage]);
       })
-      .subscribe(async () => {
-        const joinMessage: WorldChatMessage = {
-          id: crypto.randomUUID(),
-          sender: "Arena",
-          text: `${user?.user_metadata?.username || "Player"} entered World Arena`,
-          createdAt: Date.now(),
-          kind: "system",
-        };
-        await channel.send({ type: "broadcast", event: "message", payload: joinMessage });
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const ids = new Set<string>(Object.keys(state));
+        setOnlineUserIds(ids);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ user_id: user?.id, username: user?.user_metadata?.username });
+          const joinMessage: WorldChatMessage = {
+            id: crypto.randomUUID(),
+            sender: "Arena",
+            text: `${user?.user_metadata?.username || "Player"} entered World Arena`,
+            createdAt: Date.now(),
+            kind: "system",
+          };
+          await channel.send({ type: "broadcast", event: "message", payload: joinMessage });
+        }
       });
 
     worldChatChannelRef.current = channel;
@@ -106,6 +112,7 @@ const Lobby = () => {
     const message: WorldChatMessage = {
       id: crypto.randomUUID(),
       sender: user?.user_metadata?.username || "Player",
+      senderId: user?.id,
       text,
       createdAt: Date.now(),
       kind: "chat",
@@ -221,6 +228,19 @@ const Lobby = () => {
             <motion.div key="searching" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-4 h-4" /> Back</button>
 
+              {mode === "world_arena" && (
+                <div className="glass-card px-4 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </span>
+                    <span className="text-sm font-display font-bold">{onlineUserIds.size} player{onlineUserIds.size !== 1 ? "s" : ""} online</span>
+                  </div>
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+
               <div className="glass-card p-4">
                 <p className="font-display text-sm font-bold mb-2 flex items-center gap-2"><Clock3 className="w-4 h-4 text-primary" />Match Time Limit</p>
                 <div className="flex flex-wrap gap-2">
@@ -280,9 +300,7 @@ const Lobby = () => {
                   <div className="h-36 overflow-y-auto bg-secondary/40 rounded-md p-2 space-y-1 text-xs">
                     {worldChatMessages.length === 0 && <p className="text-muted-foreground">No messages yet.</p>}
                     {worldChatMessages.map((msg) => (
-                      <p key={msg.id} className={msg.kind === "system" ? "text-primary/90 italic" : ""}>
-                        {msg.kind === "system" ? msg.text : <><span className="text-primary font-semibold">{msg.sender}:</span> {msg.text}</>}
-                      </p>
+                      <WorldChatMessageItem key={msg.id} msg={msg} onlineUserIds={onlineUserIds} />
                     ))}
                   </div>
                   <div className="flex gap-2 mt-2">
