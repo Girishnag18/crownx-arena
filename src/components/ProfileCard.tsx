@@ -14,6 +14,7 @@ interface ProfileCardProps {
   games_played: number;
   win_streak: number;
   compact?: boolean;
+  isOnline?: boolean;
 }
 
 const getSkillLevel = (elo: number): { label: string; color: string } => {
@@ -36,6 +37,7 @@ const ProfileCard = ({
   games_played,
   win_streak,
   compact = false,
+  isOnline,
 }: ProfileCardProps) => {
   const skill = getSkillLevel(crown_score);
   const winRate = games_played > 0 ? Math.round((wins / games_played) * 100) : 0;
@@ -43,12 +45,17 @@ const ProfileCard = ({
   if (compact) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3">
-        <Avatar className="w-10 h-10 border border-primary/30">
-          <AvatarImage src={avatar_url || undefined} alt={username} />
-          <AvatarFallback className="bg-secondary text-primary font-bold">
-            {(username || "P").slice(0, 1).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="w-10 h-10 border border-primary/30">
+            <AvatarImage src={avatar_url || undefined} alt={username} />
+            <AvatarFallback className="bg-secondary text-primary font-bold">
+              {(username || "P").slice(0, 1).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          {isOnline !== undefined && (
+            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+          )}
+        </div>
         <div className="flex-1 min-w-0">
           <p className="font-display font-bold text-sm truncate">{username || "Player"}</p>
           <p className="text-[10px] text-muted-foreground font-mono">UID: {player_uid}</p>
@@ -66,12 +73,17 @@ const ProfileCard = ({
       {/* Header gradient */}
       <div className="h-20 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative">
         <div className="absolute -bottom-8 left-6">
-          <Avatar className="w-16 h-16 border-4 border-card shadow-lg">
-            <AvatarImage src={avatar_url || undefined} alt={username} />
-            <AvatarFallback className="bg-secondary text-primary text-xl font-bold">
-              {(username || "P").slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="w-16 h-16 border-4 border-card shadow-lg">
+              <AvatarImage src={avatar_url || undefined} alt={username} />
+              <AvatarFallback className="bg-secondary text-primary text-xl font-bold">
+                {(username || "P").slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {isOnline !== undefined && (
+              <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[3px] border-card ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+            )}
+          </div>
         </div>
       </div>
 

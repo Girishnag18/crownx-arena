@@ -17,9 +17,10 @@ export interface ChatMessage {
 
 interface Props {
   msg: ChatMessage;
+  onlineUserIds?: Set<string>;
 }
 
-const WorldChatMessageItem = ({ msg }: Props) => {
+const WorldChatMessageItem = ({ msg, onlineUserIds }: Props) => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -99,6 +100,7 @@ const WorldChatMessageItem = ({ msg }: Props) => {
                 losses={profile.losses}
                 games_played={profile.games_played}
                 win_streak={profile.win_streak}
+                isOnline={onlineUserIds ? onlineUserIds.has(msg.senderId || "") : undefined}
               />
               {!isSelf && (
                 <div className="px-4 pb-3">
