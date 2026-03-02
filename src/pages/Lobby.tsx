@@ -6,16 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { usePrivateRoom } from "@/hooks/usePrivateRoom";
 import { supabase } from "@/integrations/supabase/client";
+import WorldChatMessageItem, { type ChatMessage } from "@/components/chat/WorldChatMessage";
 
 type Mode = null | "quick_play" | "world_arena" | "private";
 
-interface WorldChatMessage {
-  id: string;
-  sender: string;
-  text: string;
-  createdAt: number;
-  kind?: "chat" | "system";
-}
+type WorldChatMessage = ChatMessage;
 
 const TIME_LIMIT_OPTIONS = [
   { label: "No limit", value: null },
@@ -106,6 +101,7 @@ const Lobby = () => {
     const message: WorldChatMessage = {
       id: crypto.randomUUID(),
       sender: user?.user_metadata?.username || "Player",
+      senderId: user?.id,
       text,
       createdAt: Date.now(),
       kind: "chat",
@@ -280,9 +276,7 @@ const Lobby = () => {
                   <div className="h-36 overflow-y-auto bg-secondary/40 rounded-md p-2 space-y-1 text-xs">
                     {worldChatMessages.length === 0 && <p className="text-muted-foreground">No messages yet.</p>}
                     {worldChatMessages.map((msg) => (
-                      <p key={msg.id} className={msg.kind === "system" ? "text-primary/90 italic" : ""}>
-                        {msg.kind === "system" ? msg.text : <><span className="text-primary font-semibold">{msg.sender}:</span> {msg.text}</>}
-                      </p>
+                      <WorldChatMessageItem key={msg.id} msg={msg} />
                     ))}
                   </div>
                   <div className="flex gap-2 mt-2">
