@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Chess, Square } from "chess.js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Json } from "@/integrations/supabase/types";
 
 interface GameData {
   id: string;
@@ -10,7 +11,8 @@ interface GameData {
   player1_id: string;
   player2_id: string;
   current_fen: string;
-  moves: any[];
+  duration_seconds: number | null;
+  moves: Json[];
   result_type: string;
   winner_id: string | null;
 }
@@ -51,7 +53,7 @@ export const useOnlineGame = (gameId: string | null) => {
         setGameData(gd);
         const chess = new Chess(gd.current_fen);
         setGame(chess);
-        setPlayerColor(gd.player_white === user.id ? "w" : "b");
+        setPlayerColor(gd.player_white === user.id ? "w" : gd.player_black === user.id ? "b" : null);
 
         const playerIds = [gd.player_white, gd.player_black].filter(Boolean) as string[];
         if (playerIds.length > 0) {
@@ -186,7 +188,7 @@ export const useOnlineGame = (gameId: string | null) => {
           return {
             ...prev,
             current_fen: gameCopy.fen(),
-            moves: [...(prev.moves || []), { from, to, san: move.san, promotion }],
+            moves: [...(prev.moves || []), { from, to, san: move.san, promotion: promotion ?? null }],
           };
         });
 
@@ -207,13 +209,13 @@ export const useOnlineGame = (gameId: string | null) => {
           endedAt = new Date().toISOString();
         }
 
-        const newMoves = [...previousMoves, { from, to, san: move.san, promotion }];
+        const newMoves = [...previousMoves, { from, to, san: move.san, promotion: promotion ?? null }];
 
         const { error } = await supabase
           .from("games")
           .update({
             current_fen: gameCopy.fen(),
-            moves: newMoves as any,
+            moves: newMoves as Json,
             result_type: resultType,
             winner_id: winnerId,
             ended_at: endedAt,
@@ -246,6 +248,7 @@ export const useOnlineGame = (gameId: string | null) => {
 
   const resign = useCallback(async () => {
     if (!gameData || !user) return;
+    if (gameData.player_white !== user.id && gameData.player_black !== user.id) return;
     const winnerId = gameData.player_white === user.id ? gameData.player_black : gameData.player_white;
     await supabase
       .from("games")
@@ -269,6 +272,7 @@ export const useOnlineGame = (gameId: string | null) => {
     lastSyncedAt,
     makeMove,
     resign,
+    isSpectator: !!user && !!gameData && gameData.player_white !== user.id && gameData.player_black !== user.id,
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",

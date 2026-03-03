@@ -6,8 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
+import { supabase } from "@/integrations/supabase/client";
 import ChessBoard from "@/components/chess/ChessBoard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { trackArenaEvent } from "@/services/arenaAnalytics";
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
@@ -32,6 +34,7 @@ const Play = () => {
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+  const [nextLiveGameId, setNextLiveGameId] = useState<string | null>(null);
   const aiWorkerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -46,10 +49,42 @@ const Play = () => {
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
   const isComputerGame = !isOnline && mode === "computer";
+  const isSpectator = isOnline && online.isSpectator;
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [authLoading, user, navigate]);
+
+  useEffect(() => {
+    if (isOnline && isSpectator && user?.id && onlineGameId) {
+      void trackArenaEvent(user.id, "spectate_open", { game_id: onlineGameId });
+    }
+  }, [isOnline, isSpectator, onlineGameId, user?.id]);
+
+  useEffect(() => {
+    if (!isSpectator || !onlineGameId) return;
+    const loadNextLive = async () => {
+      const liveFeedClient = supabase as unknown as {
+        from: (table: string) => {
+          select: (fields: string) => {
+            neq: (col: string, value: string) => {
+              order: (col2: string, opts: { ascending: boolean }) => {
+                limit: (count: number) => Promise<{ data: Array<{ id: string }> | null }>;
+              };
+            };
+          };
+        };
+      };
+      const { data } = await liveFeedClient
+        .from("live_games_feed")
+        .select("id")
+        .neq("id", onlineGameId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      setNextLiveGameId((data && data.length > 0) ? data[0].id : null);
+    };
+    void loadNextLive();
+  }, [isSpectator, onlineGameId]);
 
   useEffect(() => {
     if (!isOnline || !online.lastSyncedAt) return;
@@ -177,17 +212,19 @@ const Play = () => {
     if (isOnline && online.gameData) {
       const rt = online.gameData.result_type;
       if (rt === "checkmate") {
+        if (isSpectator) return "Checkmate";
         const won = online.gameData.winner_id === user?.id;
         return won ? "You win by checkmate!" : "You lost by checkmate";
       }
       if (rt === "resignation") {
+        if (isSpectator) return "Game ended by resignation";
         const won = online.gameData.winner_id === user?.id;
-        return won ? "Opponent resigned — You win!" : "You resigned";
+        return won ? "Opponent resigned - You win!" : "You resigned";
       }
       if (rt === "stalemate") return "Stalemate — Draw";
       if (rt === "draw") return "Draw";
       if (rt === "in_progress") {
-        return online.isMyTurn ? "Your turn" : "Opponent's turn";
+        return isSpectator ? `${game.turn() === "w" ? "White" : "Black"} to move` : (online.isMyTurn ? "Your turn" : "Opponent's turn");
       }
     }
     if (game.isCheckmate()) return `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`;
@@ -195,7 +232,7 @@ const Play = () => {
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
-  }, [game, isInCheck, isOnline, online, user]);
+  }, [game, isInCheck, isOnline, isSpectator, online, user]);
 
   const displayMoves = isOnline && online.gameData?.moves
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
@@ -259,22 +296,30 @@ const Play = () => {
   const localBottomName = localBottomColor === "w" ? "White Player" : "Black Player";
 
   const topPlayerName = isOnline
-    ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 400})`
+    ? isSpectator
+      ? `${online.blackPlayer?.username || "Black"} (${online.blackPlayer?.crown_score ?? 400})`
+      : `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 400})`
     : isComputerGame
       ? `${computerColor === "b" ? `AI (${aiElo})` : `You (${playerElo})`}`
       : localTopName;
 
   const bottomPlayerName = isOnline
-    ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
+    ? isSpectator
+      ? `${online.whitePlayer?.username || "White"} (${online.whitePlayer?.crown_score ?? 400})`
+      : `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
     : isComputerGame
       ? `${computerColor === "w" ? `AI (${aiElo})` : `You (${playerElo})`}`
       : localBottomName;
 
   const topAvatar = isOnline
-    ? (online.playerColor === "w" ? online.blackPlayer?.avatar_url : online.whitePlayer?.avatar_url)
+    ? isSpectator
+      ? online.blackPlayer?.avatar_url
+      : (online.playerColor === "w" ? online.blackPlayer?.avatar_url : online.whitePlayer?.avatar_url)
     : null;
   const bottomAvatar = isOnline
-    ? (online.playerColor === "w" ? online.whitePlayer?.avatar_url : online.blackPlayer?.avatar_url)
+    ? isSpectator
+      ? online.whitePlayer?.avatar_url
+      : (online.playerColor === "w" ? online.whitePlayer?.avatar_url : online.blackPlayer?.avatar_url)
     : null;
 
   const PlayerLabel = ({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) => (
@@ -359,6 +404,15 @@ const Play = () => {
               className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
             >
               <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
+                {isSpectator && <span className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">Spectating</span>}
+                {isSpectator && nextLiveGameId && (
+                  <button
+                    onClick={() => navigate(`/play?game=${nextLiveGameId}&spectate=true`)}
+                    className="rounded border border-border/70 bg-secondary/40 px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    Next Live
+                  </button>
+                )}
                 {!isOnline && (
                   <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
@@ -366,7 +420,7 @@ const Play = () => {
                 {gameStatus}
               </div>
               <div className="flex gap-2">
-                {isOnline && !online.isGameOver && (
+                {isOnline && !online.isGameOver && !isSpectator && (
                   <button
                     onClick={async () => {
                       if (!window.confirm("Are you sure to resign?")) return;
@@ -403,11 +457,13 @@ const Play = () => {
             <div className="glass-card p-5 border-glow space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
-                {isOnline ? `Live match: ${online.playerName} vs ${online.opponentName}` : "Local Game"}
+                {isOnline ? `Live match: ${online.whitePlayer?.username || "White"} vs ${online.blackPlayer?.username || "Black"}` : "Local Game"}
               </h3>
               <p className="text-xs text-muted-foreground">
                 {isOnline
-                  ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
+                  ? isSpectator
+                    ? "Spectating this live match in read-only mode."
+                    : `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
                   : isComputerGame
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
                     : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} pieces are at the bottom for the current player.`}
@@ -466,12 +522,30 @@ const Play = () => {
               >
                 <Crown className="w-8 h-8 text-primary mx-auto mb-2" />
                 <p className="font-display font-bold text-lg mb-3">{gameStatus}</p>
-                <button
-                  onClick={isOnline ? () => navigate("/lobby") : resetLocalGame}
-                  className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform"
-                >
-                  {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    onClick={isOnline ? () => navigate("/lobby") : resetLocalGame}
+                    className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform"
+                  >
+                    {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
+                  </button>
+                  {isSpectator && online.gameData?.winner_id && (
+                    <button
+                      onClick={() => {
+                        if (user?.id) {
+                          void trackArenaEvent(user.id, "play_winner_now_click", {
+                            winner_id: online.gameData?.winner_id,
+                            duration_seconds: online.gameData?.duration_seconds,
+                          });
+                        }
+                        navigate(`/lobby?challengeWinner=${online.gameData?.winner_id}&duration=${online.gameData?.duration_seconds ?? ""}`);
+                      }}
+                      className="border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-display font-bold text-xs tracking-wider px-4 py-2.5 rounded-lg"
+                    >
+                      PLAY WINNER NOW
+                    </button>
+                  )}
+                </div>
               </motion.div>
             )}
 
@@ -508,3 +582,5 @@ const Play = () => {
 };
 
 export default Play;
+
+

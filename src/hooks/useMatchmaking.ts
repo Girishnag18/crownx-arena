@@ -4,12 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 type MatchState = "idle" | "searching" | "matched" | "error";
+type MatchmakingOptions = {
+  preferLocalRegion?: boolean;
+  targetPlayerId?: string | null;
+};
+type ChallengeStatus = "idle" | "pending" | "accepted" | "expired";
+type QueueScope = "local" | "global" | null;
 
 export const useMatchmaking = () => {
   const { user } = useAuth();
   const [state, setState] = useState<MatchState>("idle");
   const [gameId, setGameId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [challengeStatus, setChallengeStatus] = useState<ChallengeStatus>("idle");
+  const [challengeTargetId, setChallengeTargetId] = useState<string | null>(null);
+  const [queueScope, setQueueScope] = useState<QueueScope>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const gameSubscriptionRef = useRef<RealtimeChannel | null>(null);
 
@@ -86,18 +95,34 @@ export const useMatchmaking = () => {
     }, 3000);
   }, [clearSearchState, user]);
 
-  const startSearch = useCallback(async (gameMode = "quick_play", durationSeconds: number | null = null) => {
+  const startSearch = useCallback(async (
+    gameMode = "quick_play",
+    durationSeconds: number | null = null,
+    options: MatchmakingOptions = {},
+  ) => {
     if (!user) return;
 
     setState("searching");
     setError(null);
     setGameId(null);
+    if (options.targetPlayerId) {
+      setChallengeStatus("pending");
+      setChallengeTargetId(options.targetPlayerId);
+    } else {
+      setChallengeStatus("idle");
+      setChallengeTargetId(null);
+    }
 
     try {
       attachRealtimeGameListener(durationSeconds);
 
       const { data, error: fnError } = await supabase.functions.invoke("matchmake", {
-        body: { game_mode: gameMode, duration_seconds: durationSeconds },
+        body: {
+          game_mode: gameMode,
+          duration_seconds: durationSeconds,
+          prefer_local_region: !!options.preferLocalRegion,
+          target_player_id: options.targetPlayerId ?? null,
+        },
       });
 
       if (fnError) throw fnError;
@@ -105,12 +130,19 @@ export const useMatchmaking = () => {
       if (data?.matched && data?.game?.id) {
         setState("matched");
         setGameId(data.game.id);
+        if (options.targetPlayerId) setChallengeStatus("accepted");
         clearSearchState();
+      } else if (options.targetPlayerId && data?.challenge_pending) {
+        setChallengeStatus("pending");
+        setQueueScope((data?.queue_scope as QueueScope) ?? "local");
+      } else if (data?.queued) {
+        setQueueScope((data?.queue_scope as QueueScope) ?? "local");
       }
     } catch (err: unknown) {
       clearSearchState();
       setState("error");
       setError(err instanceof Error ? err.message : "Matchmaking failed");
+      if (options.targetPlayerId) setChallengeStatus("expired");
     }
   }, [attachRealtimeGameListener, clearSearchState, user]);
 
@@ -122,6 +154,9 @@ export const useMatchmaking = () => {
     setState("idle");
     setGameId(null);
     setError(null);
+    setChallengeStatus("idle");
+    setChallengeTargetId(null);
+    setQueueScope(null);
   }, [clearSearchState, user]);
 
   useEffect(() => {
@@ -130,5 +165,5 @@ export const useMatchmaking = () => {
     };
   }, [clearSearchState]);
 
-  return { state, gameId, error, startSearch, cancelSearch };
+  return { state, gameId, error, challengeStatus, challengeTargetId, queueScope, startSearch, cancelSearch };
 };
