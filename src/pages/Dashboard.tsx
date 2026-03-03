@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Bot, Swords } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -54,15 +54,6 @@ interface RecentGame {
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
-
-const rankEmoji: Record<string, string> = {
-  Bronze: "🥉",
-  Silver: "🥈",
-  Gold: "🥇",
-  Platinum: "💎",
-  Diamond: "💠",
-  "Crown Master": "👑",
 };
 
 const Dashboard = () => {
@@ -333,8 +324,8 @@ const Dashboard = () => {
     await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
     await (supabase as any).from("tournaments").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", tournament.id);
 
-    publishInGameNotification(`Sorry! Tournament "${tournament.name}" was called off. Crowns have been refunded.`, "warning");
-    toast.success("Tournament called off, refunds issued and in-game apology notice sent.");
+    publishInGameNotification(`Tournament "${tournament.name}" was cancelled. Entry crowns were refunded to all players.`, "warning");
+    toast.success("Tournament cancelled. Refunds were issued and players were notified.");
 
     loadTournaments();
     loadProfile(user.id);
@@ -384,6 +375,37 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
       <div className="container mx-auto max-w-7xl">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 md:p-6"
+        >
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Arena Hub</p>
+              <h1 className="font-display text-2xl font-bold">Welcome back, {displayName}</h1>
+              <p className="text-sm text-muted-foreground">Manage your competitive profile, queue into matches, and run tournaments from one place.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs md:min-w-[320px]">
+              <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
+                <p className="text-muted-foreground">Crown Score</p>
+                <p className="font-display text-base font-bold">{profile?.crown_score ?? 400}</p>
+              </div>
+              <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
+                <p className="text-muted-foreground">Global Rank</p>
+                <p className="font-display text-base font-bold">{globalRank ? `#${globalRank}` : "--"}</p>
+              </div>
+              <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
+                <p className="text-muted-foreground">Win Streak</p>
+                <p className="font-display text-base font-bold">{profile?.win_streak ?? 0}</p>
+              </div>
+              <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
+                <p className="text-muted-foreground">Leaderboard Size</p>
+                <p className="font-display text-base font-bold">{liveLeaderboardSize}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.08 } } }} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <motion.div variants={fadeUp} className="lg:col-span-4 glass-card p-6 border-glow">
             <div className="flex items-center gap-4 mb-6">
@@ -399,7 +421,10 @@ const Dashboard = () => {
               <div>
                 <h2 className="font-display text-xl font-bold">{displayName}</h2>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gradient-gold font-display font-bold">{rankEmoji[profile?.rank_tier || "Bronze"]} {profile?.rank_tier || "Bronze"}</span>
+                  <span className="rounded-md border border-primary/35 bg-primary/10 px-2 py-0.5 font-display text-xs font-bold tracking-wide text-primary">
+                    {(profile?.rank_tier || "Bronze").split(" ").map((word) => word[0]).join("").slice(0, 2)}
+                  </span>
+                  <span className="text-gradient-gold font-display font-bold">{profile?.rank_tier || "Bronze"}</span>
                   <span className="text-muted-foreground">• Level {profile?.level || 1}</span>
                 </div>
               </div>
@@ -455,7 +480,11 @@ const Dashboard = () => {
 
           <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
             <div className="space-y-3">
-              {[{ icon: Globe, title: "Online Mode", desc: "Quick Play, World Arena and Private Rooms", to: "/lobby", accent: true }].map((mode) => (
+              {[
+                { icon: Globe, title: "Online Arena", desc: "Quick Play, World Arena, and Private Rooms", to: "/lobby", accent: true },
+                { icon: Bot, title: "Play vs Computer", desc: "Start an AI practice match instantly", to: "/play?mode=computer", accent: false },
+                { icon: Swords, title: "Local Pass & Play", desc: "Play both sides on this device", to: "/play", accent: false },
+              ].map((mode) => (
                 <motion.button key={mode.title} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate(mode.to)} className={`glass-card p-5 text-left group transition-all duration-300 ${mode.accent ? "border-primary/30 gold-glow" : "hover:border-primary/20"}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${mode.accent ? "bg-primary/20" : "bg-secondary"}`}><mode.icon className={`w-5 h-5 ${mode.accent ? "text-primary" : "text-muted-foreground"}`} /></div>
@@ -518,10 +547,10 @@ const Dashboard = () => {
                           <div className="text-[11px] text-muted-foreground mt-0.5">📅 {new Date(tournament.starts_at).toLocaleString()}</div>
                         )}
                         <div className="text-[11px] text-primary/90 mt-0.5">
-                          {tournament.status === "cancelled" ? `Tournament cancelled${tournament.cancelled_at ? ` • auto-delete at ${new Date(new Date(tournament.cancelled_at).getTime() + 1000 * 60 * 60).toLocaleTimeString()}` : ""}` : isReady ? "Tournament ready to start • realtime qualifier analysis active" : "Ready for registrations • Entry: 2 crowns"}
+                          {tournament.status === "cancelled" ? `Tournament cancelled${tournament.cancelled_at ? ` • archive at ${new Date(new Date(tournament.cancelled_at).getTime() + 1000 * 60 * 60).toLocaleTimeString()}` : ""}` : isReady ? "Ready to start • live qualifier insights active" : "Open for registration • Entry: 2 crowns"}
                         </div>
                       </div>
-                      <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id || tournament.status === "cancelled"} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2C)"}</button>
+                      <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id || tournament.status === "cancelled"} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2 crowns)"}</button>
                     </div>
 
                     {isReady && (
@@ -535,13 +564,13 @@ const Dashboard = () => {
                         }}
                         className="text-[11px] px-2 py-1 rounded bg-secondary"
                       >
-                        View realtime Top 10 qualifiers
+                        View live Top 10 qualifiers
                       </button>
                     )}
 
                     {tournament.created_by === user?.id && tournament.status !== "cancelled" && (
                       <button onClick={() => cancelTournament(tournament)} className="text-[11px] px-2 py-1 rounded bg-destructive/10 text-destructive font-semibold">
-                        Call off tournament + refund crowns
+                        Cancel tournament and refund
                       </button>
                     )}
                   </div>

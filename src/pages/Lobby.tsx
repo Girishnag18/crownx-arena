@@ -52,6 +52,12 @@ type ArenaSnapshotRow = {
     winner_name: string | null;
   }> | null;
 };
+type MatchmakingQueueRow = {
+  player_id: string;
+  rating: number;
+  region: string | null;
+  created_at: string;
+};
 
 const TIME_LIMIT_OPTIONS = [
   { label: "No limit", value: null },
@@ -225,24 +231,30 @@ const Lobby = () => {
   const fetchMatchQuality = useCallback(async () => {
     if (!user?.id) return;
 
-    const [profileResult, queueResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("crown_score, country")
-        .eq("id", user.id)
-        .single(),
-      (durationSeconds === null
-        ? supabase
-            .from("matchmaking_queue")
-            .select("player_id, rating, region, created_at")
-            .eq("game_mode", "world_arena")
-            .is("duration_seconds", null)
-        : supabase
-            .from("matchmaking_queue")
-            .select("player_id, rating, region, created_at")
-            .eq("game_mode", "world_arena")
-            .eq("duration_seconds", durationSeconds)),
-    ]);
+    const profileResult = await supabase
+      .from("profiles")
+      .select("crown_score, country")
+      .eq("id", user.id)
+      .single();
+
+    const queueClient = supabase as unknown as {
+      from: (table: string) => {
+        select: (columns: string) => {
+          eq: (column: string, value: string | number) => {
+            is: (column: string, value: null) => Promise<{ data: MatchmakingQueueRow[] | null }>;
+            eq: (column: string, value: number | string) => Promise<{ data: MatchmakingQueueRow[] | null }>;
+          };
+        };
+      };
+    };
+
+    const queueBase = queueClient
+      .from("matchmaking_queue")
+      .select("player_id, rating, region, created_at")
+      .eq("game_mode", "world_arena");
+    const queueResult = durationSeconds === null
+      ? await queueBase.is("duration_seconds", null)
+      : await queueBase.eq("duration_seconds", durationSeconds);
 
     const myRating = profileResult.data?.crown_score ?? null;
     const myRegion = profileResult.data?.country ?? null;

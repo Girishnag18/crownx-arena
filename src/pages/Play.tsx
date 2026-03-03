@@ -1,9 +1,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +16,6 @@ const Play = () => {
   const [searchParams] = useSearchParams();
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
-  const isRankedAI = searchParams.get("ranked") === "true";
 
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
@@ -34,8 +32,10 @@ const Play = () => {
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+  const [localResult, setLocalResult] = useState<{ type: "resignation"; winnerColor: "w" | "b"; loserColor: "w" | "b" } | null>(null);
   const [nextLiveGameId, setNextLiveGameId] = useState<string | null>(null);
   const aiWorkerRef = useRef<Worker | null>(null);
+  const aiTurnRequestRef = useRef(0);
 
   useEffect(() => {
     // Initialize the AI worker
@@ -148,38 +148,61 @@ const Play = () => {
     setShowCheckmateBanner(false);
     setShowPostGameReview(false);
     setLocalBottomColor("w");
+    setLocalResult(null);
   };
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = isOnline ? online.isGameOver : game.isGameOver();
+  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || !!localResult);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
     if (game.turn() !== computerColor) return;
 
-    const timer = window.setTimeout(() => {
-      if (aiWorkerRef.current) {
-        const searchDepth = aiAccuracy >= 95 ? 3 : 2;
-        
-        aiWorkerRef.current.onmessage = (e: MessageEvent) => {
-          const { move } = e.data;
-          if (move) {
-            handleLocalMove(move.from as Square, move.to as Square, move.promotion);
-          }
-        };
+    const requestId = aiTurnRequestRef.current + 1;
+    aiTurnRequestRef.current = requestId;
+    let settled = false;
+    const legalMoves = game.moves({ verbose: true });
 
-        aiWorkerRef.current.postMessage({
-          fen: game.fen(),
-          depth: searchDepth,
-          aiAccuracy,
-          computerColor
-        });
+    const fallbackMove = () => {
+      if (settled || legalMoves.length === 0 || aiTurnRequestRef.current !== requestId) return;
+      settled = true;
+      const pick = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+      handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+    };
+
+    const hardDeadlineTimer = window.setTimeout(fallbackMove, 5000);
+    const timer = window.setTimeout(() => {
+      if (!aiWorkerRef.current) {
+        fallbackMove();
+        return;
       }
-    }, 350);
+      const searchDepth = aiAccuracy >= 95 ? 3 : 2;
+
+      aiWorkerRef.current.onmessage = (e: MessageEvent) => {
+        if (settled || aiTurnRequestRef.current !== requestId) return;
+        settled = true;
+        window.clearTimeout(hardDeadlineTimer);
+        const { move } = e.data as { move?: { from: string; to: string; promotion?: string } | null };
+        if (move) {
+          handleLocalMove(move.from as Square, move.to as Square, move.promotion);
+          return;
+        }
+        fallbackMove();
+      };
+
+      aiWorkerRef.current.postMessage({
+        fen: game.fen(),
+        depth: searchDepth,
+        aiAccuracy,
+        computerColor
+      });
+    }, 150);
 
     return () => {
       window.clearTimeout(timer);
+      window.clearTimeout(hardDeadlineTimer);
+      settled = true;
       if (aiWorkerRef.current) {
         aiWorkerRef.current.onmessage = null;
       }
@@ -209,6 +232,10 @@ const Play = () => {
   }, [game]);
 
   const gameStatus = useMemo(() => {
+    if (!isOnline && localResult?.type === "resignation") {
+      if (isComputerGame) return "You resigned";
+      return `${localResult.loserColor === "w" ? "White" : "Black"} resigned - ${localResult.winnerColor === "w" ? "White" : "Black"} wins`;
+    }
     if (isOnline && online.gameData) {
       const rt = online.gameData.result_type;
       if (rt === "checkmate") {
@@ -221,18 +248,27 @@ const Play = () => {
         const won = online.gameData.winner_id === user?.id;
         return won ? "Opponent resigned - You win!" : "You resigned";
       }
-      if (rt === "stalemate") return "Stalemate — Draw";
+      if (rt === "stalemate") return "Stalemate - Draw";
       if (rt === "draw") return "Draw";
       if (rt === "in_progress") {
         return isSpectator ? `${game.turn() === "w" ? "White" : "Black"} to move` : (online.isMyTurn ? "Your turn" : "Opponent's turn");
       }
     }
     if (game.isCheckmate()) return `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`;
-    if (game.isStalemate()) return "Stalemate — Draw";
+    if (game.isStalemate()) return "Stalemate - Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
-  }, [game, isInCheck, isOnline, isSpectator, online, user]);
+  }, [game, isComputerGame, isInCheck, isOnline, isSpectator, localResult, online, user]);
+
+  const resignLocalGame = () => {
+    if (!window.confirm("Are you sure to resign?")) return;
+    const loserColor: "w" | "b" = isComputerGame ? (computerColor === "w" ? "b" : "w") : game.turn();
+    const winnerColor: "w" | "b" = loserColor === "w" ? "b" : "w";
+    setLocalResult({ type: "resignation", winnerColor, loserColor });
+    setShowCheckmateBanner(false);
+    setShowPostGameReview(true);
+  };
 
   const displayMoves = isOnline && online.gameData?.moves
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
@@ -361,7 +397,7 @@ const Play = () => {
                 game={game}
                 onMove={isOnline ? handleOnlineMove : handleLocalMove}
                 flipped={flipped}
-                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (isComputerGame ? game.turn() === computerColor : false)}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (!!localResult || (isComputerGame ? game.turn() === computerColor : false))}
                 lastMove={derivedLastMove}
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
@@ -420,19 +456,23 @@ const Play = () => {
                 {gameStatus}
               </div>
               <div className="flex gap-2">
-                {isOnline && !online.isGameOver && !isSpectator && (
+                {!isGameOver && !isSpectator && (
                   <button
                     onClick={async () => {
-                      if (!window.confirm("Are you sure to resign?")) return;
-                      setResignPending(true);
-                      await online.resign();
-                      setResignPending(false);
+                      if (isOnline) {
+                        if (!window.confirm("Are you sure to resign?")) return;
+                        setResignPending(true);
+                        await online.resign();
+                        setResignPending(false);
+                        return;
+                      }
+                      resignLocalGame();
                     }}
-                    disabled={resignPending}
+                    disabled={isOnline && resignPending}
                     className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
                     title="Resign"
                   >
-                    {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+                    {isOnline && resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
                 {!isOnline && (
@@ -582,5 +622,3 @@ const Play = () => {
 };
 
 export default Play;
-
-

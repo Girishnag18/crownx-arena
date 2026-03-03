@@ -6,10 +6,14 @@ export const trackArenaEvent = async (
   payload: Record<string, unknown> = {},
 ) => {
   if (!userId) return;
-  await supabase.from("arena_events").insert({
+  const analyticsClient = supabase as unknown as {
+    from: (table: string) => {
+      insert: (values: Record<string, unknown>) => Promise<{ error: unknown }>;
+    };
+  };
+  await analyticsClient.from("arena_events").insert({
     user_id: userId,
     event_name: eventName,
     payload,
   });
 };
-
