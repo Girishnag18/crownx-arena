@@ -15,6 +15,13 @@ interface GameData {
   moves: Json[];
   result_type: string;
   winner_id: string | null;
+  clock_white_ms: number | null;
+  clock_black_ms: number | null;
+  increment_ms: number;
+  delay_ms: number;
+  time_control_mode: "none" | "fischer" | "delay" | "bronstein";
+  clock_last_move_at: string | null;
+  flag_fall_winner_id: string | null;
 }
 
 interface PlayerSummary {
@@ -35,6 +42,7 @@ export const useOnlineGame = (gameId: string | null) => {
   const [syncState, setSyncState] = useState<"connecting" | "live" | "offline">("connecting");
   const [pendingMove, setPendingMove] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [clockTick, setClockTick] = useState(0);
 
   // Load game data
   useEffect(() => {
@@ -167,6 +175,47 @@ export const useOnlineGame = (gameId: string | null) => {
     };
   }, [gameData]);
 
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setClockTick((prev) => (prev + 1) % 10000);
+    }, 250);
+    return () => {
+      window.clearInterval(id);
+    };
+  }, []);
+
+  const deriveClocks = useCallback((data: GameData | null) => {
+    if (!data) return { white: null as number | null, black: null as number | null };
+    if (data.clock_white_ms === null || data.clock_black_ms === null || !data.clock_last_move_at || data.result_type !== "in_progress") {
+      return { white: data.clock_white_ms, black: data.clock_black_ms };
+    }
+
+    const elapsedMs = Math.max(0, Date.now() - new Date(data.clock_last_move_at).getTime());
+    const isWhiteTurn = data.current_fen?.includes(" w ");
+
+    let white = data.clock_white_ms;
+    let black = data.clock_black_ms;
+
+    if (isWhiteTurn) {
+      if (data.time_control_mode === "delay") {
+        white = Math.max(0, white - Math.max(0, elapsedMs - data.delay_ms));
+      } else if (data.time_control_mode === "bronstein") {
+        white = Math.max(0, white - elapsedMs + Math.min(elapsedMs, data.delay_ms));
+      } else {
+        white = Math.max(0, white - elapsedMs);
+      }
+    } else {
+      if (data.time_control_mode === "delay") {
+        black = Math.max(0, black - Math.max(0, elapsedMs - data.delay_ms));
+      } else if (data.time_control_mode === "bronstein") {
+        black = Math.max(0, black - elapsedMs + Math.min(elapsedMs, data.delay_ms));
+      } else {
+        black = Math.max(0, black - elapsedMs);
+      }
+    }
+    return { white, black };
+  }, []);
+
   const makeMove = useCallback(
     async (from: Square, to: Square, promotion?: string) => {
       if (!game || !gameData || !user || !playerColor) return false;
@@ -211,19 +260,49 @@ export const useOnlineGame = (gameId: string | null) => {
 
         const newMoves = [...previousMoves, { from, to, san: move.san, promotion: promotion ?? null }];
 
-        const { error } = await supabase
-          .from("games")
-          .update({
-            current_fen: gameCopy.fen(),
-            moves: newMoves as Json,
-            result_type: resultType,
-            winner_id: winnerId,
-            ended_at: endedAt,
-            pgn: gameCopy.pgn(),
-          })
-          .eq("id", gameData.id);
+        const { data, error } = await (supabase as unknown as {
+          rpc: (
+            fn: string,
+            args: Record<string, unknown>,
+          ) => Promise<{
+            data: Array<{
+              ok: boolean;
+              result_type: string;
+              winner_id: string | null;
+              clock_white_ms: number | null;
+              clock_black_ms: number | null;
+              current_fen: string;
+              moves: Json;
+            }> | null;
+            error: { message: string } | null;
+          }>;
+        }).rpc("submit_online_move", {
+          p_game_id: gameData.id,
+          p_from: from,
+          p_to: to,
+          p_san: move.san,
+          p_promotion: promotion ?? null,
+          p_new_fen: gameCopy.fen(),
+          p_result_type: resultType,
+          p_winner_id: winnerId,
+          p_pgn: gameCopy.pgn(),
+        });
 
         if (error) throw error;
+        if (data && data.length > 0) {
+          const row = data[0];
+          setGameData((prev) => prev ? {
+            ...prev,
+            current_fen: row.current_fen,
+            moves: (row.moves as Json[]) || newMoves,
+            result_type: row.result_type,
+            winner_id: row.winner_id,
+            clock_white_ms: row.clock_white_ms,
+            clock_black_ms: row.clock_black_ms,
+            clock_last_move_at: new Date().toISOString(),
+          } : prev);
+          setGame(new Chess(row.current_fen));
+        }
 
         setLastSyncedAt(new Date());
         setPendingMove(false);
@@ -279,5 +358,9 @@ export const useOnlineGame = (gameId: string | null) => {
     opponentName: playerColor === "w" ? blackPlayer?.username || "Opponent" : whitePlayer?.username || "Opponent",
     isMyTurn: game ? game.turn() === playerColor : false,
     isGameOver: gameData?.result_type !== "in_progress" && gameData?.result_type !== "pending",
+    clock: (() => {
+      void clockTick;
+      return deriveClocks(gameData);
+    })(),
   };
 };

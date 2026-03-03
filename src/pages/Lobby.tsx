@@ -67,6 +67,13 @@ const TIME_LIMIT_OPTIONS = [
   { label: "30 min", value: 30 * 60 },
 ];
 
+const TIME_MODE_OPTIONS: Array<{ label: string; value: "none" | "fischer" | "delay" | "bronstein" }> = [
+  { label: "None", value: "none" },
+  { label: "Fischer", value: "fischer" },
+  { label: "Delay", value: "delay" },
+  { label: "Bronstein", value: "bronstein" },
+];
+
 const Lobby = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -79,6 +86,9 @@ const Lobby = () => {
   const [worldChatInput, setWorldChatInput] = useState("");
   const [worldChatMessages, setWorldChatMessages] = useState<WorldChatMessage[]>([]);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
+  const [timeControlMode, setTimeControlMode] = useState<"none" | "fischer" | "delay" | "bronstein">("none");
+  const [incrementMs, setIncrementMs] = useState(0);
+  const [delayMs, setDelayMs] = useState(0);
   const [preferLocalRegion, setPreferLocalRegion] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [arenaStats, setArenaStats] = useState({
@@ -729,10 +739,13 @@ const Lobby = () => {
     void matchmaking.startSearch("world_arena", parsedDuration && [600, 900, 1200, 1800].includes(parsedDuration) ? parsedDuration : null, {
       preferLocalRegion,
       targetPlayerId: challengeWinner,
+      timeControlMode,
+      incrementMs,
+      delayMs,
     });
     toast.success("Direct challenge queued");
     setSearchParams({}, { replace: true });
-  }, [matchmaking, preferLocalRegion, searchParams, setSearchParams, user?.id]);
+  }, [delayMs, incrementMs, matchmaking, preferLocalRegion, searchParams, setSearchParams, timeControlMode, user?.id]);
 
   const sendWorldMessage = async () => {
     const text = worldChatInput.trim();
@@ -783,9 +796,65 @@ const Lobby = () => {
     await matchmaking.startSearch("world_arena", game.durationSeconds ?? null, {
       preferLocalRegion,
       targetPlayerId: game.winnerId,
+      timeControlMode,
+      incrementMs,
+      delayMs,
     });
     toast.success(`Queued to challenge ${game.winnerName || "winner"} (${formatDuration(game.durationSeconds)})`);
   };
+
+  const renderTimeControlConfig = () => (
+    <>
+      <div className="mt-3">
+        <p className="text-xs text-muted-foreground mb-1">Clock mode</p>
+        <div className="flex flex-wrap gap-2">
+          {TIME_MODE_OPTIONS.map((option) => (
+            <button key={option.value} onClick={() => setTimeControlMode(option.value)} className={`text-xs px-2.5 py-1 rounded-md border ${timeControlMode === option.value ? "bg-primary/20 border-primary text-primary" : "bg-secondary/40 border-border"}`}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {timeControlMode !== "none" && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <label className="space-y-1">
+            <span className="text-muted-foreground">{timeControlMode === "fischer" ? "Increment (sec)" : "Delay (sec)"}</span>
+            <input
+              type="number"
+              min={0}
+              max={60}
+              value={timeControlMode === "fischer" ? Math.floor(incrementMs / 1000) : Math.floor(delayMs / 1000)}
+              onChange={(e) => {
+                const sec = Math.max(0, Math.min(60, Number(e.target.value) || 0));
+                if (timeControlMode === "fischer") setIncrementMs(sec * 1000);
+                else setDelayMs(sec * 1000);
+              }}
+              className="w-full bg-secondary border border-border rounded-md px-2 py-1.5"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="text-muted-foreground">Preset</span>
+            <select
+              className="w-full bg-secondary border border-border rounded-md px-2 py-1.5"
+              value=""
+              onChange={(e) => {
+                const sec = Number(e.target.value);
+                if (!sec) return;
+                if (timeControlMode === "fischer") setIncrementMs(sec * 1000);
+                else setDelayMs(sec * 1000);
+              }}
+            >
+              <option value="">Select</option>
+              <option value="2">2s</option>
+              <option value="3">3s</option>
+              <option value="5">5s</option>
+              <option value="10">10s</option>
+            </select>
+          </label>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
@@ -834,11 +903,12 @@ const Lobby = () => {
                     </button>
                   ))}
                 </div>
+                {renderTimeControlConfig()}
               </div>
 
               {privateRoom.status === "idle" && (
                 <div className="space-y-4">
-                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationSeconds); setCreatingRoom(false); }} disabled={creatingRoom} className="w-full glass-card p-6 border-primary/30 gold-glow text-center disabled:opacity-70">
+                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationSeconds, { mode: timeControlMode, incrementMs, delayMs }); setCreatingRoom(false); }} disabled={creatingRoom} className="w-full glass-card p-6 border-primary/30 gold-glow text-center disabled:opacity-70">
                     {creatingRoom ? <Loader2 className="w-8 h-8 text-primary mx-auto mb-2 animate-spin" /> : <Users className="w-8 h-8 text-primary mx-auto mb-2" />}
                     <h3 className="font-display font-bold">Create Room</h3>
                     <p className="text-sm text-muted-foreground">Get a code to share with a friend</p>
@@ -848,7 +918,7 @@ const Lobby = () => {
                     <h3 className="font-display font-bold text-sm mb-3">Join a Room</h3>
                     <div className="flex gap-2">
                       <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())} placeholder="Enter room code" maxLength={6} className="flex-1 bg-secondary border border-border rounded-lg px-4 py-2.5 font-mono text-lg tracking-widest text-center uppercase focus:outline-none focus:ring-2 focus:ring-primary" />
-                      <button onClick={async () => { setJoiningRoom(true); await privateRoom.joinRoom(joinCode, durationSeconds); setJoiningRoom(false); }} disabled={joinCode.length < 6 || joiningRoom} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg disabled:opacity-50 transition-all hover:scale-105">
+                      <button onClick={async () => { setJoiningRoom(true); await privateRoom.joinRoom(joinCode, durationSeconds, { mode: timeControlMode, incrementMs, delayMs }); setJoiningRoom(false); }} disabled={joinCode.length < 6 || joiningRoom} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg disabled:opacity-50 transition-all hover:scale-105">
                         {joiningRoom ? <Loader2 className="w-4 h-4 animate-spin" /> : "JOIN"}
                       </button>
                     </div>
@@ -896,6 +966,7 @@ const Lobby = () => {
                     </button>
                   ))}
                 </div>
+                {renderTimeControlConfig()}
                 {mode === "world_arena" && (
                   <label className="mt-3 flex items-center justify-between gap-3 rounded-md border border-border/70 bg-secondary/30 px-3 py-2 text-xs">
                     <span className="text-muted-foreground">Prefer local region (lower ping)</span>
@@ -1017,7 +1088,7 @@ const Lobby = () => {
                       </span>
                     </div>
                   )}
-                  <button onClick={() => matchmaking.startSearch(mode!, durationSeconds, { preferLocalRegion: mode === "world_arena" ? preferLocalRegion : false })} className="bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider px-8 py-3 rounded-lg gold-glow hover:scale-105 transition-transform">FIND MATCH</button>
+                  <button onClick={() => matchmaking.startSearch(mode!, durationSeconds, { preferLocalRegion: mode === "world_arena" ? preferLocalRegion : false, timeControlMode, incrementMs, delayMs })} className="bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider px-8 py-3 rounded-lg gold-glow hover:scale-105 transition-transform">FIND MATCH</button>
                 </div>
               )}
 
@@ -1055,7 +1126,7 @@ const Lobby = () => {
                 <div className="glass-card p-8 text-center">
                   <p className="text-destructive mb-4">{matchmaking.error}</p>
                   <div className="flex gap-3 justify-center">
-                    <button onClick={() => matchmaking.startSearch(mode!, durationSeconds, { preferLocalRegion: mode === "world_arena" ? preferLocalRegion : false })} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">TRY AGAIN</button>
+                    <button onClick={() => matchmaking.startSearch(mode!, durationSeconds, { preferLocalRegion: mode === "world_arena" ? preferLocalRegion : false, timeControlMode, incrementMs, delayMs })} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">TRY AGAIN</button>
                     <button
                       onClick={() => navigate("/play?mode=computer&ranked=true")}
                       className="inline-flex items-center gap-2 border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10"

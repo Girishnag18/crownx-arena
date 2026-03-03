@@ -58,6 +58,7 @@ const Play = () => {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [boardTheme, setBoardTheme] = useState<BoardTheme>("wood");
   const [pieceTheme, setPieceTheme] = useState<PieceTheme>("neo");
+  const analysisEnqueuedRef = useRef<string | null>(null);
 
   const aiWorkerRef = useRef<Worker | null>(null);
   const aiTurnRequestRef = useRef(0);
@@ -295,6 +296,21 @@ const Play = () => {
   }, [game, isComputerGame, isGameOver]);
 
   useEffect(() => {
+    if (!isOnline || !online.gameData?.id || !isGameOver || !user?.id) return;
+    if (analysisEnqueuedRef.current === online.gameData.id) return;
+    analysisEnqueuedRef.current = online.gameData.id;
+
+    const rpc = supabase as unknown as {
+      rpc: (name: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+    };
+
+    void rpc.rpc("enqueue_game_analysis", {
+      target_game: online.gameData.id,
+      p_priority: 80,
+    });
+  }, [isGameOver, isOnline, online.gameData?.id, user?.id]);
+
+  useEffect(() => {
     if (!game.isCheckmate()) {
       setShowCheckmateBanner(false);
       setShowPostGameReview(false);
@@ -498,6 +514,25 @@ const Play = () => {
     </div>
   );
 
+  const formatClock = (ms: number | null) => {
+    if (ms === null) return "--:--";
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const mm = Math.floor(total / 60);
+    const ss = total % 60;
+    return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  };
+
+  const topClock = isOnline
+    ? (isSpectator
+      ? formatClock(online.clock.black)
+      : formatClock(online.playerColor === "w" ? online.clock.black : online.clock.white))
+    : null;
+  const bottomClock = isOnline
+    ? (isSpectator
+      ? formatClock(online.clock.white)
+      : formatClock(online.playerColor === "w" ? online.clock.white : online.clock.black))
+    : null;
+
   if (isOnline && online.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pt-20">
@@ -514,10 +549,13 @@ const Play = () => {
             <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} />
-                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                <div className="flex items-center gap-3">
+                  {isOnline && <span className="rounded border border-border/70 bg-background/60 px-2 py-1 text-xs font-mono">{topClock}</span>}
+                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                   {capturedPieces.capturedByBlack.length === 0
                     ? <span className="text-xs text-muted-foreground">No captures</span>
                     : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -553,10 +591,13 @@ const Play = () => {
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
-                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                <div className="flex items-center gap-3">
+                  {isOnline && <span className="rounded border border-border/70 bg-background/60 px-2 py-1 text-xs font-mono">{bottomClock}</span>}
+                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                   {capturedPieces.capturedByWhite.length === 0
                     ? <span className="text-xs text-muted-foreground">No captures</span>
                     : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                  </div>
                 </div>
               </div>
             </div>

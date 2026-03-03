@@ -17,7 +17,10 @@ export const usePrivateRoom = () => {
     return code;
   };
 
-  const createRoom = useCallback(async (durationSeconds: number | null = null) => {
+  const createRoom = useCallback(async (
+    durationSeconds: number | null = null,
+    timeControl: { mode?: "none" | "fischer" | "delay" | "bronstein"; incrementMs?: number; delayMs?: number } = {},
+  ) => {
     if (!user) return;
     setError(null);
     let createdRoom: { room_code: string; id: string } | null = null;
@@ -26,7 +29,14 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds })
+        .insert({
+          room_code: code,
+          host_id: user.id,
+          duration_seconds: durationSeconds,
+          time_control_mode: timeControl.mode ?? (durationSeconds ? "fischer" : "none"),
+          increment_ms: timeControl.incrementMs ?? 0,
+          delay_ms: timeControl.delayMs ?? 0,
+        })
         .select()
         .single();
 
@@ -46,7 +56,11 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
-  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null) => {
+  const joinRoom = useCallback(async (
+    code: string,
+    selectedDurationSeconds: number | null = null,
+    timeControl: { mode?: "none" | "fischer" | "delay" | "bronstein"; incrementMs?: number; delayMs?: number } = {},
+  ) => {
     if (!user) return;
     setError(null);
 
@@ -69,6 +83,12 @@ export const usePrivateRoom = () => {
       setError("Room not found or already full");
       return;
     }
+    const roomMeta = room as typeof room & {
+      duration_seconds?: number | null;
+      time_control_mode?: "none" | "fischer" | "delay" | "bronstein";
+      increment_ms?: number;
+      delay_ms?: number;
+    };
 
     if (room.host_id === user.id) {
       setError("You can't join your own room");
@@ -93,7 +113,10 @@ export const usePrivateRoom = () => {
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
-    const durationSeconds = selectedDurationSeconds ?? null;
+    const durationSeconds = selectedDurationSeconds ?? roomMeta.duration_seconds ?? null;
+    const timeControlMode = timeControl.mode ?? roomMeta.time_control_mode ?? (durationSeconds ? "fischer" : "none");
+    const incrementMs = timeControl.incrementMs ?? roomMeta.increment_ms ?? 0;
+    const delayMs = timeControl.delayMs ?? roomMeta.delay_ms ?? 0;
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
@@ -107,6 +130,12 @@ export const usePrivateRoom = () => {
         result_type: "in_progress",
         current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         moves: [],
+        clock_white_ms: durationSeconds ? durationSeconds * 1000 : null,
+        clock_black_ms: durationSeconds ? durationSeconds * 1000 : null,
+        increment_ms: incrementMs,
+        delay_ms: delayMs,
+        time_control_mode: timeControlMode,
+        clock_last_move_at: new Date().toISOString(),
       })
       .select()
       .single();

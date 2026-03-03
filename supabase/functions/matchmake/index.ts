@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const gameMode = body?.game_mode ?? "quick_play";
     const durationSeconds = body?.duration_seconds ?? null;
+    const timeControlMode = body?.time_control_mode ?? (durationSeconds ? "fischer" : "none");
+    const incrementMs = Number(body?.increment_ms ?? 0);
+    const delayMs = Number(body?.delay_ms ?? 0);
     const preferLocalRegion = !!body?.prefer_local_region;
     const targetPlayerIdRaw = body?.target_player_id;
     const targetPlayerId = typeof targetPlayerIdRaw === "string" && targetPlayerIdRaw.length > 0
@@ -71,6 +74,26 @@ Deno.serve(async (req) => {
 
     if (durationSeconds !== null && !allowedDurations.has(durationSeconds)) {
       return new Response(JSON.stringify({ error: "Invalid duration_seconds" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const allowedTimeControlModes = new Set(["none", "fischer", "delay", "bronstein"]);
+    if (!allowedTimeControlModes.has(timeControlMode)) {
+      return new Response(JSON.stringify({ error: "Invalid time_control_mode" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!Number.isFinite(incrementMs) || incrementMs < 0 || incrementMs > 60_000) {
+      return new Response(JSON.stringify({ error: "Invalid increment_ms" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!Number.isFinite(delayMs) || delayMs < 0 || delayMs > 60_000) {
+      return new Response(JSON.stringify({ error: "Invalid delay_ms" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -160,6 +183,7 @@ Deno.serve(async (req) => {
         .limit(8);
 
       query = durationSeconds === null ? query.is("duration_seconds", null) : query.eq("duration_seconds", durationSeconds);
+      query = query.eq("time_control_mode", timeControlMode).eq("increment_ms", incrementMs).eq("delay_ms", delayMs);
 
       if (onlyTarget) {
         query = query.eq("player_id", onlyTarget);
@@ -194,6 +218,10 @@ Deno.serve(async (req) => {
       incomingQuery = durationSeconds === null
         ? incomingQuery.is("duration_seconds", null)
         : incomingQuery.eq("duration_seconds", durationSeconds);
+      incomingQuery = incomingQuery
+        .eq("time_control_mode", timeControlMode)
+        .eq("increment_ms", incrementMs)
+        .eq("delay_ms", delayMs);
 
       const { data: incoming } = await incomingQuery;
       if (incoming && incoming.length > 0) {
@@ -243,6 +271,12 @@ Deno.serve(async (req) => {
           current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
           moves: [],
           duration_seconds: durationSeconds,
+          clock_white_ms: durationSeconds ? durationSeconds * 1000 : null,
+          clock_black_ms: durationSeconds ? durationSeconds * 1000 : null,
+          increment_ms: incrementMs,
+          delay_ms: delayMs,
+          time_control_mode: timeControlMode,
+          clock_last_move_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -291,6 +325,9 @@ Deno.serve(async (req) => {
           rating: playerRating,
           region: playerRegion,
           duration_seconds: durationSeconds,
+          time_control_mode: timeControlMode,
+          increment_ms: incrementMs,
+          delay_ms: delayMs,
           target_player_id: targetPlayerId,
           challenge_expires_at: challengeExpiresAt,
           queue_state: myScope === "global" ? "queued_global" : "queued_local",
@@ -328,9 +365,12 @@ Deno.serve(async (req) => {
     }
 
     await logEvent("queue_started", {
-      game_mode: gameMode,
-      duration_seconds: durationSeconds,
-      scope: myScope,
+        game_mode: gameMode,
+        duration_seconds: durationSeconds,
+        time_control_mode: timeControlMode,
+        increment_ms: incrementMs,
+        delay_ms: delayMs,
+        scope: myScope,
       target_player_id: targetPlayerId,
       prefer_local_region: preferLocalRegion,
     });

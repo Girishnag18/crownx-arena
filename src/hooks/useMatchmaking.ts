@@ -7,6 +7,9 @@ type MatchState = "idle" | "searching" | "matched" | "error";
 type MatchmakingOptions = {
   preferLocalRegion?: boolean;
   targetPlayerId?: string | null;
+  timeControlMode?: "none" | "fischer" | "delay" | "bronstein";
+  incrementMs?: number;
+  delayMs?: number;
 };
 type ChallengeStatus = "idle" | "pending" | "accepted" | "expired";
 type QueueScope = "local" | "global" | null;
@@ -33,7 +36,12 @@ export const useMatchmaking = () => {
     }
   }, []);
 
-  const attachRealtimeGameListener = useCallback((durationSeconds: number | null) => {
+  const attachRealtimeGameListener = useCallback((
+    durationSeconds: number | null,
+    timeControlMode: "none" | "fischer" | "delay" | "bronstein",
+    incrementMs: number,
+    delayMs: number,
+  ) => {
     if (!user) return;
 
     clearSearchState();
@@ -54,14 +62,18 @@ export const useMatchmaking = () => {
             player2_id: string | null;
             result_type: string;
             duration_seconds: number | null;
+            time_control_mode: "none" | "fischer" | "delay" | "bronstein";
+            increment_ms: number;
+            delay_ms: number;
           };
 
           const joined = row.player1_id === user.id || row.player2_id === user.id;
           const durationMatch = durationSeconds === null
             ? row.duration_seconds === null
             : row.duration_seconds === durationSeconds;
+          const tcMatch = row.time_control_mode === timeControlMode && row.increment_ms === incrementMs && row.delay_ms === delayMs;
 
-          if (joined && row.result_type === "in_progress" && durationMatch) {
+          if (joined && row.result_type === "in_progress" && durationMatch && tcMatch) {
             setState("matched");
             setGameId(row.id);
             clearSearchState();
@@ -74,7 +86,36 @@ export const useMatchmaking = () => {
 
     // Fallback polling for environments where realtime is delayed.
     pollRef.current = setInterval(async () => {
-      let gamesQuery = supabase
+      const queryClient = supabase as unknown as {
+        from: (table: string) => {
+          select: (cols: string) => {
+            eq: (col: string, value: string | number) => {
+              or: (expr: string) => {
+                order: (col2: string, opts: { ascending: boolean }) => {
+                  limit: (count: number) => {
+                    is: (col3: string, value3: null) => {
+                      eq: (col4: string, value4: string | number) => {
+                        eq: (col5: string, value5: string | number) => {
+                          eq: (col6: string, value6: string | number) => Promise<{ data: Array<{ id: string }> | null }>;
+                        };
+                      };
+                    };
+                    eq: (col3: string, value3: string | number) => {
+                      eq: (col4: string, value4: string | number) => {
+                        eq: (col5: string, value5: string | number) => {
+                          eq: (col6: string, value6: string | number) => Promise<{ data: Array<{ id: string }> | null }>;
+                        };
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+
+      const base = queryClient
         .from("games")
         .select("id")
         .eq("result_type", "in_progress")
@@ -82,11 +123,17 @@ export const useMatchmaking = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      gamesQuery = durationSeconds === null
-        ? gamesQuery.is("duration_seconds", null)
-        : gamesQuery.eq("duration_seconds", durationSeconds);
-
-      const { data: games } = await gamesQuery;
+      const { data: games } = durationSeconds === null
+        ? await base
+            .is("duration_seconds", null)
+            .eq("time_control_mode", timeControlMode)
+            .eq("increment_ms", incrementMs)
+            .eq("delay_ms", delayMs)
+        : await base
+            .eq("duration_seconds", durationSeconds)
+            .eq("time_control_mode", timeControlMode)
+            .eq("increment_ms", incrementMs)
+            .eq("delay_ms", delayMs);
       if (games && games.length > 0) {
         setState("matched");
         setGameId(games[0].id);
@@ -114,7 +161,10 @@ export const useMatchmaking = () => {
     }
 
     try {
-      attachRealtimeGameListener(durationSeconds);
+      const timeControlMode = options.timeControlMode ?? (durationSeconds ? "fischer" : "none");
+      const incrementMs = options.incrementMs ?? 0;
+      const delayMs = options.delayMs ?? 0;
+      attachRealtimeGameListener(durationSeconds, timeControlMode, incrementMs, delayMs);
 
       const { data, error: fnError } = await supabase.functions.invoke("matchmake", {
         body: {
@@ -122,6 +172,9 @@ export const useMatchmaking = () => {
           duration_seconds: durationSeconds,
           prefer_local_region: !!options.preferLocalRegion,
           target_player_id: options.targetPlayerId ?? null,
+          time_control_mode: timeControlMode,
+          increment_ms: incrementMs,
+          delay_ms: delayMs,
         },
       });
 
