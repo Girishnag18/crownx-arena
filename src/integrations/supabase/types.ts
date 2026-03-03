@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      elo_history: {
+        Row: {
+          elo_after: number
+          elo_before: number
+          elo_delta: number | null
+          game_id: string | null
+          id: string
+          player_id: string
+          recorded_at: string
+        }
+        Insert: {
+          elo_after: number
+          elo_before: number
+          elo_delta?: number | null
+          game_id?: string | null
+          id?: string
+          player_id: string
+          recorded_at?: string
+        }
+        Update: {
+          elo_after?: number
+          elo_before?: number
+          elo_delta?: number | null
+          game_id?: string | null
+          id?: string
+          player_id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elo_history_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           addressee_id: string

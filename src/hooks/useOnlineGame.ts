@@ -223,6 +223,39 @@ export const useOnlineGame = (gameId: string | null) => {
 
         if (error) throw error;
 
+        // Record elo_history snapshot if game ended
+        if (resultType !== "in_progress") {
+          try {
+            const { data: currentProfile } = await supabase
+              .from("profiles")
+              .select("crown_score")
+              .eq("id", user.id)
+              .single();
+            
+            if (currentProfile) {
+              const eloBefore = currentProfile.crown_score;
+              // Simple elo delta: +20 for win, -15 for loss, 0 for draw
+              const eloChange = winnerId === user.id ? 20 : winnerId ? -15 : 0;
+              const eloAfter = Math.max(0, eloBefore + eloChange);
+
+              await supabase.from("elo_history").insert({
+                player_id: user.id,
+                game_id: gameData.id,
+                elo_before: eloBefore,
+                elo_after: eloAfter,
+              } as any);
+
+              // Update profile crown_score
+              await supabase
+                .from("profiles")
+                .update({ crown_score: eloAfter } as any)
+                .eq("id", user.id);
+            }
+          } catch {
+            // Non-critical: don't fail the move if elo tracking fails
+          }
+        }
+
         setLastSyncedAt(new Date());
         setPendingMove(false);
 
