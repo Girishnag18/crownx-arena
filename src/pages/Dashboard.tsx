@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Bot, Swords } from "lucide-react";
@@ -7,6 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { publishInGameNotification } from "@/components/InGameNotificationBar";
+import TournamentBracket, { type TournamentBracketMatch } from "@/components/tournament/TournamentBracket";
 
 interface Profile {
   username: string | null;
@@ -30,6 +32,9 @@ interface Tournament {
   created_by?: string;
   status: "open" | "full" | "live" | "completed" | "cancelled";
   starts_at: string | null;
+  round_seconds?: number | null;
+  current_round?: number | null;
+  champion_id?: string | null;
   cancelled_at?: string | null;
   registration_count?: { count: number }[];
 }
@@ -74,6 +79,8 @@ const Dashboard = () => {
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
+  const [expandedTournamentId, setExpandedTournamentId] = useState<string | null>(null);
+  const [tournamentMatches, setTournamentMatches] = useState<Record<string, TournamentBracketMatch[]>>({});
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
@@ -132,7 +139,7 @@ const Dashboard = () => {
   const loadTournaments = async () => {
     const { data } = await (supabase as any)
       .from("tournaments")
-      .select("id, name, prize_pool, max_players, created_by, status, starts_at, registration_count:tournament_registrations(count)")
+      .select("id, name, prize_pool, max_players, created_by, status, starts_at, round_seconds, current_round, champion_id, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -146,6 +153,43 @@ const Dashboard = () => {
       .eq("player_id", userId);
 
     if (data) setRegisteredTournamentIds((data as any[]).map((entry: any) => entry.tournament_id));
+  };
+
+  const loadTournamentMatches = async (tournamentId: string) => {
+    const { data: matches } = await (supabase as any)
+      .from("tournament_matches")
+      .select("id, round_number, match_number, player1_id, player2_id, winner_id, status, game_id, deadline_at")
+      .eq("tournament_id", tournamentId)
+      .order("round_number", { ascending: true })
+      .order("match_number", { ascending: true });
+
+    const rows = (matches || []) as Array<{
+      id: string;
+      round_number: number;
+      match_number: number;
+      player1_id: string | null;
+      player2_id: string | null;
+      winner_id: string | null;
+      status: TournamentBracketMatch["status"];
+      game_id: string | null;
+      deadline_at: string | null;
+    }>;
+
+    const ids = Array.from(new Set(rows.flatMap((r) => [r.player1_id, r.player2_id]).filter(Boolean))) as string[];
+    let namesMap = new Map<string, string>();
+    if (ids.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", ids);
+      namesMap = new Map((profiles || []).map((p) => [p.id, p.username || "Player"]));
+    }
+
+    setTournamentMatches((prev) => ({
+      ...prev,
+      [tournamentId]: rows.map((r) => ({
+        ...r,
+        player1_name: r.player1_id ? namesMap.get(r.player1_id) || "Player" : null,
+        player2_name: r.player2_id ? namesMap.get(r.player2_id) || "Player" : null,
+      })),
+    }));
   };
 
   useEffect(() => {
@@ -197,6 +241,12 @@ const Dashboard = () => {
         loadTournaments();
         loadMyRegistrations(user.id);
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "tournament_matches" }, () => {
+        if (expandedTournamentId) {
+          void loadTournamentMatches(expandedTournamentId);
+          void loadTournaments();
+        }
+      })
       .subscribe();
 
     return () => {
@@ -205,7 +255,26 @@ const Dashboard = () => {
       supabase.removeChannel(ratingChannel);
       supabase.removeChannel(tournamentChannel);
     };
-  }, [user]);
+  }, [expandedTournamentId, user]);
+
+  useEffect(() => {
+    if (!user?.id || !expandedTournamentId) return;
+    const t = tournaments.find((row) => row.id === expandedTournamentId);
+    if (!t || t.status !== "live" || t.created_by !== user.id) return;
+
+    const rpcClient = supabase as unknown as { rpc: (name: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }> };
+    const id = window.setInterval(async () => {
+      const { error } = await rpcClient.rpc("tournament_bracket_tick", { target_tournament: expandedTournamentId });
+      if (!error) {
+        void loadTournaments();
+        void loadTournamentMatches(expandedTournamentId);
+      }
+    }, 10_000);
+
+    return () => {
+      window.clearInterval(id);
+    };
+  }, [expandedTournamentId, tournaments, user?.id]);
 
 
   const createTournament = async () => {
@@ -269,6 +338,59 @@ const Dashboard = () => {
     loadMyRegistrations(user.id);
     loadTournaments();
     loadProfile(user.id);
+  };
+
+  const startTournamentBracket = async (tournamentId: string, roundSeconds: number | null = 600) => {
+    const { error } = await (supabase as any).rpc("start_tournament_bracket", {
+      target_tournament: tournamentId,
+      p_round_seconds: roundSeconds ?? 600,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Bracket started. Round 1 pairings are live.");
+    await loadTournaments();
+    await loadTournamentMatches(tournamentId);
+  };
+
+  const advanceTournamentBracket = async (tournamentId: string) => {
+    const { error } = await (supabase as any).rpc("advance_tournament_bracket", {
+      target_tournament: tournamentId,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Next round pairings generated.");
+    await loadTournaments();
+    await loadTournamentMatches(tournamentId);
+  };
+
+  const launchTournamentMatch = async (matchId: string) => {
+    const { data, error } = await (supabase as any).rpc("create_tournament_match_game", {
+      target_match: matchId,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Match game created.");
+    if (expandedTournamentId) await loadTournamentMatches(expandedTournamentId);
+    if (data) navigate(`/play?game=${data}`);
+  };
+
+  const reportTournamentWinner = async (matchId: string, winnerId: string) => {
+    const { error } = await (supabase as any).rpc("report_tournament_match_result", {
+      target_match: matchId,
+      target_winner: winnerId,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Result reported.");
+    if (expandedTournamentId) await loadTournamentMatches(expandedTournamentId);
   };
 
   const getTournamentLeaderboard = async (tournamentId: string): Promise<TournamentLeaderboardRow[]> => {
@@ -357,7 +479,7 @@ const Dashboard = () => {
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [location.search]);
+  }, [location.search, navigate]);
 
   const liveTournamentCount = useMemo(
     () => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled").length,
@@ -553,6 +675,41 @@ const Dashboard = () => {
                       <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id || tournament.status === "cancelled"} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2 crowns)"}</button>
                     </div>
 
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={async () => {
+                          const next = expandedTournamentId === tournament.id ? null : tournament.id;
+                          setExpandedTournamentId(next);
+                          if (next) await loadTournamentMatches(next);
+                        }}
+                        className="text-[11px] px-2 py-1 rounded bg-secondary"
+                      >
+                        {expandedTournamentId === tournament.id ? "Hide Bracket" : "View Bracket"}
+                      </button>
+                      {tournament.created_by === user?.id && tournament.status !== "live" && tournament.status !== "completed" && tournament.status !== "cancelled" && (
+                        <button
+                          onClick={() => void startTournamentBracket(tournament.id, tournament.round_seconds ?? 600)}
+                          className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary"
+                        >
+                          Start Bracket
+                        </button>
+                      )}
+                      {tournament.created_by === user?.id && tournament.status === "live" && (
+                        <button
+                          onClick={() => void advanceTournamentBracket(tournament.id)}
+                          className="text-[11px] px-2 py-1 rounded bg-emerald-500/10 text-emerald-300"
+                        >
+                          Advance Round
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate(`/tournaments/${tournament.id}/bracket`)}
+                        className="text-[11px] px-2 py-1 rounded bg-secondary"
+                      >
+                        Full Bracket
+                      </button>
+                    </div>
+
                     {isReady && (
                       <button
                         onClick={async () => {
@@ -572,6 +729,22 @@ const Dashboard = () => {
                       <button onClick={() => cancelTournament(tournament)} className="text-[11px] px-2 py-1 rounded bg-destructive/10 text-destructive font-semibold">
                         Cancel tournament and refund
                       </button>
+                    )}
+
+                    {expandedTournamentId === tournament.id && (
+                      <TournamentBracket
+                        tournamentId={tournament.id}
+                        status={tournament.status}
+                        currentRound={tournament.current_round ?? null}
+                        roundSeconds={tournament.round_seconds ?? 600}
+                        isCreator={tournament.created_by === user?.id}
+                        userId={user?.id || null}
+                        matches={tournamentMatches[tournament.id] || []}
+                        onStart={() => void startTournamentBracket(tournament.id, tournament.round_seconds ?? 600)}
+                        onAdvance={() => void advanceTournamentBracket(tournament.id)}
+                        onLaunchGame={(matchId) => void launchTournamentMatch(matchId)}
+                        onReportWinner={(matchId, winnerId) => void reportTournamentWinner(matchId, winnerId)}
+                      />
                     )}
                   </div>
                 );

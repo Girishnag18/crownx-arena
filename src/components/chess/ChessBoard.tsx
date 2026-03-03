@@ -1,26 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
-
-const PIECE_UNICODE: Record<string, string> = {
-  wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
-  bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
-};
-
-const PIECE_SPRITES: Record<string, string> = {
-  wp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wp.png",
-  wn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wn.png",
-  wb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wb.png",
-  wr: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wr.png",
-  wq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wq.png",
-  wk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
-  bp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bp.png",
-  bn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bn.png",
-  bb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bb.png",
-  br: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/br.png",
-  bq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bq.png",
-  bk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bk.png",
-};
+import { BOARD_THEME_CLASSES, BoardTheme, PIECE_THEME_SPRITES, PIECE_UNICODE, PieceTheme } from "@/utils/chessThemes";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -33,22 +14,35 @@ interface ChessBoardProps {
   lastMove?: { from: Square; to: Square } | null;
   sizeClassName?: string;
   maxBoardSizePx?: number;
+  boardTheme?: BoardTheme;
+  pieceTheme?: PieceTheme;
 }
 
-const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName, maxBoardSizePx }: ChessBoardProps) => {
+const ChessBoard = ({
+  game,
+  onMove,
+  flipped = false,
+  disabled = false,
+  lastMove,
+  sizeClassName,
+  maxBoardSizePx,
+  boardTheme = "wood",
+  pieceTheme = "neo",
+}: ChessBoardProps) => {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
-
+  const boardClasses = BOARD_THEME_CLASSES[boardTheme];
+  const pieceSprites = PIECE_THEME_SPRITES[pieceTheme];
   const isInCheck = game.isCheck();
 
   const kingSquare = useMemo(() => {
     if (!isInCheck) return null;
-    for (let r = 0; r < 8; r++) {
-      for (let f = 0; f < 8; f++) {
+    for (let r = 0; r < 8; r += 1) {
+      for (let f = 0; f < 8; f += 1) {
         const sq = (FILES[f] + RANKS[r]) as Square;
         const p = game.get(sq);
         if (p && p.type === "k" && p.color === game.turn()) return sq;
@@ -94,12 +88,11 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
   }, [game, selectedSquare, onMove, disabled, promotionPending]);
 
   const handlePromotion = useCallback((piece: string) => {
-    if (promotionPending) {
-      onMove(promotionPending.from, promotionPending.to, piece);
-      setPromotionPending(null);
-      setSelectedSquare(null);
-      setLegalMoves([]);
-    }
+    if (!promotionPending) return;
+    onMove(promotionPending.from, promotionPending.to, piece);
+    setPromotionPending(null);
+    setSelectedSquare(null);
+    setLegalMoves([]);
   }, [promotionPending, onMove]);
 
   return (
@@ -124,7 +117,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                     onClick={() => handlePromotion(p)}
                     className="w-14 h-14 rounded-lg bg-secondary hover:bg-primary/20 hover:border-primary/40 border border-border flex items-center justify-center text-3xl transition-colors"
                   >
-                    {PIECE_UNICODE[(game.turn() + p)]}
+                    {PIECE_UNICODE[`${game.turn()}${p}`]}
                   </button>
                 ))}
               </div>
@@ -152,7 +145,7 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                 key={square}
                 onClick={() => handleSquareClick(square)}
                 className={`board-square relative flex items-center justify-center transition-all duration-300 ${
-                  isLight ? "chess-board-light" : "chess-board-dark"
+                  isLight ? boardClasses.light : boardClasses.dark
                 } ${isSelected ? "!bg-primary/35" : ""} ${
                   isLastMove ? "!bg-yellow-300/60" : ""
                 } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
@@ -172,31 +165,37 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
                   <div className="absolute inset-[5%] rounded-full border-[3px] border-yellow-500/45" />
                 )}
                 {piece && (
-                  <motion.img
-                    layout
-                    initial={{ scale: 0.9, opacity: 0.85 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
-                    src={PIECE_SPRITES[piece.color + piece.type]}
-                    alt={`${piece.color === "w" ? "white" : "black"} ${piece.type}`}
-                    draggable={false}
-                    className="w-[82%] h-[82%] object-contain select-none"
-                    style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
-                  />
+                  pieceTheme === "letter" ? (
+                    <span className="font-mono text-2xl font-bold text-black/70">
+                      {PIECE_UNICODE[piece.color + piece.type]}
+                    </span>
+                  ) : (
+                    <motion.img
+                      layout
+                      initial={{ scale: 0.9, opacity: 0.85 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
+                      src={pieceSprites[piece.color + piece.type]}
+                      alt={`${piece.color === "w" ? "white" : "black"} ${piece.type}`}
+                      draggable={false}
+                      className="w-[82%] h-[82%] object-contain select-none"
+                      style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
+                    />
+                  )
                 )}
                 {fi === 0 && (
-                  <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
+                  <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-black/50" : "text-white/60"}`}>
                     {rank}
                   </span>
                 )}
                 {ri === 7 && (
-                  <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
+                  <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-black/50" : "text-white/60"}`}>
                     {file}
                   </span>
                 )}
               </button>
             );
-          })
+          }),
         )}
       </div>
     </div>

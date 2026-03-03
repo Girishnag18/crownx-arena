@@ -7,23 +7,41 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import { supabase } from "@/integrations/supabase/client";
 import ChessBoard from "@/components/chess/ChessBoard";
+import EvaluationBar from "@/components/chess/EvaluationBar";
+import AnalysisPanel, { type MoveAnalysisItem } from "@/components/chess/AnalysisPanel";
+import InGameChat from "@/components/chat/InGameChat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { trackArenaEvent } from "@/services/arenaAnalytics";
+import { BoardTheme, PieceTheme, PIECE_UNICODE } from "@/utils/chessThemes";
+
+type EngineBestMoveResponse = {
+  type: "bestMove";
+  move: { from: string; to: string; promotion?: string } | null;
+  evalCp: number;
+  using: "stockfish" | "fallback";
+};
+
+type EngineEvalResponse = {
+  type: "evaluate";
+  evalCp: number;
+  using: "stockfish" | "fallback";
+};
+
+type LocalMove = { from: string; to: string; san: string; promotion?: string | null };
 
 const Play = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
 
-  const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
   const aiElo = playerElo + 20;
 
   const [localGame, setLocalGame] = useState(new Chess());
+  const [localMoves, setLocalMoves] = useState<LocalMove[]>([]);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
-  const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [syncAgo, setSyncAgo] = useState("just now");
   const [resignPending, setResignPending] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
@@ -34,22 +52,47 @@ const Play = () => {
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const [localResult, setLocalResult] = useState<{ type: "resignation"; winnerColor: "w" | "b"; loserColor: "w" | "b" } | null>(null);
   const [nextLiveGameId, setNextLiveGameId] = useState<string | null>(null);
+  const [evalCp, setEvalCp] = useState<number | null>(0);
+  const [engineBackend, setEngineBackend] = useState<"stockfish" | "fallback" | null>(null);
+  const [analysisItems, setAnalysisItems] = useState<MoveAnalysisItem[]>([]);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [boardTheme, setBoardTheme] = useState<BoardTheme>("wood");
+  const [pieceTheme, setPieceTheme] = useState<PieceTheme>("neo");
+
   const aiWorkerRef = useRef<Worker | null>(null);
   const aiTurnRequestRef = useRef(0);
-
-  useEffect(() => {
-    // Initialize the AI worker
-    const worker = new Worker(new URL('../utils/chess-ai-worker.ts', import.meta.url), { type: 'module' });
-    aiWorkerRef.current = worker;
-    return () => {
-      worker.terminate();
-    };
-  }, []);
+  const pendingBestMoveRef = useRef<((data: EngineBestMoveResponse) => void) | null>(null);
+  const pendingEvalRef = useRef<((data: EngineEvalResponse) => void) | null>(null);
+  const evalQueueRef = useRef(Promise.resolve());
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
   const isComputerGame = !isOnline && mode === "computer";
   const isSpectator = isOnline && online.isSpectator;
+
+  useEffect(() => {
+    const nextBoardTheme = (localStorage.getItem("chess-board-theme") as BoardTheme) || "wood";
+    const nextPieceTheme = (localStorage.getItem("chess-piece-theme") as PieceTheme) || "neo";
+    setBoardTheme(nextBoardTheme);
+    setPieceTheme(nextPieceTheme);
+  }, []);
+
+  useEffect(() => {
+    const worker = new Worker(new URL("../utils/chess-ai-worker.ts", import.meta.url), { type: "module" });
+    worker.onmessage = (event: MessageEvent<EngineBestMoveResponse | EngineEvalResponse>) => {
+      const data = event.data;
+      if (data.type === "bestMove") {
+        pendingBestMoveRef.current?.(data);
+      } else {
+        pendingEvalRef.current?.(data);
+      }
+    };
+    aiWorkerRef.current = worker;
+    return () => {
+      worker.terminate();
+      aiWorkerRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -88,7 +131,6 @@ const Play = () => {
 
   useEffect(() => {
     if (!isOnline || !online.lastSyncedAt) return;
-
     const formatSyncAge = () => {
       const diffSeconds = Math.max(0, Math.floor((Date.now() - online.lastSyncedAt!.getTime()) / 1000));
       if (diffSeconds < 1) {
@@ -97,10 +139,8 @@ const Play = () => {
       }
       setSyncAgo(`${diffSeconds}s ago`);
     };
-
     formatSyncAge();
     const interval = window.setInterval(formatSyncAge, 1000);
-
     return () => window.clearInterval(interval);
   }, [isOnline, online.lastSyncedAt]);
 
@@ -108,17 +148,45 @@ const Play = () => {
     const calculateBoardSize = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const horizontalPadding = viewportWidth >= 1024 ? 220 : 32;
+      const horizontalPadding = viewportWidth >= 1024 ? 300 : 32;
       const verticalReserved = viewportWidth >= 1024 ? 220 : 280;
       const sizeFromWidth = viewportWidth - horizontalPadding;
       const sizeFromHeight = viewportHeight - verticalReserved;
-      const computed = Math.max(280, Math.min(sizeFromWidth, sizeFromHeight, 980));
+      const computed = Math.max(280, Math.min(sizeFromWidth, sizeFromHeight, 920));
       setMaxBoardSizePx(computed);
     };
-
     calculateBoardSize();
     window.addEventListener("resize", calculateBoardSize);
     return () => window.removeEventListener("resize", calculateBoardSize);
+  }, []);
+
+  const evaluateFen = useCallback((fen: string, depth = 10) => {
+    return new Promise<{ evalCp: number; using: "stockfish" | "fallback" }>((resolve) => {
+      const run = async () => {
+        if (!aiWorkerRef.current) {
+          resolve({ evalCp: 0, using: "fallback" });
+          return;
+        }
+        await new Promise<void>((done) => {
+          const timeout = window.setTimeout(() => {
+            pendingEvalRef.current = null;
+            resolve({ evalCp: 0, using: "fallback" });
+            done();
+          }, 5000);
+
+          pendingEvalRef.current = (data) => {
+            window.clearTimeout(timeout);
+            pendingEvalRef.current = null;
+            resolve({ evalCp: data.evalCp, using: data.using });
+            done();
+          };
+
+          aiWorkerRef.current!.postMessage({ type: "evaluate", fen, depth });
+        });
+      };
+
+      evalQueueRef.current = evalQueueRef.current.then(run).catch(run);
+    });
   }, []);
 
   const handleLocalMove = useCallback((from: Square, to: Square, promotion?: string): boolean => {
@@ -128,7 +196,7 @@ const Play = () => {
       if (move) {
         setLocalGame(gameCopy);
         setLastMove({ from, to });
-        setMoveHistory((prev) => [...prev, move.san]);
+        setLocalMoves((prev) => [...prev, { from, to, san: move.san, promotion: promotion ?? null }]);
         return true;
       }
     } catch {
@@ -143,17 +211,31 @@ const Play = () => {
 
   const resetLocalGame = () => {
     setLocalGame(new Chess());
+    setLocalMoves([]);
     setLastMove(null);
-    setMoveHistory([]);
     setShowCheckmateBanner(false);
     setShowPostGameReview(false);
     setLocalBottomColor("w");
     setLocalResult(null);
+    setAnalysisItems([]);
+    setEvalCp(0);
   };
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
   const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || !!localResult);
+
+  useEffect(() => {
+    let cancelled = false;
+    void evaluateFen(game.fen()).then((result) => {
+      if (cancelled) return;
+      setEvalCp(result.evalCp);
+      setEngineBackend(result.using);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [evaluateFen, game]);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
@@ -177,25 +259,25 @@ const Play = () => {
         fallbackMove();
         return;
       }
-      const searchDepth = aiAccuracy >= 95 ? 3 : 2;
-
-      aiWorkerRef.current.onmessage = (e: MessageEvent) => {
+      const searchDepth = aiAccuracy >= 95 ? 8 : 6;
+      pendingBestMoveRef.current = (data) => {
         if (settled || aiTurnRequestRef.current !== requestId) return;
         settled = true;
         window.clearTimeout(hardDeadlineTimer);
-        const { move } = e.data as { move?: { from: string; to: string; promotion?: string } | null };
-        if (move) {
-          handleLocalMove(move.from as Square, move.to as Square, move.promotion);
+        setEvalCp(data.evalCp);
+        setEngineBackend(data.using);
+        if (data.move) {
+          handleLocalMove(data.move.from as Square, data.move.to as Square, data.move.promotion);
           return;
         }
         fallbackMove();
       };
-
       aiWorkerRef.current.postMessage({
+        type: "bestMove",
         fen: game.fen(),
         depth: searchDepth,
         aiAccuracy,
-        computerColor
+        computerColor,
       });
     }, 150);
 
@@ -203,9 +285,7 @@ const Play = () => {
       window.clearTimeout(timer);
       window.clearTimeout(hardDeadlineTimer);
       settled = true;
-      if (aiWorkerRef.current) {
-        aiWorkerRef.current.onmessage = null;
-      }
+      pendingBestMoveRef.current = null;
     };
   }, [aiAccuracy, computerColor, game, handleLocalMove, isComputerGame, isGameOver]);
 
@@ -214,22 +294,79 @@ const Play = () => {
     setAiAccuracy(Math.floor(Math.random() * 11) + 88);
   }, [game, isComputerGame, isGameOver]);
 
-
   useEffect(() => {
     if (!game.isCheckmate()) {
       setShowCheckmateBanner(false);
       setShowPostGameReview(false);
       return;
     }
-
     setShowCheckmateBanner(true);
     const timer = window.setTimeout(() => {
       setShowCheckmateBanner(false);
       setShowPostGameReview(true);
     }, 5000);
-
     return () => window.clearTimeout(timer);
   }, [game]);
+
+  const moveObjects = useMemo(() => {
+    if (isOnline && online.gameData?.moves) {
+      return (online.gameData.moves as Array<{ from: string; to: string; san: string; promotion?: string | null }>).map((m) => ({
+        from: m.from,
+        to: m.to,
+        san: m.san,
+        promotion: m.promotion ?? null,
+      }));
+    }
+    return localMoves;
+  }, [isOnline, online.gameData?.moves, localMoves]);
+
+  useEffect(() => {
+    if (!isGameOver || moveObjects.length === 0) return;
+    let cancelled = false;
+
+    const buildAnalysis = async () => {
+      setAnalysisLoading(true);
+      const analysis: MoveAnalysisItem[] = [];
+      const replay = new Chess();
+
+      for (let i = 0; i < moveObjects.length; i += 1) {
+        const moverColor = replay.turn();
+        const beforeEval = (await evaluateFen(replay.fen(), 10)).evalCp;
+        replay.move({
+          from: moveObjects[i].from,
+          to: moveObjects[i].to,
+          promotion: moveObjects[i].promotion ?? undefined,
+        });
+        const afterEval = (await evaluateFen(replay.fen(), 10)).evalCp;
+        const moverPerspectiveBefore = moverColor === "w" ? beforeEval : -beforeEval;
+        const moverPerspectiveAfter = moverColor === "w" ? afterEval : -afterEval;
+        const loss = Math.max(0, moverPerspectiveBefore - moverPerspectiveAfter);
+        let label: MoveAnalysisItem["label"] = "Best";
+        if (loss >= 180) label = "Blunder";
+        else if (loss >= 90) label = "Mistake";
+        else if (loss >= 40) label = "Inaccuracy";
+
+        analysis.push({
+          ply: i + 1,
+          san: moveObjects[i].san,
+          evalBefore: beforeEval,
+          evalAfter: afterEval,
+          loss,
+          label,
+        });
+      }
+
+      if (!cancelled) {
+        setAnalysisItems(analysis);
+        setAnalysisLoading(false);
+      }
+    };
+
+    void buildAnalysis();
+    return () => {
+      cancelled = true;
+    };
+  }, [evaluateFen, isGameOver, moveObjects]);
 
   const gameStatus = useMemo(() => {
     if (!isOnline && localResult?.type === "resignation") {
@@ -270,10 +407,7 @@ const Play = () => {
     setShowPostGameReview(true);
   };
 
-  const displayMoves = isOnline && online.gameData?.moves
-    ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
-    : moveHistory;
-
+  const displayMoves = moveObjects.map((m) => m.san);
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
     for (let i = 0; i < displayMoves.length; i += 2) {
@@ -287,22 +421,19 @@ const Play = () => {
   }, [displayMoves]);
 
   const derivedLastMove = useMemo(() => {
-    if (isOnline && online.gameData?.moves) {
-      const moves = online.gameData.moves as Array<{ from: string; to: string }>;
-      if (moves.length > 0) {
-        const last = moves[moves.length - 1];
-        return { from: last.from as Square, to: last.to as Square };
-      }
+    if (moveObjects.length > 0) {
+      const last = moveObjects[moveObjects.length - 1];
+      return { from: last.from as Square, to: last.to as Square };
     }
     return lastMove;
-  }, [isOnline, online.gameData, lastMove]);
+  }, [moveObjects, lastMove]);
 
   const capturedPieces = useMemo(() => {
     const initialCounts: Record<string, number> = { p: 8, n: 2, b: 2, r: 2, q: 1 };
     const current = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } };
     const pieceGlyph: Record<string, string> = {
-      wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕",
-      bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛",
+      wp: PIECE_UNICODE.wp, wn: PIECE_UNICODE.wn, wb: PIECE_UNICODE.wb, wr: PIECE_UNICODE.wr, wq: PIECE_UNICODE.wq,
+      bp: PIECE_UNICODE.bp, bn: PIECE_UNICODE.bn, bb: PIECE_UNICODE.bb, br: PIECE_UNICODE.br, bq: PIECE_UNICODE.bq,
     };
 
     for (const row of game.board()) {
@@ -322,7 +453,6 @@ const Play = () => {
       for (let i = 0; i < blackMissing; i += 1) capturedByWhite.push(pieceGlyph[`b${pieceType}`]);
       for (let i = 0; i < whiteMissing; i += 1) capturedByBlack.push(pieceGlyph[`w${pieceType}`]);
     }
-
     return { capturedByWhite, capturedByBlack };
   }, [game]);
 
@@ -378,7 +508,7 @@ const Play = () => {
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-[1500px]">
+      <div className="container mx-auto max-w-[1580px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-9 flex flex-col items-center">
             <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
@@ -392,30 +522,28 @@ const Play = () => {
               </div>
             </div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-              <ChessBoard
-                game={game}
-                onMove={isOnline ? handleOnlineMove : handleLocalMove}
-                flipped={flipped}
-                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (!!localResult || (isComputerGame ? game.turn() === computerColor : false))}
-                lastMove={derivedLastMove}
-                sizeClassName={boardSizeClass}
-                maxBoardSizePx={maxBoardSizePx || undefined}
-              />
-            </motion.div>
+            <div className={`w-full ${boardSizeClass} flex items-start justify-center gap-3`}>
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                <ChessBoard
+                  game={game}
+                  onMove={isOnline ? handleOnlineMove : handleLocalMove}
+                  flipped={flipped}
+                  disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (!!localResult || (isComputerGame ? game.turn() === computerColor : false))}
+                  lastMove={derivedLastMove}
+                  sizeClassName={boardSizeClass}
+                  maxBoardSizePx={maxBoardSizePx || undefined}
+                  boardTheme={boardTheme}
+                  pieceTheme={pieceTheme}
+                />
+              </motion.div>
+              <div className="hidden sm:block">
+                <EvaluationBar evalCp={evalCp} />
+              </div>
+            </div>
 
             {showCheckmateBanner && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/45 backdrop-blur-sm"
-              >
-                <motion.div
-                  initial={{ y: 20 }}
-                  animate={{ y: [0, -8, 0], boxShadow: ["0 0 10px rgba(255,215,0,.2)", "0 0 45px rgba(255,215,0,.8)", "0 0 10px rgba(255,215,0,.2)"] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="rounded-2xl border border-primary/50 bg-card/95 px-12 py-8 text-center"
-                >
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/45 backdrop-blur-sm">
+                <motion.div initial={{ y: 20 }} animate={{ y: [0, -8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="rounded-2xl border border-primary/50 bg-card/95 px-12 py-8 text-center">
                   <p className="font-display text-4xl md:text-6xl font-black text-primary tracking-wide">CHECKMATE</p>
                   <p className="text-sm text-muted-foreground mt-2">Tactical finish!</p>
                 </motion.div>
@@ -433,29 +561,22 @@ const Play = () => {
               </div>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}>
               <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
                 {isSpectator && <span className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">Spectating</span>}
                 {isSpectator && nextLiveGameId && (
-                  <button
-                    onClick={() => navigate(`/play?game=${nextLiveGameId}&spectate=true`)}
-                    className="rounded border border-border/70 bg-secondary/40 px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground"
-                  >
+                  <button onClick={() => navigate(`/play?game=${nextLiveGameId}&spectate=true`)} className="rounded border border-border/70 bg-secondary/40 px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground">
                     Next Live
                   </button>
                 )}
-                {!isOnline && (
-                  <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
-                )}
+                {!isOnline && <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />}
                 {(isOnline && online.pendingMove) && <LoaderCircle className="w-4 h-4 animate-spin text-primary" />}
                 {gameStatus}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <span className="rounded-md border border-border/60 bg-secondary/40 px-2 py-1 text-[11px] text-muted-foreground">
+                  Engine: {engineBackend ?? "starting"}
+                </span>
                 {!isGameOver && !isSpectator && (
                   <button
                     onClick={async () => {
@@ -476,11 +597,7 @@ const Play = () => {
                   </button>
                 )}
                 {!isOnline && (
-                  <button
-                    onClick={resetLocalGame}
-                    className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
-                    title="New Game"
-                  >
+                  <button onClick={resetLocalGame} className="glass-card px-3 py-2 hover:border-primary/30 transition-colors" title="New Game">
                     <RotateCcw className="w-4 h-4" />
                   </button>
                 )}
@@ -488,12 +605,7 @@ const Play = () => {
             </motion.div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-4"
-          >
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-3 space-y-4">
             <div className="glass-card p-5 border-glow space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
@@ -503,10 +615,10 @@ const Play = () => {
                 {isOnline
                   ? isSpectator
                     ? "Spectating this live match in read-only mode."
-                    : `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
+                    : `You are playing as ${online.playerColor === "w" ? "White" : "Black"}.`
                   : isComputerGame
-                    ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
-                    : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} pieces are at the bottom for the current player.`}
+                    ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}.`
+                    : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} at the bottom.`}
               </p>
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
@@ -527,12 +639,9 @@ const Play = () => {
 
             <div className="glass-card p-5 border border-primary/20">
               <h3 className="font-display font-bold text-sm mb-2 flex items-center gap-2"><Swords className="w-4 h-4 text-primary" />Latest move</h3>
-              <p className="text-xs text-muted-foreground">The most recent move is highlighted in yellow on the board so you can instantly see your opponent's last move.</p>
+              <p className="text-xs text-muted-foreground">Most recent move is highlighted on board.</p>
               {!isOnline && !isComputerGame && (
-                <button
-                  onClick={() => setLocalBottomColor((prev) => (prev === "w" ? "b" : "w"))}
-                  className="mt-3 w-full border rounded-lg px-3 py-2 text-xs font-display font-bold"
-                >
+                <button onClick={() => setLocalBottomColor((prev) => (prev === "w" ? "b" : "w"))} className="mt-3 w-full border rounded-lg px-3 py-2 text-xs font-display font-bold">
                   Switch Seat (show {localBottomColor === "w" ? "Black" : "White"} at bottom)
                 </button>
               )}
@@ -541,9 +650,7 @@ const Play = () => {
             <div className="glass-card p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
               <div className="max-h-64 overflow-y-auto space-y-1 text-sm font-mono">
-                {movePairs.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">No moves yet</p>
-                )}
+                {movePairs.length === 0 && <p className="text-xs text-muted-foreground italic">No moves yet</p>}
                 {movePairs.map((pair) => (
                   <div key={pair.num} className="flex items-center gap-2 py-0.5">
                     <span className="text-muted-foreground w-6 text-right text-xs">{pair.num}.</span>
@@ -554,63 +661,37 @@ const Play = () => {
               </div>
             </div>
 
+            {isOnline && !isSpectator && user?.id && (
+              <InGameChat
+                gameId={onlineGameId!}
+                userId={user.id}
+                username={online.playerName || profile?.username || "Player"}
+              />
+            )}
+
             {isGameOver && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="glass-card p-5 border-glow gold-glow text-center"
-              >
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-5 border-glow gold-glow text-center">
                 <Crown className="w-8 h-8 text-primary mx-auto mb-2" />
                 <p className="font-display font-bold text-lg mb-3">{gameStatus}</p>
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  <button
-                    onClick={isOnline ? () => navigate("/lobby") : resetLocalGame}
-                    className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform"
-                  >
+                  <button onClick={isOnline ? () => navigate("/lobby") : resetLocalGame} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform">
                     {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
                   </button>
-                  {isSpectator && online.gameData?.winner_id && (
-                    <button
-                      onClick={() => {
-                        if (user?.id) {
-                          void trackArenaEvent(user.id, "play_winner_now_click", {
-                            winner_id: online.gameData?.winner_id,
-                            duration_seconds: online.gameData?.duration_seconds,
-                          });
-                        }
-                        navigate(`/lobby?challengeWinner=${online.gameData?.winner_id}&duration=${online.gameData?.duration_seconds ?? ""}`);
-                      }}
-                      className="border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-display font-bold text-xs tracking-wider px-4 py-2.5 rounded-lg"
-                    >
-                      PLAY WINNER NOW
-                    </button>
-                  )}
                 </div>
               </motion.div>
             )}
 
             {isGameOver && showPostGameReview && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card p-5 border border-primary/30"
-              >
-                <p className="font-display font-bold text-sm">Quick Review Suggestion</p>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">Review the final 8 moves to spot tactical misses, then pick your next step.</p>
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 border border-primary/30 space-y-3">
+                <p className="font-display font-bold text-sm">Analysis Mode</p>
+                {analysisLoading ? (
+                  <p className="text-xs text-muted-foreground">Running engine analysis...</p>
+                ) : (
+                  <AnalysisPanel items={analysisItems} />
+                )}
                 <div className="flex flex-wrap gap-2">
-                  <button onClick={() => navigate("/dashboard?section=history")} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">QUICK REVIEW</button>
+                  <button onClick={() => navigate("/dashboard?section=history")} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">FULL REVIEW</button>
                   <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm("Need a rematch?")) {
-                        if (isOnline) navigate("/lobby");
-                        else resetLocalGame();
-                      }
-                    }}
-                    className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md"
-                  >
-                    ASK REMATCH
-                  </button>
                 </div>
               </motion.div>
             )}

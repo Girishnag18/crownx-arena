@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadAvatarImage } from "@/lib/avatar";
+import { BOARD_THEME_OPTIONS, BoardTheme, PIECE_THEME_OPTIONS, PieceTheme } from "@/utils/chessThemes";
 
 const Settings = () => {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -24,6 +25,8 @@ const Settings = () => {
   const [emailOtp, setEmailOtp] = useState("");
   const [saving, setSaving] = useState(false);
   const [uid, setUid] = useState("");
+  const [boardTheme, setBoardTheme] = useState<BoardTheme>("wood");
+  const [pieceTheme, setPieceTheme] = useState<PieceTheme>("neo");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -39,6 +42,8 @@ const Settings = () => {
     setDateOfBirth((user.user_metadata?.date_of_birth as string) || "");
     setEmail(user.email || "");
     setUid(profile.player_uid || "");
+    setBoardTheme((localStorage.getItem("chess-board-theme") as BoardTheme) || "wood");
+    setPieceTheme((localStorage.getItem("chess-piece-theme") as PieceTheme) || "neo");
   }, [profile, user]);
 
   const saveSettings = async () => {
@@ -46,7 +51,7 @@ const Settings = () => {
     setSaving(true);
 
     const [{ data: profileData, error: profileError }, { error: metadataError }] = await Promise.all([
-      (supabase as any).from("profiles").update({
+      supabase.from("profiles").update({
         avatar_url: avatarUrl || null,
         username: username || null,
         bio: bio || null,
@@ -68,6 +73,8 @@ const Settings = () => {
     }
 
     toast.success("Profile updated successfully");
+    localStorage.setItem("chess-board-theme", boardTheme);
+    localStorage.setItem("chess-piece-theme", pieceTheme);
     refreshProfile();
   };
 
@@ -86,8 +93,9 @@ const Settings = () => {
       const publicUrl = await uploadAvatarImage(user.id, file);
       setAvatarUrl(publicUrl);
       toast.success("Avatar uploaded. Save profile to apply it.");
-    } catch (error: any) {
-      toast.error(error?.message || "Avatar upload failed.");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Avatar upload failed.";
+      toast.error(msg);
     } finally {
       setAvatarUploading(false);
       event.target.value = "";
@@ -235,6 +243,47 @@ const Settings = () => {
               >
                 Verify Email
               </button>
+            </div>
+          </div>
+
+          <div className="glass-card p-6 mb-6">
+            <h3 className="font-display text-lg font-bold mb-1">Chessboard Themes</h3>
+            <p className="text-xs text-muted-foreground mb-4">Customize board colors and piece style.</p>
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-2 block">Board Style</Label>
+                <div className="flex flex-wrap gap-2">
+                  {BOARD_THEME_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setBoardTheme(option.id)}
+                      className={`rounded-md border px-3 py-2 text-xs font-display font-bold ${
+                        boardTheme === option.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary/40"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label className="mb-2 block">Piece Set</Label>
+                <div className="flex flex-wrap gap-2">
+                  {PIECE_THEME_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setPieceTheme(option.id)}
+                      className={`rounded-md border px-3 py-2 text-xs font-display font-bold ${
+                        pieceTheme === option.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary/40"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
