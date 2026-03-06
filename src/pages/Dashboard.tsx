@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Bot, Swords } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Bot, Swords, Brain, Radar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -59,6 +59,16 @@ interface RecentGame {
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const formatRelativeCountdown = (targetIso: string | null) => {
+  if (!targetIso) return "Schedule pending";
+  const diffMs = new Date(targetIso).getTime() - Date.now();
+  const absSeconds = Math.max(0, Math.floor(Math.abs(diffMs) / 1000));
+  const hh = Math.floor(absSeconds / 3600);
+  const mm = Math.floor((absSeconds % 3600) / 60);
+  if (diffMs <= 0) return `Started ${hh > 0 ? `${hh}h ` : ""}${mm}m ago`;
+  return `Starts in ${hh > 0 ? `${hh}h ` : ""}${mm}m`;
 };
 
 const Dashboard = () => {
@@ -258,17 +268,26 @@ const Dashboard = () => {
   }, [expandedTournamentId, user]);
 
   useEffect(() => {
-    if (!user?.id || !expandedTournamentId) return;
-    const t = tournaments.find((row) => row.id === expandedTournamentId);
-    if (!t || t.status !== "live" || t.created_by !== user.id) return;
+    if (!user?.id) return;
+    const liveOwnedTournamentIds = tournaments
+      .filter((tournament) => tournament.status === "live" && tournament.created_by === user.id)
+      .map((tournament) => tournament.id);
+    if (liveOwnedTournamentIds.length === 0) return;
 
-    const rpcClient = supabase as unknown as { rpc: (name: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }> };
+    const rpcClient = supabase as unknown as {
+      rpc: (name: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+    };
+
     const id = window.setInterval(async () => {
-      const { error } = await rpcClient.rpc("tournament_bracket_tick", { target_tournament: expandedTournamentId });
-      if (!error) {
-        void loadTournaments();
-        void loadTournamentMatches(expandedTournamentId);
-      }
+      await Promise.all(
+        liveOwnedTournamentIds.map(async (tournamentId) => {
+          const { error } = await rpcClient.rpc("tournament_bracket_tick", { target_tournament: tournamentId });
+          if (!error && expandedTournamentId === tournamentId) {
+            await loadTournamentMatches(tournamentId);
+          }
+        }),
+      );
+      void loadTournaments();
     }, 10_000);
 
     return () => {
@@ -547,7 +566,7 @@ const Dashboard = () => {
                     {(profile?.rank_tier || "Bronze").split(" ").map((word) => word[0]).join("").slice(0, 2)}
                   </span>
                   <span className="text-gradient-gold font-display font-bold">{profile?.rank_tier || "Bronze"}</span>
-                  <span className="text-muted-foreground">• Level {profile?.level || 1}</span>
+                  <span className="text-muted-foreground">Level {profile?.level || 1}</span>
                 </div>
               </div>
             </div>
@@ -573,7 +592,7 @@ const Dashboard = () => {
               {walletPanelOpen && (
                 <div className="bg-secondary/30 border border-border rounded-xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">1 Crown = ₹1</span>
+                    <span className="text-xs text-muted-foreground">1 Crown = Rs 1</span>
                     <span className="text-xs text-muted-foreground">Available balance</span>
                   </div>
                   <div className="flex items-center gap-2 text-lg font-display font-bold">
@@ -604,6 +623,7 @@ const Dashboard = () => {
             <div className="space-y-3">
               {[
                 { icon: Globe, title: "Online Arena", desc: "Quick Play, World Arena, and Private Rooms", to: "/lobby", accent: true },
+                { icon: Brain, title: "Tactics Trainer", desc: "Puzzle rush, daily drills, and study mode", to: "/tactics", accent: false },
                 { icon: Bot, title: "Play vs Computer", desc: "Start an AI practice match instantly", to: "/play?mode=computer", accent: false },
                 { icon: Swords, title: "Local Pass & Play", desc: "Play both sides on this device", to: "/play", accent: false },
               ].map((mode) => (
@@ -634,7 +654,7 @@ const Dashboard = () => {
                   <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Weekend Crown Clash" className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Prize Pool (₹)</label>
+                  <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Prize Pool (Rs)</label>
                   <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="500" type="number" min={0} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
               <div className="space-y-1">
@@ -664,13 +684,25 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="font-semibold text-sm">{tournament.name}</div>
-                        <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players • 🏆 ₹{tournament.prize_pool}</div>
+                        <div className="text-xs text-muted-foreground">{count}/{tournament.max_players} players | Prize Rs {tournament.prize_pool}</div>
                         {tournament.starts_at && (
-                          <div className="text-[11px] text-muted-foreground mt-0.5">📅 {new Date(tournament.starts_at).toLocaleString()}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">
+                            {new Date(tournament.starts_at).toLocaleString()} | {formatRelativeCountdown(tournament.starts_at)}
+                          </div>
                         )}
                         <div className="text-[11px] text-primary/90 mt-0.5">
-                          {tournament.status === "cancelled" ? `Tournament cancelled${tournament.cancelled_at ? ` • archive at ${new Date(new Date(tournament.cancelled_at).getTime() + 1000 * 60 * 60).toLocaleTimeString()}` : ""}` : isReady ? "Ready to start • live qualifier insights active" : "Open for registration • Entry: 2 crowns"}
+                          {tournament.status === "cancelled"
+                            ? `Tournament cancelled${tournament.cancelled_at ? ` | archive at ${new Date(new Date(tournament.cancelled_at).getTime() + 1000 * 60 * 60).toLocaleTimeString()}` : ""}`
+                            : isReady
+                              ? "Ready to start | live bracket insights active"
+                              : "Open for registration | Entry: 2 crowns"}
                         </div>
+                        {tournament.status === "live" && tournament.created_by === user?.id && (
+                          <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
+                            <Radar className="h-3 w-3" />
+                            Creator heartbeat active
+                          </div>
+                        )}
                       </div>
                       <button onClick={() => registerTournament(tournament.id)} disabled={isRegistered || isFull || registeringTournamentId === tournament.id || tournament.status === "cancelled"} className="text-xs font-display font-bold px-3 py-1.5 rounded bg-primary/10 text-primary disabled:bg-muted disabled:text-muted-foreground transition-all duration-300">{isRegistered ? "Registered" : isFull ? "Full" : registeringTournamentId === tournament.id ? <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Joining...</span> : "Register (2 crowns)"}</button>
                     </div>

@@ -56,9 +56,11 @@ const Play = () => {
   const [engineBackend, setEngineBackend] = useState<"stockfish" | "fallback" | null>(null);
   const [analysisItems, setAnalysisItems] = useState<MoveAnalysisItem[]>([]);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisSource, setAnalysisSource] = useState<"local" | "server" | null>(null);
   const [boardTheme, setBoardTheme] = useState<BoardTheme>("wood");
   const [pieceTheme, setPieceTheme] = useState<PieceTheme>("neo");
   const analysisEnqueuedRef = useRef<string | null>(null);
+  const analysisSourceRef = useRef<"local" | "server" | null>(null);
 
   const aiWorkerRef = useRef<Worker | null>(null);
   const aiTurnRequestRef = useRef(0);
@@ -219,6 +221,8 @@ const Play = () => {
     setLocalBottomColor("w");
     setLocalResult(null);
     setAnalysisItems([]);
+    analysisSourceRef.current = null;
+    setAnalysisSource(null);
     setEvalCp(0);
   };
 
@@ -337,6 +341,76 @@ const Play = () => {
   }, [isOnline, online.gameData?.moves, localMoves]);
 
   useEffect(() => {
+    if (isGameOver) return;
+    analysisSourceRef.current = null;
+    setAnalysisSource(null);
+    setAnalysisItems([]);
+    setAnalysisLoading(false);
+  }, [isGameOver, onlineGameId]);
+
+  const loadServerAnalysis = useCallback(async () => {
+    if (!isOnline || !online.gameData?.id || moveObjects.length === 0) return false;
+
+    const { data } = await supabase
+      .from("game_engine_analysis")
+      .select("ply, eval_cp_before, eval_cp_after, cpl, tags")
+      .eq("game_id", online.gameData.id)
+      .order("ply", { ascending: true });
+
+    if (!data || data.length === 0) return false;
+
+    const mapped: MoveAnalysisItem[] = data.map((row) => {
+      const tag = Array.isArray(row.tags) ? row.tags[0] : null;
+      const label: MoveAnalysisItem["label"] = tag === "blunder"
+        ? "Blunder"
+        : tag === "mistake"
+          ? "Mistake"
+          : tag === "inaccuracy"
+            ? "Inaccuracy"
+            : "Best";
+
+      return {
+        ply: row.ply,
+        san: moveObjects[row.ply - 1]?.san || `Ply ${row.ply}`,
+        evalBefore: row.eval_cp_before ?? 0,
+        evalAfter: row.eval_cp_after ?? 0,
+        loss: row.cpl ?? 0,
+        label,
+      };
+    });
+
+    analysisSourceRef.current = "server";
+    setAnalysisItems(mapped);
+    setAnalysisLoading(false);
+    setAnalysisSource("server");
+    return true;
+  }, [isOnline, moveObjects, online.gameData?.id]);
+
+  useEffect(() => {
+    if (!isOnline || !isGameOver || !online.gameData?.id || moveObjects.length === 0) return;
+
+    let cancelled = false;
+    let timeoutId: number | null = null;
+    let attempts = 0;
+
+    const poll = async () => {
+      const found = await loadServerAnalysis();
+      if (cancelled || found) return;
+      attempts += 1;
+      if (attempts >= 8) return;
+      timeoutId = window.setTimeout(() => {
+        void poll();
+      }, 4000);
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [isGameOver, isOnline, loadServerAnalysis, moveObjects.length, online.gameData?.id]);
+
+  useEffect(() => {
     if (!isGameOver || moveObjects.length === 0) return;
     let cancelled = false;
 
@@ -372,9 +446,11 @@ const Play = () => {
         });
       }
 
-      if (!cancelled) {
+      if (!cancelled && analysisSourceRef.current !== "server") {
         setAnalysisItems(analysis);
         setAnalysisLoading(false);
+        analysisSourceRef.current = analysisSourceRef.current ?? "local";
+        setAnalysisSource((prev) => prev ?? "local");
       }
     };
 
@@ -400,6 +476,11 @@ const Play = () => {
         if (isSpectator) return "Game ended by resignation";
         const won = online.gameData.winner_id === user?.id;
         return won ? "Opponent resigned - You win!" : "You resigned";
+      }
+      if (rt === "timeout") {
+        if (isSpectator) return "Game ended on time";
+        const won = online.gameData.winner_id === user?.id;
+        return won ? "You win on time!" : "You lost on time";
       }
       if (rt === "stalemate") return "Stalemate - Draw";
       if (rt === "draw") return "Draw";
@@ -533,6 +614,27 @@ const Play = () => {
       : formatClock(online.playerColor === "w" ? online.clock.white : online.clock.black))
     : null;
 
+  const timeControlLabel = useMemo(() => {
+    if (!isOnline || !online.gameData) {
+      return isComputerGame ? "Adaptive AI" : "Local board";
+    }
+
+    const base = online.gameData.duration_seconds
+      ? `${Math.round(online.gameData.duration_seconds / 60)}m`
+      : "No clock";
+
+    if (online.gameData.time_control_mode === "fischer" && online.gameData.increment_ms > 0) {
+      return `${base} + ${Math.round(online.gameData.increment_ms / 1000)}s`;
+    }
+    if (online.gameData.time_control_mode === "delay" && online.gameData.delay_ms > 0) {
+      return `${base} delay ${Math.round(online.gameData.delay_ms / 1000)}s`;
+    }
+    if (online.gameData.time_control_mode === "bronstein" && online.gameData.delay_ms > 0) {
+      return `${base} bronstein ${Math.round(online.gameData.delay_ms / 1000)}s`;
+    }
+    return base;
+  }, [isComputerGame, isOnline, online.gameData]);
+
   if (isOnline && online.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pt-20">
@@ -661,6 +763,18 @@ const Play = () => {
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}.`
                     : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} at the bottom.`}
               </p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg border border-border/60 bg-secondary/20 px-3 py-2">
+                  <p className="text-muted-foreground">Time control</p>
+                  <p className="mt-1 font-display font-bold">{timeControlLabel}</p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-secondary/20 px-3 py-2">
+                  <p className="text-muted-foreground">Mode</p>
+                  <p className="mt-1 font-display font-bold">
+                    {isOnline ? (isSpectator ? "Spectate" : "Ranked live") : isComputerGame ? "Vs computer" : "Local board"}
+                  </p>
+                </div>
+              </div>
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-display">
@@ -724,7 +838,18 @@ const Play = () => {
 
             {isGameOver && showPostGameReview && (
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 border border-primary/30 space-y-3">
-                <p className="font-display font-bold text-sm">Analysis Mode</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-display font-bold text-sm">Analysis Mode</p>
+                  {analysisSource && (
+                    <span className={`rounded-full border px-2 py-1 text-[11px] ${
+                      analysisSource === "server"
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                        : "border-border/70 bg-secondary/30 text-muted-foreground"
+                    }`}>
+                      {analysisSource === "server" ? "Server review" : "Local quick review"}
+                    </span>
+                  )}
+                </div>
                 {analysisLoading ? (
                   <p className="text-xs text-muted-foreground">Running engine analysis...</p>
                 ) : (

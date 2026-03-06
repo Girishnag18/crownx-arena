@@ -1,27 +1,15 @@
 import React from "react";
 import { Square } from "chess.js";
 import { motion } from "framer-motion";
-
-const PIECE_SPRITES: Record<string, string> = {
-  wp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wp.png",
-  wn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wn.png",
-  wb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wb.png",
-  wr: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wr.png",
-  wq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wq.png",
-  wk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
-  bp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bp.png",
-  bn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bn.png",
-  bb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bb.png",
-  br: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/br.png",
-  bq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bq.png",
-  bk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bk.png",
-};
+import { PIECE_UNICODE } from "@/utils/chessThemes";
 
 interface BoardSquareProps {
   square: Square;
   pieceColor?: string;
   pieceType?: string;
-  isLight: boolean;
+  squareColor: string;
+  coordinateColor: string;
+  pieceSprite?: string;
   isSelected: boolean;
   isLegal: boolean;
   isLastMove: boolean;
@@ -36,7 +24,9 @@ const BoardSquare = React.memo(({
   square,
   pieceColor,
   pieceType,
-  isLight,
+  squareColor,
+  coordinateColor,
+  pieceSprite,
   isSelected,
   isLegal,
   isLastMove,
@@ -48,15 +38,17 @@ const BoardSquare = React.memo(({
 }: BoardSquareProps) => {
   const hasPiece = !!pieceColor && !!pieceType;
   const spriteKey = hasPiece ? pieceColor + pieceType : "";
+  const pieceGlyph = hasPiece ? PIECE_UNICODE[spriteKey] : "";
 
   return (
     <button
       onClick={onClick}
-      className={`board-square relative flex items-center justify-center transition-all duration-300 ${
-        isLight ? "chess-board-light" : "chess-board-dark"
-      } ${isSelected ? "!bg-primary/35" : ""} ${
+      type="button"
+      aria-label={hasPiece ? `${pieceColor === "w" ? "white" : "black"} ${pieceType} on ${square}` : square}
+      className={`board-square relative flex items-center justify-center transition-all duration-300 ${isSelected ? "!bg-primary/35" : ""} ${
         isLastMove ? "!bg-yellow-300/60" : ""
       } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
+      style={{ backgroundColor: squareColor }}
     >
       {isMoveDestination && (
         <motion.div
@@ -72,26 +64,34 @@ const BoardSquare = React.memo(({
       {isLegal && hasPiece && (
         <div className="absolute inset-[5%] rounded-full border-[3px] border-yellow-500/45" />
       )}
-      {hasPiece && (
+      {hasPiece && pieceSprite && (
         <motion.img
           layout
           initial={{ scale: 0.9, opacity: 0.85 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
-          src={PIECE_SPRITES[spriteKey]}
+          src={pieceSprite}
           alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
           draggable={false}
           className="w-[82%] h-[82%] object-contain select-none"
           style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
         />
       )}
+      {hasPiece && !pieceSprite && (
+        <span
+          className={`select-none text-[2.3rem] leading-none ${pieceColor === "w" ? "text-white" : "text-slate-900"}`}
+          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}
+        >
+          {pieceGlyph}
+        </span>
+      )}
       {showRank && (
-        <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
+        <span className="absolute top-0.5 left-1 text-[0.55rem] font-bold" style={{ color: coordinateColor }}>
           {showRank}
         </span>
       )}
       {showFile && (
-        <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
+        <span className="absolute bottom-0.5 right-1 text-[0.55rem] font-bold" style={{ color: coordinateColor }}>
           {showFile}
         </span>
       )}

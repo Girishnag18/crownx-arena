@@ -2,11 +2,13 @@ import { useState, useCallback, useMemo } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
 import BoardSquare from "./BoardSquare";
-
-const PIECE_UNICODE: Record<string, string> = {
-  wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
-  bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
-};
+import {
+  BOARD_THEME_STYLES,
+  PIECE_THEME_SPRITES,
+  PIECE_UNICODE,
+  type BoardTheme,
+  type PieceTheme,
+} from "@/utils/chessThemes";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -40,7 +42,7 @@ const ChessBoard = ({
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
-  const boardClasses = BOARD_THEME_CLASSES[boardTheme];
+  const boardStyles = BOARD_THEME_STYLES[boardTheme];
   const pieceSprites = PIECE_THEME_SPRITES[pieceTheme];
   const isInCheck = game.isCheck();
 
@@ -55,6 +57,11 @@ const ChessBoard = ({
     }
     return null;
   }, [game, isInCheck]);
+
+  const clearSelection = () => {
+    setSelectedSquare(null);
+    setLegalMoves([]);
+  };
 
   const handleSquareClick = useCallback((square: Square) => {
     if (disabled || promotionPending) return;
@@ -81,24 +88,19 @@ const ChessBoard = ({
 
       const result = onMove(selectedSquare, square);
       if (result instanceof Promise) {
-        result.finally(() => {
-          setSelectedSquare(null);
-          setLegalMoves([]);
-        });
+        result.finally(clearSelection);
       } else {
-        setSelectedSquare(null);
-        setLegalMoves([]);
+        clearSelection();
       }
     }
-  }, [game, selectedSquare, onMove, disabled, promotionPending]);
+  }, [disabled, game, onMove, promotionPending, selectedSquare]);
 
   const handlePromotion = useCallback((piece: string) => {
     if (!promotionPending) return;
-    onMove(promotionPending.from, promotionPending.to, piece);
+    void onMove(promotionPending.from, promotionPending.to, piece);
     setPromotionPending(null);
-    setSelectedSquare(null);
-    setLegalMoves([]);
-  }, [promotionPending, onMove]);
+    clearSelection();
+  }, [onMove, promotionPending]);
 
   return (
     <div
@@ -111,18 +113,19 @@ const ChessBoard = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-20 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-xl"
+            className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-background/80 backdrop-blur-sm"
           >
-            <div className="glass-card p-6 border-glow">
-              <p className="font-display text-sm font-bold mb-4 text-center">Promote to:</p>
+            <div className="glass-card border-glow p-6">
+              <p className="mb-4 text-center font-display text-sm font-bold">Promote to:</p>
               <div className="flex gap-3">
-                {["q", "r", "b", "n"].map((p) => (
+                {["q", "r", "b", "n"].map((piece) => (
                   <button
-                    key={p}
-                    onClick={() => handlePromotion(p)}
-                    className="w-14 h-14 rounded-lg bg-secondary hover:bg-primary/20 hover:border-primary/40 border border-border flex items-center justify-center text-3xl transition-colors"
+                    key={piece}
+                    type="button"
+                    onClick={() => handlePromotion(piece)}
+                    className="flex h-14 w-14 items-center justify-center rounded-lg border border-border bg-secondary text-3xl transition-colors hover:border-primary/40 hover:bg-primary/20"
                   >
-                    {PIECE_UNICODE[`${game.turn()}${p}`]}
+                    {PIECE_UNICODE[`${game.turn()}${piece}`]}
                   </button>
                 ))}
               </div>
@@ -131,7 +134,14 @@ const ChessBoard = ({
         )}
       </AnimatePresence>
 
-      <div className="chess-board-shell grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl">
+      <div
+        className="chess-board-shell grid h-full w-full grid-cols-8 grid-rows-8 overflow-hidden rounded-xl border shadow-2xl"
+        style={{
+          background: boardStyles.shellBackground,
+          boxShadow: boardStyles.shellShadow,
+          borderColor: boardStyles.borderColor,
+        }}
+      >
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
             const square = (file + rank) as Square;
@@ -139,6 +149,7 @@ const ChessBoard = ({
             const origRi = RANKS.indexOf(rank);
             const origFi = FILES.indexOf(file);
             const isLight = (origRi + origFi) % 2 === 0;
+            const spriteKey = piece ? `${piece.color}${piece.type}` : "";
 
             return (
               <BoardSquare
@@ -146,7 +157,9 @@ const ChessBoard = ({
                 square={square}
                 pieceColor={piece?.color}
                 pieceType={piece?.type}
-                isLight={isLight}
+                squareColor={isLight ? boardStyles.lightSquare : boardStyles.darkSquare}
+                coordinateColor={isLight ? boardStyles.coordinateLight : boardStyles.coordinateDark}
+                pieceSprite={spriteKey ? pieceSprites[spriteKey] : undefined}
                 isSelected={selectedSquare === square}
                 isLegal={legalMoves.includes(square)}
                 isLastMove={lastMove?.from === square || lastMove?.to === square}
