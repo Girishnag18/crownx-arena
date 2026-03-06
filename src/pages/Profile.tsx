@@ -5,8 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { uploadAvatarImage } from "@/lib/avatar";
 import ProfileCard from "@/components/ProfileCard";
+import PerformanceTab from "@/components/profile/PerformanceTab";
 import { motion } from "framer-motion";
-import { Edit3, X } from "lucide-react";
+import { Edit3, X, Swords } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 type FullProfile = {
   id: string;
@@ -31,6 +34,7 @@ type Friendship = {
 
 const Profile = () => {
   const { user, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState<FullProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ username: "", bio: "", country: "", avatar_url: "" });
@@ -93,7 +97,6 @@ const Profile = () => {
     loadSocialData();
   }, [user?.id]);
 
-  // Realtime profile updates
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -103,7 +106,6 @@ const Profile = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
 
-  // Realtime friendship updates
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -229,6 +231,12 @@ const Profile = () => {
     await deleteFriendship(data.id, "Friend removed.");
   };
 
+  const challengeFriend = (friendId: string) => {
+    navigate("/lobby");
+    // TODO: auto-create private room and invite friend
+    toast.success("Redirecting to lobby — create a private room and share the code!");
+  };
+
   return (
     <main className="container max-w-6xl py-24 px-4 space-y-6">
       <div className="flex items-center justify-between">
@@ -298,69 +306,91 @@ const Profile = () => {
         </motion.section>
       )}
 
-      {/* Search Players */}
-      <section className="glass-card p-6 space-y-4">
-        <h2 className="text-2xl font-bold font-display">Find Players by UID</h2>
-        <div className="flex gap-2">
-          <input
-            className="w-full rounded-lg border border-border bg-card p-3"
-            value={searchUid}
-            onChange={(e) => setSearchUid(e.target.value.replace(/\D/g, "").slice(0, 8))}
-            placeholder="Enter 8-digit UID"
-          />
-          <button className="border border-border rounded-lg px-4 hover:bg-secondary/50 transition-colors" onClick={performUidSearch}>Search</button>
-        </div>
-        {searchResult && (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <ProfileCard {...searchResult} username={searchResult.username || "Player"} compact />
-            </div>
-            <button onClick={sendFriendRequest} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm shrink-0">Add Friend</button>
-          </div>
-        )}
-      </section>
+      {/* Tabs: Performance & Social */}
+      <Tabs defaultValue="performance" className="w-full">
+        <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
+          <TabsTrigger value="search">Find Players</TabsTrigger>
+        </TabsList>
 
-      {/* Social */}
-      <section className="grid lg:grid-cols-3 gap-6">
-        <div className="glass-card p-6 space-y-3">
-          <h2 className="text-xl font-bold font-display">Incoming Requests</h2>
-          {incoming.length === 0 ? <p className="text-sm text-muted-foreground">No pending requests.</p> : incoming.map((item) => (
-            <div key={item.id} className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold text-sm">{item.requester?.username || "Player"}</p>
-                <p className="text-[10px] text-muted-foreground font-mono">UID: {item.requester?.player_uid || "-"}</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => updateFriendRequest(item, "declined")}>Decline</button>
-                <button className="bg-primary text-primary-foreground rounded px-3 py-1 text-xs" onClick={() => updateFriendRequest(item, "accepted")}>Accept</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <TabsContent value="performance">
+          {user && (
+            <PerformanceTab playerId={user.id} currentElo={profileData?.crown_score || 400} />
+          )}
+        </TabsContent>
 
-        <div className="glass-card p-6 space-y-3">
-          <h2 className="text-xl font-bold font-display">Outgoing Requests</h2>
-          {outgoing.length === 0 ? <p className="text-sm text-muted-foreground">No outgoing requests.</p> : outgoing.map((item) => (
-            <div key={item.id} className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold text-sm">{item.addressee?.username || "Player"}</p>
-                <p className="text-[10px] text-muted-foreground font-mono">UID: {item.addressee?.player_uid || "-"}</p>
-              </div>
-              <button className="border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => deleteFriendship(item.id, "Request cancelled.")}>Cancel</button>
+        <TabsContent value="social">
+          <section className="grid lg:grid-cols-3 gap-6">
+            <div className="glass-card p-6 space-y-3">
+              <h2 className="text-xl font-bold font-display">Incoming Requests</h2>
+              {incoming.length === 0 ? <p className="text-sm text-muted-foreground">No pending requests.</p> : incoming.map((item) => (
+                <div key={item.id} className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-sm">{item.requester?.username || "Player"}</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">UID: {item.requester?.player_uid || "-"}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => updateFriendRequest(item, "declined")}>Decline</button>
+                    <button className="bg-primary text-primary-foreground rounded px-3 py-1 text-xs" onClick={() => updateFriendRequest(item, "accepted")}>Accept</button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="glass-card p-6 space-y-3">
-          <h2 className="text-xl font-bold font-display">Friends List</h2>
-          {friends.length === 0 ? <p className="text-sm text-muted-foreground">No friends yet.</p> : friends.map((friend) => (
-            <div key={friend.id} className="space-y-2">
-              <ProfileCard {...friend} username={friend.username || "Player"} compact />
-              <button className="border border-border rounded px-3 py-1 text-xs w-full hover:bg-secondary/50" onClick={() => unfriendPlayer(friend.id)}>Remove</button>
+            <div className="glass-card p-6 space-y-3">
+              <h2 className="text-xl font-bold font-display">Outgoing Requests</h2>
+              {outgoing.length === 0 ? <p className="text-sm text-muted-foreground">No outgoing requests.</p> : outgoing.map((item) => (
+                <div key={item.id} className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-sm">{item.addressee?.username || "Player"}</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">UID: {item.addressee?.player_uid || "-"}</p>
+                  </div>
+                  <button className="border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => deleteFriendship(item.id, "Request cancelled.")}>Cancel</button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+
+            <div className="glass-card p-6 space-y-3">
+              <h2 className="text-xl font-bold font-display">Friends List</h2>
+              {friends.length === 0 ? <p className="text-sm text-muted-foreground">No friends yet.</p> : friends.map((friend) => (
+                <div key={friend.id} className="space-y-2">
+                  <ProfileCard {...friend} username={friend.username || "Player"} compact />
+                  <div className="flex gap-2">
+                    <button className="flex-1 inline-flex items-center justify-center gap-1 bg-primary/10 text-primary border border-primary/30 rounded px-3 py-1 text-xs hover:bg-primary/20" onClick={() => challengeFriend(friend.id)}>
+                      <Swords className="w-3 h-3" /> Challenge
+                    </button>
+                    <button className="flex-1 border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => unfriendPlayer(friend.id)}>Remove</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="search">
+          <section className="glass-card p-6 space-y-4">
+            <h2 className="text-2xl font-bold font-display">Find Players by UID</h2>
+            <div className="flex gap-2">
+              <input
+                className="w-full rounded-lg border border-border bg-card p-3"
+                value={searchUid}
+                onChange={(e) => setSearchUid(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                placeholder="Enter 8-digit UID"
+              />
+              <button className="border border-border rounded-lg px-4 hover:bg-secondary/50 transition-colors" onClick={performUidSearch}>Search</button>
+            </div>
+            {searchResult && (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <ProfileCard {...searchResult} username={searchResult.username || "Player"} compact />
+                </div>
+                <button onClick={sendFriendRequest} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm shrink-0">Add Friend</button>
+              </div>
+            )}
+          </section>
+        </TabsContent>
+      </Tabs>
     </main>
   );
 };

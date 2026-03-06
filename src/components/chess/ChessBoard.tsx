@@ -1,7 +1,12 @@
 import { useState, useCallback, useMemo } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
-import { BOARD_THEME_CLASSES, BoardTheme, PIECE_THEME_SPRITES, PIECE_UNICODE, PieceTheme } from "@/utils/chessThemes";
+import BoardSquare from "./BoardSquare";
+
+const PIECE_UNICODE: Record<string, string> = {
+  wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
+  bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
+};
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -134,66 +139,23 @@ const ChessBoard = ({
             const origRi = RANKS.indexOf(rank);
             const origFi = FILES.indexOf(file);
             const isLight = (origRi + origFi) % 2 === 0;
-            const isSelected = selectedSquare === square;
-            const isLegal = legalMoves.includes(square);
-            const isLastMove = lastMove?.from === square || lastMove?.to === square;
-            const isMoveDestination = lastMove?.to === square;
-            const isKingInCheck = kingSquare === square;
 
             return (
-              <button
+              <BoardSquare
                 key={square}
+                square={square}
+                pieceColor={piece?.color}
+                pieceType={piece?.type}
+                isLight={isLight}
+                isSelected={selectedSquare === square}
+                isLegal={legalMoves.includes(square)}
+                isLastMove={lastMove?.from === square || lastMove?.to === square}
+                isMoveDestination={lastMove?.to === square}
+                isKingInCheck={kingSquare === square}
+                showRank={fi === 0 ? rank : undefined}
+                showFile={ri === 7 ? file : undefined}
                 onClick={() => handleSquareClick(square)}
-                className={`board-square relative flex items-center justify-center transition-all duration-300 ${
-                  isLight ? boardClasses.light : boardClasses.dark
-                } ${isSelected ? "!bg-primary/35" : ""} ${
-                  isLastMove ? "!bg-yellow-300/60" : ""
-                } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
-              >
-                {isMoveDestination && (
-                  <motion.div
-                    className="absolute inset-[14%] rounded-full border-2 border-yellow-400/80"
-                    initial={{ scale: 0.7, opacity: 0.2 }}
-                    animate={{ scale: 1.15, opacity: 0 }}
-                    transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
-                  />
-                )}
-                {isLegal && !piece && (
-                  <div className="absolute w-[28%] h-[28%] rounded-full bg-black/15" />
-                )}
-                {isLegal && piece && (
-                  <div className="absolute inset-[5%] rounded-full border-[3px] border-yellow-500/45" />
-                )}
-                {piece && (
-                  pieceTheme === "letter" ? (
-                    <span className="font-mono text-2xl font-bold text-black/70">
-                      {PIECE_UNICODE[piece.color + piece.type]}
-                    </span>
-                  ) : (
-                    <motion.img
-                      layout
-                      initial={{ scale: 0.9, opacity: 0.85 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
-                      src={pieceSprites[piece.color + piece.type]}
-                      alt={`${piece.color === "w" ? "white" : "black"} ${piece.type}`}
-                      draggable={false}
-                      className="w-[82%] h-[82%] object-contain select-none"
-                      style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
-                    />
-                  )
-                )}
-                {fi === 0 && (
-                  <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-black/50" : "text-white/60"}`}>
-                    {rank}
-                  </span>
-                )}
-                {ri === 7 && (
-                  <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-black/50" : "text-white/60"}`}>
-                    {file}
-                  </span>
-                )}
-              </button>
+              />
             );
           }),
         )}
