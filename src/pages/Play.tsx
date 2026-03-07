@@ -558,10 +558,10 @@ const Play = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-card p-5 border border-primary/30"
               >
-                <p className="font-display font-bold text-sm">Quick Review Suggestion</p>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">Review the final 8 moves to spot tactical misses, then pick your next step.</p>
+                <p className="font-display font-bold text-sm">Post-Game Analysis</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
                 <div className="flex flex-wrap gap-2">
-                  <button onClick={() => navigate("/dashboard?section=history")} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">QUICK REVIEW</button>
+                  <button onClick={() => setShowEngineReview(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">ENGINE REVIEW</button>
                   <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
                   <button
                     onClick={() => {
@@ -576,6 +576,18 @@ const Play = () => {
                   </button>
                 </div>
               </motion.div>
+            )}
+
+            {isGameOver && showEngineReview && (
+              <GameReview
+                moves={
+                  isOnline && online.gameData?.moves
+                    ? (online.gameData.moves as Array<{ from: string; to: string; san: string; promotion?: string }>)
+                    : moveHistory.map((san) => ({ from: "", to: "", san }))
+                }
+                playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
+                onClose={() => setShowEngineReview(false)}
+              />
             )}
           </motion.div>
         </div>
