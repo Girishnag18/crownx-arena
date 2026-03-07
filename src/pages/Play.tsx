@@ -451,6 +451,13 @@ const Play = () => {
                     {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
+                <button
+                  onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
+                  className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                  title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
+                >
+                  {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
                 {!isOnline && (
                   <button
                     onClick={resetLocalGame}
