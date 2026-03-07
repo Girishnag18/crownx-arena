@@ -173,6 +173,10 @@ const Lobby = () => {
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate("/play")} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Crown className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Local Play</h3><p className="text-sm text-muted-foreground">Play against a friend on this device</p></div></div>
               </motion.button>
+
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate("/spectate")} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Eye className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Spectate</h3><p className="text-sm text-muted-foreground">Watch live games happening now</p></div></div>
+              </motion.button>
             </motion.div>
           ) : mode === "private" ? (
             <motion.div key="private" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
