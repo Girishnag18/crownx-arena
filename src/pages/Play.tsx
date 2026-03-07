@@ -1,13 +1,15 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
+import GameReview from "@/components/chess/GameReview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { soundManager } from "@/services/soundManager";
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
@@ -31,7 +33,10 @@ const Play = () => {
   const [aiAccuracy, setAiAccuracy] = useState(92);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
+  const [showEngineReview, setShowEngineReview] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+  const prevMoveCountRef = useRef(0);
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -193,6 +198,34 @@ const Play = () => {
     setAiAccuracy(Math.floor(Math.random() * 11) + 88);
   }, [game, isComputerGame, isGameOver]);
 
+  // Sound effects for moves
+  useEffect(() => {
+    const currentMoves = isOnline && online.gameData?.moves
+      ? (online.gameData.moves as any[]).length
+      : moveHistory.length;
+
+    if (currentMoves > prevMoveCountRef.current && prevMoveCountRef.current > 0) {
+      if (game.isCheckmate()) {
+        soundManager.play("gameEnd");
+      } else if (game.isCheck()) {
+        soundManager.play("check");
+      } else {
+        // Check last move type
+        const history = game.history({ verbose: true });
+        const lastHistoryMove = history[history.length - 1];
+        if (lastHistoryMove?.captured) {
+          soundManager.play("capture");
+        } else if (lastHistoryMove?.flags.includes("k") || lastHistoryMove?.flags.includes("q")) {
+          soundManager.play("castle");
+        } else if (lastHistoryMove?.promotion) {
+          soundManager.play("promote");
+        } else {
+          soundManager.play("move");
+        }
+      }
+    }
+    prevMoveCountRef.current = currentMoves;
+  }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
 
   useEffect(() => {
     if (!game.isCheckmate()) {
@@ -418,6 +451,13 @@ const Play = () => {
                     {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
+                <button
+                  onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
+                  className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                  title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
+                >
+                  {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
                 {!isOnline && (
                   <button
                     onClick={resetLocalGame}
@@ -518,10 +558,10 @@ const Play = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-card p-5 border border-primary/30"
               >
-                <p className="font-display font-bold text-sm">Quick Review Suggestion</p>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">Review the final 8 moves to spot tactical misses, then pick your next step.</p>
+                <p className="font-display font-bold text-sm">Post-Game Analysis</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
                 <div className="flex flex-wrap gap-2">
-                  <button onClick={() => navigate("/dashboard?section=history")} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">QUICK REVIEW</button>
+                  <button onClick={() => setShowEngineReview(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">ENGINE REVIEW</button>
                   <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
                   <button
                     onClick={() => {
@@ -536,6 +576,18 @@ const Play = () => {
                   </button>
                 </div>
               </motion.div>
+            )}
+
+            {isGameOver && showEngineReview && (
+              <GameReview
+                moves={
+                  isOnline && online.gameData?.moves
+                    ? (online.gameData.moves as Array<{ from: string; to: string; san: string; promotion?: string }>)
+                    : moveHistory.map((san) => ({ from: "", to: "", san }))
+                }
+                playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
+                onClose={() => setShowEngineReview(false)}
+              />
             )}
           </motion.div>
         </div>
