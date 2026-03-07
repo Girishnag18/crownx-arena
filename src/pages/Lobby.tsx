@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Clock3 } from "lucide-react";
+import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Clock3, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
