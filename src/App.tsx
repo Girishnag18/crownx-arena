@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Ratings from "./pages/Ratings";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import Spectate from "./pages/Spectate";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
