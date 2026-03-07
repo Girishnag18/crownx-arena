@@ -1,13 +1,15 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
+import GameReview from "@/components/chess/GameReview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { soundManager } from "@/services/soundManager";
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
