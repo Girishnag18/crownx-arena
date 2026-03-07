@@ -33,7 +33,10 @@ const Play = () => {
   const [aiAccuracy, setAiAccuracy] = useState(92);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
+  const [showEngineReview, setShowEngineReview] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+  const prevMoveCountRef = useRef(0);
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
