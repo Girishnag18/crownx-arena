@@ -198,6 +198,34 @@ const Play = () => {
     setAiAccuracy(Math.floor(Math.random() * 11) + 88);
   }, [game, isComputerGame, isGameOver]);
 
+  // Sound effects for moves
+  useEffect(() => {
+    const currentMoves = isOnline && online.gameData?.moves
+      ? (online.gameData.moves as any[]).length
+      : moveHistory.length;
+
+    if (currentMoves > prevMoveCountRef.current && prevMoveCountRef.current > 0) {
+      if (game.isCheckmate()) {
+        soundManager.play("gameEnd");
+      } else if (game.isCheck()) {
+        soundManager.play("check");
+      } else {
+        // Check last move type
+        const history = game.history({ verbose: true });
+        const lastHistoryMove = history[history.length - 1];
+        if (lastHistoryMove?.captured) {
+          soundManager.play("capture");
+        } else if (lastHistoryMove?.flags.includes("k") || lastHistoryMove?.flags.includes("q")) {
+          soundManager.play("castle");
+        } else if (lastHistoryMove?.promotion) {
+          soundManager.play("promote");
+        } else {
+          soundManager.play("move");
+        }
+      }
+    }
+    prevMoveCountRef.current = currentMoves;
+  }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
 
   useEffect(() => {
     if (!game.isCheckmate()) {
