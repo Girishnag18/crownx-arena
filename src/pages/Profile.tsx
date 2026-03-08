@@ -264,12 +264,12 @@ const Profile = () => {
   };
 
   return (
-    <main className="container max-w-6xl py-24 px-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold font-display">Player Profile</h1>
+    <main className="container max-w-6xl pt-20 pb-12 px-4 space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold font-display">Player Profile</h1>
         {profileData && !editing && (
-          <button onClick={() => setEditing(true)} className="flex items-center gap-2 text-sm border border-border rounded-lg px-4 py-2 hover:bg-secondary/50 transition-colors">
-            <Edit3 className="w-4 h-4" /> Edit Profile
+          <button onClick={() => setEditing(true)} className="flex items-center gap-2 text-xs sm:text-sm border border-border rounded-lg px-3 sm:px-4 py-2 hover:bg-secondary/50 transition-colors shrink-0">
+            <Edit3 className="w-4 h-4" /> Edit
           </button>
         )}
       </div>
