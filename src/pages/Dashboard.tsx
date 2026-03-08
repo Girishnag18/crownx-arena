@@ -355,7 +355,7 @@ const Dashboard = () => {
   );
 
   const recentTournaments = useMemo(
-    () => tournaments.filter((t) => t.status === "completed" || t.status === "cancelled"),
+    () => tournaments.filter((t) => t.status === "completed"),
     [tournaments],
   );
 
