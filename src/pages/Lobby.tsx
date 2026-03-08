@@ -641,12 +641,28 @@ const Lobby = () => {
           <p className="text-sm text-muted-foreground mb-5">
             {privateRoom.status === "joined" ? "Launching game room…" : "Share this code with a friend"}
           </p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3 mb-5">
             <span className="font-mono text-3xl tracking-[0.3em] font-bold text-primary">{privateRoom.roomCode}</span>
             <button onClick={handleCopyCode} className="p-2 rounded-lg bg-secondary/60 hover:bg-primary/15 transition-colors border border-border/40">
               {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-muted-foreground" />}
             </button>
           </div>
+          {privateRoom.status === "waiting" && (
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => privateRoom.regenerateRoom()}
+                className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-muted-foreground hover:text-primary border border-border/40 hover:border-primary/30 rounded-lg px-4 py-2 transition-all"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> New Code
+              </button>
+              <button
+                onClick={() => privateRoom.cancelRoom()}
+                className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 rounded-lg px-4 py-2 transition-all"
+              >
+                <X className="w-3.5 h-3.5" /> Cancel Room
+              </button>
+            </div>
+          )}
         </div>
       )}
 

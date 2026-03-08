@@ -10,6 +10,8 @@ export const usePrivateRoom = () => {
   const [gameId, setGameId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "waiting" | "joined" | "ready">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [lastDuration, setLastDuration] = useState<number | null>(null);
+  const [lastIncrement, setLastIncrement] = useState<number | null>(null);
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -21,6 +23,8 @@ export const usePrivateRoom = () => {
   const createRoom = useCallback(async (durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
+    setLastDuration(durationSeconds);
+    setLastIncrement(incrementSeconds);
     let createdRoom: { room_code: string; id: string } | null = null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -47,6 +51,49 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
+  const regenerateRoom = useCallback(async () => {
+    if (!user || !roomId) return;
+    setError(null);
+
+    // Delete old room
+    await supabase.from("game_rooms").delete().eq("id", roomId).eq("host_id", user.id);
+
+    // Create new one with same settings
+    let createdRoom: { room_code: string; id: string } | null = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateCode();
+      const { data, error: err } = await supabase
+        .from("game_rooms")
+        .insert({ room_code: code, host_id: user.id, duration_seconds: lastDuration, increment_seconds: lastIncrement } as any)
+        .select()
+        .single();
+
+      if (!err && data) {
+        createdRoom = data;
+        break;
+      }
+    }
+
+    if (!createdRoom) {
+      setError("Unable to generate new code. Please retry.");
+      return;
+    }
+
+    setRoomCode(createdRoom.room_code);
+    setRoomId(createdRoom.id);
+    setStatus("waiting");
+  }, [user, roomId, lastDuration, lastIncrement]);
+
+  const cancelRoom = useCallback(async () => {
+    if (!user || !roomId) return;
+    await supabase.from("game_rooms").delete().eq("id", roomId).eq("host_id", user.id);
+    setRoomCode(null);
+    setRoomId(null);
+    setGameId(null);
+    setStatus("idle");
+    setError(null);
+  }, [user, roomId]);
+
   const joinRoom = useCallback(async (code: string, _selectedDurationSeconds: number | null = null, variant: string | null = null) => {
     if (!user) return;
     setError(null);
@@ -59,24 +106,29 @@ export const usePrivateRoom = () => {
       return;
     }
 
-    const { data: room, error: fetchErr } = await supabase
+    // Fetch all matching waiting rooms (not just single)
+    const { data: rooms, error: fetchErr } = await supabase
       .from("game_rooms")
       .select("*")
       .eq("room_code", sanitizedCode)
       .eq("status", "waiting")
-      .single();
+      .is("guest_id", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    if (fetchErr || !room) {
-      setError("Room not found or already full");
+    if (fetchErr || !rooms || rooms.length === 0) {
+      setError("Room not found, already full, or expired");
       return;
     }
+
+    const room = rooms[0];
 
     if (room.host_id === user.id) {
       setError("You can't join your own room");
       return;
     }
 
-    // Claim the room first so host can see guest connected in realtime.
+    // Claim the room
     const { data: claimedRoom, error: claimErr } = await supabase
       .from("game_rooms")
       .update({ guest_id: user.id, status: "joined" })
@@ -87,7 +139,7 @@ export const usePrivateRoom = () => {
       .single();
 
     if (claimErr || !claimedRoom) {
-      setError("Room was claimed by another player. Please try a different code.");
+      setError("This room is no longer available. Ask the host for a new code.");
       return;
     }
 
@@ -180,5 +232,5 @@ export const usePrivateRoom = () => {
     setError(null);
   }, []);
 
-  return { roomCode, gameId, status, error, createRoom, joinRoom, reset };
+  return { roomCode, gameId, status, error, createRoom, joinRoom, regenerateRoom, cancelRoom, reset };
 };
