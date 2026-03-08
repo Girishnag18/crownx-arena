@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Eye, Timer, Shuffle, ChevronRight, Zap, Flame, Clock, Trophy, MessageSquare, Send, UserCheck } from "lucide-react";
+import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Eye, Timer, Shuffle, ChevronRight, Zap, Flame, Clock, Trophy, MessageSquare, Send, UserCheck, BrainCircuit, GraduationCap, Rocket } from "lucide-react";
 import { TimeControlSelector, TIME_CONTROLS, type TimeControl } from "@/components/chess/ChessClock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,8 @@ import { usePrivateRoom } from "@/hooks/usePrivateRoom";
 import { supabase } from "@/integrations/supabase/client";
 import WorldChatMessageItem, { type ChatMessage } from "@/components/chat/WorldChatMessage";
 
-type Mode = null | "quick_play" | "world_arena" | "private";
+type Mode = null | "quick_play" | "world_arena" | "private" | "vs_computer";
+type AIDifficulty = "beginner" | "intermediate" | "advanced";
 type WorldChatMessage = ChatMessage;
 
 const cardMotion = {
