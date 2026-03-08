@@ -18,7 +18,7 @@ export const usePrivateRoom = () => {
     return code;
   };
 
-  const createRoom = useCallback(async () => {
+  const createRoom = useCallback(async (durationSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
     let createdRoom: { room_code: string; id: string } | null = null;
@@ -27,7 +27,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id })
+        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds } as any)
         .select()
         .single();
 
@@ -47,7 +47,7 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
-  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null, variant: string | null = null) => {
+  const joinRoom = useCallback(async (code: string, _selectedDurationSeconds: number | null = null, variant: string | null = null) => {
     if (!user) return;
     setError(null);
 
@@ -94,7 +94,7 @@ export const usePrivateRoom = () => {
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
-    const durationSeconds = selectedDurationSeconds ?? null;
+    const durationSeconds = (claimedRoom as any).duration_seconds ?? null;
     const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     const { data: game, error: gameErr } = await supabase

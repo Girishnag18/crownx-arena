@@ -613,6 +613,7 @@ export type Database = {
       game_rooms: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           game_id: string | null
           guest_id: string | null
           host_id: string
@@ -622,6 +623,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id: string
@@ -631,6 +633,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id?: string
