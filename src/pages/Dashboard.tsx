@@ -373,7 +373,7 @@ const Dashboard = () => {
           {/* ═══════════ HERO SECTION ═══════════ */}
           <motion.div variants={fadeUp} className={`rounded-xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-3.5 sm:p-5 relative overflow-hidden`}>
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
               {/* Avatar */}
               <div className="relative">
                 <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-primary/30 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.3)]">
