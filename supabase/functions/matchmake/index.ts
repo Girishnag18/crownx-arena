@@ -34,7 +34,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { game_mode = 'quick_play', duration_seconds = null, increment_seconds = null } = await req.json().catch(() => ({}));
+    const { game_mode = 'quick_play', duration_seconds = null, increment_seconds = null, rating_range = 200 } = await req.json().catch(() => ({}));
+
+    const ratingWindow = Math.min(Math.max(Number(rating_range) || 200, 50), 1000);
 
     // Get player's rating
     const { data: profile } = await supabase
@@ -45,14 +47,14 @@ Deno.serve(async (req) => {
 
     const playerRating = profile?.crown_score || 1200;
 
-    // Look for a match in the queue (within 200 rating points, same game mode, same time control)
+    // Look for a match in the queue (within rating window, same game mode, same time control)
     let candidatesQuery = supabase
       .from('matchmaking_queue')
       .select('*')
       .eq('game_mode', game_mode)
       .neq('player_id', user.id)
-      .gte('rating', playerRating - 200)
-      .lte('rating', playerRating + 200)
+      .gte('rating', playerRating - ratingWindow)
+      .lte('rating', playerRating + ratingWindow)
       .order('created_at', { ascending: true })
       .limit(1);
 
