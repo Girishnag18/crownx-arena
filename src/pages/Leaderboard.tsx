@@ -98,16 +98,43 @@ const Leaderboard = () => {
     })));
   };
 
+  const loadFriendsLeaderboard = async () => {
+    if (!user) return;
+    const { data: friendships } = await supabase
+      .from("friendships")
+      .select("requester_id, addressee_id")
+      .eq("status", "accepted")
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+
+    if (!friendships || friendships.length === 0) { setFriendPlayers([]); return; }
+
+    const friendIds = [...new Set(
+      (friendships as any[]).map(f => f.requester_id === user.id ? f.addressee_id : f.requester_id)
+    ), user.id]; // include self
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, avatar_url, crown_score, wins, losses")
+      .in("id", friendIds)
+      .order("crown_score", { ascending: false });
+
+    setFriendPlayers((data || []) as LeaderboardPlayer[]);
+  };
+
   useEffect(() => {
     loadLeaderboard();
     loadSeasons();
+    loadFriendsLeaderboard();
 
     const channel = supabase
       .channel("leaderboard-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, loadLeaderboard)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        loadLeaderboard();
+        loadFriendsLeaderboard();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (activeSeason) loadSeasonEntries(activeSeason.id);
