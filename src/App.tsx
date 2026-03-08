@@ -98,6 +98,7 @@ const App = () => (
           <BoardSettingsProvider>
             <Navbar />
             <AchievementListener />
+            <StreakBanner />
             <RouteAnimator />
           </BoardSettingsProvider>
         </AuthProvider>
