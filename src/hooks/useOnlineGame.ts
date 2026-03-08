@@ -29,6 +29,7 @@ interface PlayerSummary {
   username: string;
   crown_score: number;
   avatar_url: string | null;
+  equippedTitle?: { name: string; icon: string } | null;
 }
 
 export const useOnlineGame = (gameId: string | null) => {
@@ -100,7 +101,80 @@ export const useOnlineGame = (gameId: string | null) => {
   useEffect(() => {
     if (!gameId || !user) return;
     setSyncState("connecting");
+<<<<<<< HEAD
     void fetchGameSnapshot(true);
+=======
+
+    const loadGame = async () => {
+      const { data } = await supabase
+        .from("games")
+        .select("*")
+        .eq("id", gameId)
+        .single();
+
+      if (data) {
+        const gd = data as unknown as GameData;
+        setGameData(gd);
+        const chess = new Chess(gd.current_fen);
+        setGame(chess);
+        setPlayerColor(gd.player_white === user.id ? "w" : "b");
+
+        const playerIds = [gd.player_white, gd.player_black].filter(Boolean) as string[];
+        if (playerIds.length > 0) {
+          const [{ data: profiles }, { data: purchases }] = await Promise.all([
+            supabase
+              .from("profiles")
+              .select("id, username, crown_score, avatar_url")
+              .in("id", playerIds),
+            supabase
+              .from("shop_purchases")
+              .select("user_id, item_id, is_equipped")
+              .in("user_id", playerIds)
+              .eq("is_equipped", true),
+          ]);
+
+          // Fetch title items for equipped purchases
+          let titleMap = new Map<string, { name: string; icon: string }>();
+          if (purchases && purchases.length > 0) {
+            const itemIds = purchases.map((p) => p.item_id);
+            const { data: items } = await supabase
+              .from("shop_items")
+              .select("id, name, icon, category")
+              .in("id", itemIds)
+              .eq("category", "title");
+            if (items) {
+              const itemById = new Map(items.map((i) => [i.id, i]));
+              for (const p of purchases) {
+                const item = itemById.get(p.item_id);
+                if (item) titleMap.set(p.user_id, { name: item.name, icon: item.icon });
+              }
+            }
+          }
+
+          if (profiles) {
+            const profileMap = new Map(
+              profiles.map((profile) => [
+                profile.id,
+                {
+                  id: profile.id,
+                  username: profile.username || "Player",
+                  crown_score: profile.crown_score || 1200,
+                  avatar_url: profile.avatar_url || null,
+                  equippedTitle: titleMap.get(profile.id) || null,
+                } satisfies PlayerSummary,
+              ]),
+            );
+
+            setWhitePlayer(gd.player_white ? profileMap.get(gd.player_white) || null : null);
+            setBlackPlayer(gd.player_black ? profileMap.get(gd.player_black) || null : null);
+          }
+        }
+        setLoading(false);
+      }
+    };
+
+    loadGame();
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
     // Subscribe to realtime updates
     const channel = supabase

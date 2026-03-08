@@ -1,12 +1,18 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
+<<<<<<< HEAD
 import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords } from "lucide-react";
+=======
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle } from "lucide-react";
+import { generateChess960Fen } from "@/utils/chess960";
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import { supabase } from "@/integrations/supabase/client";
 import ChessBoard from "@/components/chess/ChessBoard";
+<<<<<<< HEAD
 import EvaluationBar from "@/components/chess/EvaluationBar";
 import AnalysisPanel, { type MoveAnalysisItem } from "@/components/chess/AnalysisPanel";
 import InGameChat from "@/components/chat/InGameChat";
@@ -28,6 +34,18 @@ type EngineEvalResponse = {
 };
 
 type LocalMove = { from: string; to: string; san: string; promotion?: string | null };
+=======
+import GameReview from "@/components/chess/GameReview";
+import AICoach from "@/components/chess/AICoach";
+import ReportButton from "@/components/chess/ReportButton";
+import VoiceChess from "@/components/chess/VoiceChess";
+import OpeningExplorer from "@/components/chess/OpeningExplorer";
+import GameChat from "@/components/chess/GameChat";
+import { TIME_CONTROLS, type TimeControl, TimeControlSelector, useChessClock, ClockFace } from "@/components/chess/ChessClock";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { soundManager } from "@/services/soundManager";
+import { stockfish } from "@/services/stockfishService";
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
 const Play = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -35,12 +53,24 @@ const Play = () => {
   const [searchParams] = useSearchParams();
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
+<<<<<<< HEAD
 
   const playerElo = profile?.crown_score || 400;
   const aiElo = playerElo + 20;
 
   const [localGame, setLocalGame] = useState(new Chess());
   const [localMoves, setLocalMoves] = useState<LocalMove[]>([]);
+=======
+  const isRankedAI = searchParams.get("ranked") === "true";
+  const variant = searchParams.get("variant");
+  const isChess960 = variant === "chess960";
+  const { profile } = useAuth();
+  const playerElo = profile?.crown_score || 400;
+  const aiElo = playerElo + 20;
+
+  const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
+  const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [syncAgo, setSyncAgo] = useState("just now");
   const [resignPending, setResignPending] = useState(false);
@@ -49,7 +79,13 @@ const Play = () => {
   const [aiAccuracy, setAiAccuracy] = useState(92);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
+  const [showEngineReview, setShowEngineReview] = useState(false);
+  const [showAICoach, setShowAICoach] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
+  const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+<<<<<<< HEAD
   const [localResult, setLocalResult] = useState<{ type: "resignation"; winnerColor: "w" | "b"; loserColor: "w" | "b" } | null>(null);
   const [nextLiveGameId, setNextLiveGameId] = useState<string | null>(null);
   const [evalCp, setEvalCp] = useState<number | null>(0);
@@ -67,6 +103,15 @@ const Play = () => {
   const pendingBestMoveRef = useRef<((data: EngineBestMoveResponse) => void) | null>(null);
   const pendingEvalRef = useRef<((data: EngineEvalResponse) => void) | null>(null);
   const evalQueueRef = useRef(Promise.resolve());
+=======
+  const [streamerMode, setStreamerMode] = useState(false);
+  const [timeControl, setTimeControl] = useState<TimeControl | null>(() => {
+    const tc = searchParams.get("tc");
+    return tc ? TIME_CONTROLS.find((t) => t.label === tc) || null : null;
+  });
+  const [clockGameOver, setClockGameOver] = useState(false);
+  const prevMoveCountRef = useRef(0);
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -213,21 +258,36 @@ const Play = () => {
   }, [online]);
 
   const resetLocalGame = () => {
+<<<<<<< HEAD
     setLocalGame(new Chess());
     setLocalMoves([]);
+=======
+    const newFen = isChess960 ? generateChess960Fen() : undefined;
+    setLocalGame(new Chess(newFen));
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
     setLastMove(null);
     setShowCheckmateBanner(false);
     setShowPostGameReview(false);
     setLocalBottomColor("w");
+<<<<<<< HEAD
     setLocalResult(null);
     setAnalysisItems([]);
     analysisSourceRef.current = null;
     setAnalysisSource(null);
     setEvalCp(0);
+=======
+    setClockGameOver(false);
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
   };
+
+  const handleTimeUp = useCallback((side: "w" | "b") => {
+    setClockGameOver(true);
+    soundManager.play("gameEnd");
+  }, []);
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
+<<<<<<< HEAD
   const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || !!localResult);
 
   useEffect(() => {
@@ -241,6 +301,9 @@ const Play = () => {
       cancelled = true;
     };
   }, [evaluateFen, game]);
+=======
+  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver);
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
@@ -299,6 +362,7 @@ const Play = () => {
     setAiAccuracy(Math.floor(Math.random() * 11) + 88);
   }, [game, isComputerGame, isGameOver]);
 
+<<<<<<< HEAD
   useEffect(() => {
     if (!isOnline || !online.gameData?.id || !isGameOver || !user?.id) return;
     if (analysisEnqueuedRef.current === online.gameData.id) return;
@@ -313,6 +377,53 @@ const Play = () => {
       p_priority: 80,
     });
   }, [isGameOver, isOnline, online.gameData?.id, user?.id]);
+=======
+  // Sound effects for moves
+  useEffect(() => {
+    const currentMoves = isOnline && online.gameData?.moves
+      ? (online.gameData.moves as any[]).length
+      : moveHistory.length;
+
+    if (currentMoves > prevMoveCountRef.current && prevMoveCountRef.current > 0) {
+      if (game.isCheckmate()) {
+        soundManager.play("gameEnd");
+      } else if (game.isCheck()) {
+        soundManager.play("check");
+      } else {
+        // Check last move type
+        const history = game.history({ verbose: true });
+        const lastHistoryMove = history[history.length - 1];
+        if (lastHistoryMove?.captured) {
+          soundManager.play("capture");
+        } else if (lastHistoryMove?.flags.includes("k") || lastHistoryMove?.flags.includes("q")) {
+          soundManager.play("castle");
+        } else if (lastHistoryMove?.promotion) {
+          soundManager.play("promote");
+        } else {
+          soundManager.play("move");
+        }
+      }
+    }
+    prevMoveCountRef.current = currentMoves;
+  }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
+
+  // Engine best-move arrow
+  useEffect(() => {
+    if (!showArrows || isGameOver) {
+      setEngineArrows([]);
+      return;
+    }
+    let cancelled = false;
+    const fen = game.fen();
+    stockfish.getBestMove(fen, 10).then((bestMove) => {
+      if (cancelled || !bestMove || bestMove.length < 4) return;
+      const from = bestMove.slice(0, 2);
+      const to = bestMove.slice(2, 4);
+      setEngineArrows([{ from, to }]);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [game, showArrows, isGameOver]);
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
   useEffect(() => {
     if (!game.isCheckmate()) {
@@ -488,12 +599,17 @@ const Play = () => {
         return isSpectator ? `${game.turn() === "w" ? "White" : "Black"} to move` : (online.isMyTurn ? "Your turn" : "Opponent's turn");
       }
     }
+    if (clockGameOver) return `Time's up! ${game.turn() === "w" ? "Black" : "White"} wins on time!`;
     if (game.isCheckmate()) return `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`;
     if (game.isStalemate()) return "Stalemate - Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
+<<<<<<< HEAD
   }, [game, isComputerGame, isInCheck, isOnline, isSpectator, localResult, online, user]);
+=======
+  }, [game, isInCheck, isOnline, online, user, clockGameOver]);
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
   const resignLocalGame = () => {
     if (!window.confirm("Are you sure to resign?")) return;
@@ -504,7 +620,19 @@ const Play = () => {
     setShowPostGameReview(true);
   };
 
+<<<<<<< HEAD
   const displayMoves = moveObjects.map((m) => m.san);
+=======
+  const clockActiveSide = (game.isGameOver() || clockGameOver) ? null : game.turn();
+  const { whiteMs, blackMs } = useChessClock(
+    timeControl,
+    clockActiveSide,
+    displayMoves.length > 0,
+    isGameOver,
+    handleTimeUp,
+  );
+
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
     for (let i = 0; i < displayMoves.length; i += 2) {
@@ -585,13 +713,25 @@ const Play = () => {
       : (online.playerColor === "w" ? online.whitePlayer?.avatar_url : online.blackPlayer?.avatar_url)
     : null;
 
-  const PlayerLabel = ({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) => (
-    <div className="flex items-center gap-2">
-      <Avatar className="w-7 h-7 border border-border/70">
+  const topTitle = isOnline
+    ? (online.playerColor === "w" ? online.blackPlayer?.equippedTitle : online.whitePlayer?.equippedTitle)
+    : null;
+  const bottomTitle = isOnline
+    ? (online.playerColor === "w" ? online.whitePlayer?.equippedTitle : online.blackPlayer?.equippedTitle)
+    : null;
+
+  const PlayerLabel = ({ name, avatarUrl, title }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null }) => (
+    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      <Avatar className="w-6 h-6 sm:w-7 sm:h-7 border border-border/70 shrink-0">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
+        <AvatarFallback className="text-[9px] sm:text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
       </Avatar>
-      <span className="font-display font-bold">{name}</span>
+      <span className="font-display font-bold text-xs sm:text-sm truncate">{name}</span>
+      {title && (
+        <span className="text-[9px] sm:text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1 py-0.5 rounded-full hidden sm:inline">
+          {title.icon} {title.name}
+        </span>
+      )}
     </div>
   );
 
@@ -644,6 +784,7 @@ const Play = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-background pt-20 pb-12 px-4">
       <div className="container mx-auto max-w-[1580px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -658,10 +799,34 @@ const Play = () => {
                     ? <span className="text-xs text-muted-foreground">No captures</span>
                     : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
                   </div>
+=======
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-2 sm:px-4">
+      <div className="container mx-auto max-w-[1500px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
+          <div className="lg:col-span-9 flex flex-col items-center">
+            {/* Top player bar */}
+            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} />
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
+                    {capturedPieces.capturedByBlack.length === 0
+                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      : capturedPieces.capturedByBlack.slice(0, 8).map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                  </div>
+                  {timeControl && (
+                    <ClockFace
+                      ms={flipped ? whiteMs : blackMs}
+                      isActive={clockActiveSide === (flipped ? "w" : "b")}
+                      side={flipped ? "w" : "b"}
+                    />
+                  )}
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                 </div>
               </div>
             </div>
 
+<<<<<<< HEAD
             <div className={`w-full ${boardSizeClass} flex items-start justify-center gap-3`}>
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                 <ChessBoard
@@ -680,6 +845,23 @@ const Play = () => {
                 <EvaluationBar evalCp={evalCp} />
               </div>
             </div>
+=======
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <ChessBoard
+                game={game}
+                onMove={isOnline ? handleOnlineMove : handleLocalMove}
+                flipped={flipped}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (isComputerGame ? game.turn() === computerColor : false)}
+                lastMove={derivedLastMove}
+                sizeClassName={boardSizeClass}
+                maxBoardSizePx={maxBoardSizePx || undefined}
+                arrows={showArrows ? engineArrows : []}
+                premovesEnabled={isOnline}
+                playerColor={isOnline ? online.playerColor : null}
+                streamerMode={streamerMode}
+              />
+            </motion.div>
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
             {showCheckmateBanner && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/45 backdrop-blur-sm">
@@ -690,6 +872,7 @@ const Play = () => {
               </motion.div>
             )}
 
+<<<<<<< HEAD
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
@@ -700,10 +883,30 @@ const Play = () => {
                     ? <span className="text-xs text-muted-foreground">No captures</span>
                     : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
                   </div>
+=======
+            {/* Bottom player bar */}
+            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
+                    {capturedPieces.capturedByWhite.length === 0
+                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      : capturedPieces.capturedByWhite.slice(0, 8).map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                  </div>
+                  {timeControl && (
+                    <ClockFace
+                      ms={flipped ? blackMs : whiteMs}
+                      isActive={clockActiveSide === (flipped ? "b" : "w")}
+                      side={flipped ? "b" : "w"}
+                    />
+                  )}
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                 </div>
               </div>
             </div>
 
+<<<<<<< HEAD
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}>
               <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
                 {isSpectator && <span className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">Spectating</span>}
@@ -721,6 +924,25 @@ const Play = () => {
                   Engine: {engineBackend ?? "starting"}
                 </span>
                 {!isGameOver && !isSpectator && (
+=======
+            {/* Controls bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className={`mt-2 sm:mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
+            >
+              <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
+                {!isOnline && (
+                  <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
+                )}
+                {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
+                {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
+                <span className="truncate">{gameStatus}</span>
+              </div>
+              <div className="flex gap-1 sm:gap-2 shrink-0">
+                {isOnline && !online.isGameOver && (
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                   <button
                     onClick={async () => {
                       if (isOnline) {
@@ -732,15 +954,49 @@ const Play = () => {
                       }
                       resignLocalGame();
                     }}
+<<<<<<< HEAD
                     disabled={isOnline && resignPending}
                     className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
+=======
+                    disabled={resignPending}
+                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                     title="Resign"
                   >
                     {isOnline && resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
+                <button
+                  onClick={() => setShowArrows(!showArrows)}
+                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
+                  title={showArrows ? "Hide engine arrows" : "Show engine arrows"}
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
+                  className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
+                  title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
+                >
+                  {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => setStreamerMode(!streamerMode)}
+                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors hidden sm:flex ${streamerMode ? "text-primary border-primary/40" : ""}`}
+                  title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
+                >
+                  <Monitor className="w-4 h-4" />
+                </button>
                 {!isOnline && (
+<<<<<<< HEAD
                   <button onClick={resetLocalGame} className="glass-card px-3 py-2 hover:border-primary/30 transition-colors" title="New Game">
+=======
+                  <button
+                    onClick={resetLocalGame}
+                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
+                    title="New Game"
+                  >
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                     <RotateCcw className="w-4 h-4" />
                   </button>
                 )}
@@ -748,8 +1004,19 @@ const Play = () => {
             </motion.div>
           </div>
 
+<<<<<<< HEAD
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-3 space-y-4">
             <div className="glass-card p-5 border-glow space-y-3">
+=======
+          {/* Side panel - collapsible on mobile */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-3 space-y-3 sm:space-y-4"
+          >
+            <div className="glass-card p-3 sm:p-5 border-glow space-y-2 sm:space-y-3">
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
                 {isOnline ? `Live match: ${online.whitePlayer?.username || "White"} vs ${online.blackPlayer?.username || "Black"}` : "Local Game"}
@@ -763,6 +1030,7 @@ const Play = () => {
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}.`
                     : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} at the bottom.`}
               </p>
+<<<<<<< HEAD
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg border border-border/60 bg-secondary/20 px-3 py-2">
                   <p className="text-muted-foreground">Time control</p>
@@ -775,6 +1043,15 @@ const Play = () => {
                   </p>
                 </div>
               </div>
+=======
+              {timeControl && (
+                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 text-xs">
+                  <span className="text-muted-foreground">Time control: </span>
+                  <span className="font-display font-bold text-primary">{timeControl.label}</span>
+                  <span className="text-muted-foreground"> ({timeControl.category})</span>
+                </div>
+              )}
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-display">
@@ -802,6 +1079,20 @@ const Play = () => {
               )}
             </div>
 
+            <OpeningExplorer moves={displayMoves} />
+
+            {!isGameOver && (
+              <VoiceChess
+                game={game}
+                onMove={isOnline ? handleOnlineMove : handleLocalMove}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver : (isComputerGame ? game.turn() === computerColor : false)}
+              />
+            )}
+
+            {isOnline && onlineGameId && (
+              <GameChat gameId={onlineGameId} />
+            )}
+
             <div className="glass-card p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
               <div className="max-h-64 overflow-y-auto space-y-1 text-sm font-mono">
@@ -825,6 +1116,7 @@ const Play = () => {
             )}
 
             {isGameOver && (
+<<<<<<< HEAD
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-5 border-glow gold-glow text-center">
                 <Crown className="w-8 h-8 text-primary mx-auto mb-2" />
                 <p className="font-display font-bold text-lg mb-3">{gameStatus}</p>
@@ -832,11 +1124,85 @@ const Play = () => {
                   <button onClick={isOnline ? () => navigate("/lobby") : resetLocalGame} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform">
                     {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
                   </button>
+=======
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card p-5 border-glow gold-glow text-center space-y-4"
+              >
+                <Crown className="w-8 h-8 text-primary mx-auto mb-1" />
+                <p className="font-display font-bold text-lg">{gameStatus}</p>
+
+                {/* Stats summary */}
+                <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+                  <span>{displayMoves.length} moves</span>
+                  {timeControl && <span>Time: {timeControl.label}</span>}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-2">
+                  {isOnline ? (
+                    <>
+                      <button
+                        onClick={() => navigate("/lobby")}
+                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        🔄 FIND NEW MATCH
+                      </button>
+                      <button
+                        onClick={() => setShowEngineReview(true)}
+                        className="w-full border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10 transition-colors"
+                      >
+                        📊 ANALYZE GAME
+                      </button>
+                      <button
+                        onClick={() => setShowAICoach(true)}
+                        className="w-full border border-border text-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                      >
+                        🧠 AI COACH REVIEW
+                      </button>
+                      <button
+                        onClick={() => navigate("/lobby")}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1.5"
+                      >
+                        Back to Lobby
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={resetLocalGame}
+                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        🔄 REMATCH
+                      </button>
+                      <button
+                        onClick={() => setShowEngineReview(true)}
+                        className="w-full border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10 transition-colors"
+                      >
+                        📊 ANALYZE GAME
+                      </button>
+                      <button
+                        onClick={() => setShowAICoach(true)}
+                        className="w-full border border-border text-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                      >
+                        🧠 AI COACH REVIEW
+                      </button>
+                      <button
+                        onClick={() => navigate("/lobby")}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1.5"
+                      >
+                        Play Online Instead
+                      </button>
+                    </>
+                  )}
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                 </div>
               </motion.div>
             )}
 
             {isGameOver && showPostGameReview && (
+<<<<<<< HEAD
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 border border-primary/30 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-display font-bold text-sm">Analysis Mode</p>
@@ -857,9 +1223,60 @@ const Play = () => {
                 )}
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => navigate("/dashboard?section=history")} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">FULL REVIEW</button>
+=======
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-5 border border-primary/30"
+              >
+                <p className="font-display font-bold text-sm">Post-Game Analysis</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => setShowEngineReview(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">ENGINE REVIEW</button>
+                  <button onClick={() => setShowAICoach(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">AI COACH</button>
+                  {isOnline && online.gameData && (
+                    <ReportButton
+                      gameId={online.gameData.id}
+                      reportedPlayerId={
+                        online.playerColor === "w"
+                          ? online.gameData.player_black
+                          : online.gameData.player_white
+                      }
+                    />
+                  )}
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                   <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
                 </div>
               </motion.div>
+            )}
+
+            {isGameOver && showEngineReview && (
+              <GameReview
+                moves={
+                  isOnline && online.gameData?.moves
+                    ? (online.gameData.moves as Array<{ from: string; to: string; san: string; promotion?: string }>)
+                    : moveHistory.map((san) => ({ from: "", to: "", san }))
+                }
+                playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
+                onClose={() => setShowEngineReview(false)}
+              />
+            )}
+
+            {isGameOver && showAICoach && (
+              <AICoach
+                moves={
+                  isOnline && online.gameData?.moves
+                    ? (online.gameData.moves as Array<{ san: string; classification?: string }>)
+                    : moveHistory.map((san) => ({ san }))
+                }
+                playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
+                accuracy={0}
+                blunders={0}
+                mistakes={0}
+                inaccuracies={0}
+                brilliants={0}
+                onClose={() => setShowAICoach(false)}
+              />
             )}
           </motion.div>
         </div>

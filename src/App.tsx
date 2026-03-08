@@ -5,7 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./contexts/AuthContext";
+import { BoardSettingsProvider } from "./contexts/BoardSettingsContext";
 import Navbar from "./components/Navbar";
+import MobileBottomNav from "./components/MobileBottomNav";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Rules from "./pages/Rules";
@@ -22,9 +24,29 @@ import Settings from "./pages/Settings";
 import Ratings from "./pages/Ratings";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+<<<<<<< HEAD
 import Tactics from "./pages/Tactics";
 import TournamentBracketPage from "./pages/TournamentBracketPage";
+=======
+import Spectate from "./pages/Spectate";
+import TournamentDetail from "./pages/TournamentDetail";
+import Puzzles from "./pages/Puzzles";
+import Studies from "./pages/Studies";
+import OpeningTrainer from "./pages/OpeningTrainer";
+import PgnAnalysis from "./pages/PgnAnalysis";
+import Challenges from "./pages/Challenges";
+import BattlePass from "./pages/BattlePass";
+import Tutorial from "./pages/Tutorial";
+import Clubs from "./pages/Clubs";
+import Social from "./pages/Social";
+import Shop from "./pages/Shop";
+import DailyRewards from "./pages/DailyRewards";
+import Replay from "./pages/Replay";
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import AchievementListener from "./components/gamification/AchievementListener";
+import StreakBanner from "./components/gamification/StreakBanner";
+import RealtimeNotificationToast from "./components/RealtimeNotificationToast";
 
 
 const queryClient = new QueryClient();
@@ -57,7 +79,21 @@ const RouteAnimator = () => {
           <Route path="/tactics" element={<ProtectedRoute><Tactics /></ProtectedRoute>} />
           <Route path="/tournaments/:id/bracket" element={<ProtectedRoute><TournamentBracketPage /></ProtectedRoute>} />
           <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
+          <Route path="/spectate" element={<ProtectedRoute><Spectate /></ProtectedRoute>} />
+          <Route path="/puzzles" element={<ProtectedRoute><Puzzles /></ProtectedRoute>} />
+          <Route path="/studies" element={<ProtectedRoute><Studies /></ProtectedRoute>} />
+          <Route path="/openings" element={<ProtectedRoute><OpeningTrainer /></ProtectedRoute>} />
+          <Route path="/analysis" element={<ProtectedRoute><PgnAnalysis /></ProtectedRoute>} />
+          <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
+          <Route path="/battle-pass" element={<ProtectedRoute><BattlePass /></ProtectedRoute>} />
+          <Route path="/tutorial" element={<ProtectedRoute><Tutorial /></ProtectedRoute>} />
+          <Route path="/clubs" element={<ProtectedRoute><Clubs /></ProtectedRoute>} />
+          <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
+          <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
+          <Route path="/daily-rewards" element={<ProtectedRoute><DailyRewards /></ProtectedRoute>} />
+          <Route path="/replay" element={<ProtectedRoute><Replay /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
+          <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />
           <Route path="/crown-topup" element={<ProtectedRoute><CrownTopup /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Admin /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
@@ -74,9 +110,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Navbar />
-          
-          <RouteAnimator />
+          <BoardSettingsProvider>
+            <Navbar />
+            <MobileBottomNav />
+            <AchievementListener />
+            <StreakBanner />
+            <RealtimeNotificationToast />
+            <div className="pb-14 lg:pb-0">
+              <RouteAnimator />
+            </div>
+          </BoardSettingsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

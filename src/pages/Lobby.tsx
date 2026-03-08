@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Clock3 } from "lucide-react";
+import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Clock3, Eye, Timer, Shuffle } from "lucide-react";
+import { TimeControlSelector, type TimeControl } from "@/components/chess/ChessClock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
@@ -86,10 +87,14 @@ const Lobby = () => {
   const [worldChatInput, setWorldChatInput] = useState("");
   const [worldChatMessages, setWorldChatMessages] = useState<WorldChatMessage[]>([]);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
+<<<<<<< HEAD
   const [timeControlMode, setTimeControlMode] = useState<"none" | "fischer" | "delay" | "bronstein">("none");
   const [incrementMs, setIncrementMs] = useState(0);
   const [delayMs, setDelayMs] = useState(0);
   const [preferLocalRegion, setPreferLocalRegion] = useState(true);
+=======
+  const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [arenaStats, setArenaStats] = useState({
     searchingNow: 0,
@@ -857,7 +862,7 @@ const Lobby = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
         <AnimatePresence mode="wait">
           {!mode ? (
@@ -881,12 +886,25 @@ const Lobby = () => {
                 </motion.button>
               ))}
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate("/play?mode=computer")} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+              {/* Time control selector */}
+              <div className="glass-card p-5">
+                <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
+              </div>
+
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Bot className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">vs Computer</h3><p className="text-sm text-muted-foreground">Practice with a built-in chess bot</p></div></div>
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate("/play")} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer&variant=chess960${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Shuffle className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Chess960</h3><p className="text-sm text-muted-foreground">Fischer Random — randomized starting position</p></div></div>
+              </motion.button>
+
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play${selectedTimeControl ? `?tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Crown className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Local Play</h3><p className="text-sm text-muted-foreground">Play against a friend on this device</p></div></div>
+              </motion.button>
+
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate("/spectate")} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Eye className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Spectate</h3><p className="text-sm text-muted-foreground">Watch live games happening now</p></div></div>
               </motion.button>
             </motion.div>
           ) : mode === "private" ? (

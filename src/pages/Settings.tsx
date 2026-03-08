@@ -1,15 +1,20 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Save, Mail, KeyRound, Loader2, User, Zap, ArrowLeft } from "lucide-react";
+import { Loader2, Zap, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { uploadAvatarImage } from "@/lib/avatar";
+<<<<<<< HEAD
 import { BOARD_THEME_OPTIONS, BoardTheme, PIECE_THEME_OPTIONS, PieceTheme } from "@/utils/chessThemes";
+=======
+import ProfileSection from "@/components/settings/ProfileSection";
+import EmailChangeSection from "@/components/settings/EmailChangeSection";
+import PasswordSection from "@/components/settings/PasswordSection";
+import { BoardCustomizationSection } from "@/components/settings/BoardCustomizationSection";
+import { NotificationPrefsSection } from "@/components/settings/NotificationPrefsSection";
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
 const Settings = () => {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -29,9 +34,7 @@ const Settings = () => {
   const [pieceTheme, setPieceTheme] = useState<PieceTheme>("neo");
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
+    if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -49,29 +52,20 @@ const Settings = () => {
   const saveSettings = async () => {
     if (!user) return;
     setSaving(true);
-
     const [{ data: profileData, error: profileError }, { error: metadataError }] = await Promise.all([
       supabase.from("profiles").update({
         avatar_url: avatarUrl || null,
         username: username || null,
         bio: bio || null,
       }).eq("id", user.id).select("player_uid").single(),
-      supabase.auth.updateUser({
-        data: { date_of_birth: dateOfBirth || null },
-      }),
+      supabase.auth.updateUser({ data: { date_of_birth: dateOfBirth || null } }),
     ]);
-
     setSaving(false);
-
     if (profileError || metadataError) {
       toast.error(profileError?.message || metadataError?.message || "Failed to save");
       return;
     }
-
-    if (profileData?.player_uid) {
-      setUid(profileData.player_uid);
-    }
-
+    if (profileData?.player_uid) setUid(profileData.player_uid);
     toast.success("Profile updated successfully");
     localStorage.setItem("chess-board-theme", boardTheme);
     localStorage.setItem("chess-piece-theme", pieceTheme);
@@ -82,12 +76,10 @@ const Settings = () => {
     if (!user) return;
     const file = event.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       toast.error("Please choose a JPG, JPEG, PNG, or another image file.");
       return;
     }
-
     setAvatarUploading(true);
     try {
       const publicUrl = await uploadAvatarImage(user.id, file);
@@ -103,34 +95,16 @@ const Settings = () => {
   };
 
   const requestEmailOtp = async () => {
-    if (!pendingEmail.trim()) {
-      toast.error("Enter a new email address");
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({
-      email: pendingEmail.trim(),
-    });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (!pendingEmail.trim()) { toast.error("Enter a new email address"); return; }
+    const { error } = await supabase.auth.updateUser({ email: pendingEmail.trim() });
+    if (error) { toast.error(error.message); return; }
     toast.success("OTP sent to your new email. Enter it below to verify.");
   };
 
   const verifyEmailOtp = async () => {
-    if (!pendingEmail || !emailOtp) {
-      toast.error("Enter email and OTP code");
-      return;
-    }
-    const { error } = await supabase.auth.verifyOtp({
-      type: "email_change",
-      email: pendingEmail,
-      token: emailOtp,
-    });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (!pendingEmail || !emailOtp) { toast.error("Enter email and OTP code"); return; }
+    const { error } = await supabase.auth.verifyOtp({ type: "email_change", email: pendingEmail, token: emailOtp });
+    if (error) { toast.error(error.message); return; }
     setEmail(pendingEmail);
     setEmailOtp("");
     toast.success("Email verified and updated");
@@ -141,10 +115,7 @@ const Settings = () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success("Password reset link sent to your email");
   };
 
@@ -159,93 +130,35 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
 
-          <h1 className="font-display text-3xl font-bold mb-8">Profile Settings</h1>
+          <h1 className="font-display text-xl sm:text-3xl font-bold mb-5 sm:mb-8">Profile Settings</h1>
 
-          {/* Avatar & identity */}
-          <div className="glass-card p-6 mb-6">
-            <div className="flex items-center gap-4 mb-6">
-              <Avatar className="w-16 h-16 border border-primary/30">
-                <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                <AvatarFallback className="bg-secondary text-primary">
-                  <User className="w-7 h-7" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="font-display text-xl font-bold">{displayName}</h2>
-                <p className="text-sm text-muted-foreground">{email}</p>
-              </div>
-            </div>
+          <ProfileSection
+            displayName={displayName} email={email} avatarUrl={avatarUrl}
+            avatarUploading={avatarUploading} username={username} bio={bio}
+            dateOfBirth={dateOfBirth} uid={uid} saving={saving}
+            onAvatarUpload={onAvatarUpload} onUsernameChange={setUsername}
+            onBioChange={setBio} onDateOfBirthChange={setDateOfBirth} onSave={saveSettings}
+          />
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label>Username</Label>
-                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your username" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Bio</Label>
-                <Input value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Avatar Upload</Label>
-                <Input type="file" accept="image/*,.jpg,.jpeg,.png,.webp" onChange={onAvatarUpload} disabled={avatarUploading} />
-                <p className="text-xs text-muted-foreground">Upload from your local device. JPG, JPEG, PNG, WEBP and other image formats are supported.</p>
-              </div>
-              <div className="space-y-1.5">
-                <Label>UID</Label>
-                <Input value={uid} disabled />
-                <p className="text-xs text-muted-foreground">This 8-digit in-game ID is generated automatically.</p>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Date of Birth</Label>
-                <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
-              </div>
-              <button
-                onClick={saveSettings}
-                disabled={saving}
-                className="w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-display font-bold tracking-wide disabled:opacity-60 inline-flex items-center justify-center gap-2"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save Profile
-              </button>
-            </div>
-          </div>
+          <EmailChangeSection
+            email={email} pendingEmail={pendingEmail} emailOtp={emailOtp}
+            onPendingEmailChange={setPendingEmail} onEmailOtpChange={setEmailOtp}
+            onRequestOtp={requestEmailOtp} onVerifyOtp={verifyEmailOtp}
+          />
 
-          {/* Email change */}
-          <div className="glass-card p-6 mb-6">
-            <h3 className="font-display text-lg font-bold mb-1">Change Email</h3>
-            <p className="text-xs text-muted-foreground mb-4">Current: {email || "Not set"}</p>
-            <div className="space-y-3">
-              <Input type="email" value={pendingEmail} onChange={(e) => setPendingEmail(e.target.value)} placeholder="New email address" />
-              <button
-                onClick={requestEmailOtp}
-                className="w-full bg-primary/15 text-primary px-4 py-2.5 rounded-lg text-sm font-display font-bold tracking-wide inline-flex items-center justify-center gap-2"
-              >
-                <Mail className="w-4 h-4" /> Send OTP
-              </button>
-              <Input value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} placeholder="Enter OTP code" />
-              <button
-                onClick={verifyEmailOtp}
-                className="w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-display font-bold tracking-wide"
-              >
-                Verify Email
-              </button>
-            </div>
-          </div>
+          <PasswordSection onSendReset={sendPasswordOtp} />
 
+<<<<<<< HEAD
           <div className="glass-card p-6 mb-6">
             <h3 className="font-display text-lg font-bold mb-1">Chessboard Themes</h3>
             <p className="text-xs text-muted-foreground mb-4">Customize board colors and piece style.</p>
@@ -298,6 +211,11 @@ const Settings = () => {
               <KeyRound className="w-4 h-4" /> Send Password Reset Link
             </button>
           </div>
+=======
+          <BoardCustomizationSection />
+
+          <NotificationPrefsSection />
+>>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-4">
             <Zap className="w-3.5 h-3.5 text-primary" />
