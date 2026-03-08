@@ -389,6 +389,18 @@ export const useOnlineGame = (gameId: string | null) => {
       .eq("id", gameData.id);
   }, [gameData, user]);
 
+  const acceptDraw = useCallback(async () => {
+    if (!gameData || !user) return;
+    if (gameData.result_type !== "in_progress") return;
+    await supabase
+      .from("games")
+      .update({
+        result_type: "draw",
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
   return {
     game,
     gameData,
