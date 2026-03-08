@@ -30,6 +30,7 @@ interface MatchHistoryProps {
 }
 
 const MatchHistory = ({ playerId }: MatchHistoryProps) => {
+  const navigate = useNavigate();
   const [games, setGames] = useState<GameRecord[]>([]);
   const [players, setPlayers] = useState<Map<string, PlayerInfo>>(new Map());
   const [loading, setLoading] = useState(true);
