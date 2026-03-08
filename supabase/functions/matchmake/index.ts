@@ -57,10 +57,6 @@ Deno.serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(1);
 
-    candidatesQuery = duration_seconds === null
-      ? candidatesQuery.is('duration_seconds', null)
-      : candidatesQuery.eq('duration_seconds', duration_seconds);
-
     const { data: candidates } = await candidatesQuery;
 
     if (candidates && candidates.length > 0) {
