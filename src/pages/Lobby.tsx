@@ -13,10 +13,10 @@ type Mode = null | "quick_play" | "world_arena" | "private";
 type WorldChatMessage = ChatMessage;
 
 const cardMotion = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -12 },
-  transition: { duration: 0.25 },
+  initial: { opacity: 0, y: 16, filter: "blur(4px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -12, filter: "blur(3px)" },
+  transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
 };
 
 const CATEGORY_META: Record<string, { icon: typeof Zap; color: string }> = {
@@ -155,63 +155,74 @@ const Lobby = () => {
 
   // --------------- MODE SELECTION ---------------
   const renderModeSelection = () => (
-    <motion.div key="modes" {...cardMotion} className="space-y-5">
-      <div className="text-center mb-2">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
-          <Swords className="w-7 h-7 text-primary" />
+    <motion.div key="modes" {...cardMotion} className="space-y-6">
+      {/* Hero header */}
+      <div className="text-center relative">
+        <div className="absolute inset-0 -top-20 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-primary/6 blur-[120px]" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight">Choose Game Mode</h1>
-        <p className="text-sm text-muted-foreground mt-1">Select how you want to play</p>
+        <div className="relative">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-4 gold-glow">
+            <Swords className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight">Choose Game Mode</h1>
+          <p className="text-sm text-muted-foreground mt-1.5">Select how you want to play</p>
+        </div>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {gameModes.map((gm, i) => (
           <motion.button
             key={gm.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
+            transition={{ delay: i * 0.07, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setMode(gm.id)}
-            className={`w-full rounded-xl border p-4 text-left group transition-all duration-200 flex items-center gap-4 ${
+            className={`w-full rounded-xl border p-4 text-left group transition-all duration-300 flex items-center gap-4 backdrop-blur-sm ${
               gm.accent
-                ? "bg-primary/5 border-primary/25 hover:bg-primary/10 hover:border-primary/40 shadow-[0_0_20px_-8px_hsl(var(--primary)/0.3)]"
-                : "bg-card/60 border-border/40 hover:bg-card/80 hover:border-border/60"
+                ? "bg-primary/5 border-primary/25 hover:bg-primary/10 hover:border-primary/40 shadow-[0_0_24px_-8px_hsl(var(--primary)/0.3)]"
+                : "glass-card hover:border-primary/20"
             }`}
           >
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              gm.accent ? "bg-primary/15 group-hover:bg-primary/25" : "bg-secondary/60 group-hover:bg-secondary/80"
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+              gm.accent ? "bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 group-hover:shadow-sm group-hover:shadow-primary/15" : "bg-secondary/60 group-hover:bg-secondary/80"
             }`}>
-              <gm.icon className={`w-5 h-5 ${gm.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+              <gm.icon className={`w-5 h-5 ${gm.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} transition-colors`} />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-bold text-sm">{gm.title}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{gm.desc}</p>
             </div>
-            <ChevronRight className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${gm.accent ? "text-primary/50" : "text-muted-foreground/30"}`} />
+            <ChevronRight className={`w-4 h-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1 ${gm.accent ? "text-primary/50" : "text-muted-foreground/30"}`} />
           </motion.button>
         ))}
       </div>
 
       {/* Secondary modes */}
       <div>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-2.5 px-1">More Ways to Play</p>
-        <div className="grid grid-cols-2 gap-2.5">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 px-1">More Ways to Play</p>
+        <div className="grid grid-cols-2 gap-3">
           {secondaryModes.map((sm, i) => (
             <motion.button
               key={sm.title}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.05 }}
+              transition={{ delay: 0.25 + i * 0.06, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={sm.onClick}
-              className="rounded-xl border border-border/40 bg-card/60 p-4 text-left hover:bg-card/80 hover:border-border/60 transition-all group"
+              className="glass-card p-4 text-left hover:border-primary/20 transition-all duration-300 group relative overflow-hidden"
             >
-              <div className="w-9 h-9 rounded-lg bg-secondary/60 group-hover:bg-secondary/80 flex items-center justify-center mb-2.5 transition-colors">
-                <sm.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-secondary/60 group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors duration-300 border border-border/30 group-hover:border-primary/15">
+                  <sm.icon className="w-4.5 h-4.5 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                </div>
+                <h3 className="font-display font-bold text-xs">{sm.title}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{sm.desc}</p>
               </div>
-              <h3 className="font-display font-bold text-xs">{sm.title}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{sm.desc}</p>
             </motion.button>
           ))}
         </div>
@@ -222,24 +233,24 @@ const Lobby = () => {
   // --------------- QUICK PLAY ---------------
   const renderQuickPlay = () => (
     <motion.div key="quick_play" {...cardMotion} className="space-y-4">
-      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back
+      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 mb-3">
-          <Swords className="w-6 h-6 text-primary" />
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-3 gold-glow">
+          <Swords className="w-7 h-7 text-primary" />
         </div>
         <h2 className="font-display text-xl font-bold">Quick Play</h2>
         <p className="text-xs text-muted-foreground mt-1">Choose time control and find a match</p>
       </div>
 
       {/* Time control integrated here */}
-      <div className="rounded-xl border border-border/40 bg-card/60 p-4">
+      <div className="glass-card p-4">
         <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
       </div>
 
       {/* Chess960 toggle */}
-      <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center justify-between">
+      <div className="glass-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shuffle className="w-3.5 h-3.5 text-primary" />
           <span className="font-display text-xs font-bold">Chess960</span>
@@ -273,9 +284,10 @@ const Lobby = () => {
       {/* Action */}
       {matchmaking.state === "idle" && (
         <motion.button
+          whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => matchmaking.startSearch("quick_play", durationFromTC)}
-          className="w-full rounded-xl bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider py-4 hover:opacity-90 transition-all shadow-[0_0_24px_-6px_hsl(var(--primary)/0.4)]"
+          className="w-full rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-sm tracking-wider py-4 transition-all gold-glow hover:shadow-lg hover:shadow-primary/25"
         >
           {selectedTimeControl ? `FIND ${selectedTimeControl.label} MATCH` : "FIND MATCH"}
         </motion.button>
@@ -324,19 +336,19 @@ const Lobby = () => {
   // --------------- WORLD ARENA ---------------
   const renderWorldArena = () => (
     <motion.div key="world_arena" {...cardMotion} className="space-y-4">
-      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back
+      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
 
       {/* Arena Header */}
-      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card/80 to-card/60 p-6 text-center relative overflow-hidden">
+      <div className="glass-card p-6 text-center relative overflow-hidden border-glow">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_70%)]" />
         <div className="relative">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 mb-3">
-            <Globe className="w-7 h-7 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/25 mb-3 gold-glow">
+            <Globe className="w-8 h-8 text-primary" />
           </div>
           <h2 className="font-display text-2xl font-black tracking-tight">World Arena</h2>
-          <p className="text-xs text-muted-foreground mt-1">Compete globally for leaderboard rankings</p>
+          <p className="text-xs text-muted-foreground mt-1.5">Compete globally for leaderboard rankings</p>
         </div>
       </div>
 
@@ -356,7 +368,7 @@ const Lobby = () => {
         </div>
         <button
           onClick={() => navigate("/leaderboard")}
-          className="rounded-xl border border-border/40 bg-card/60 p-3.5 flex items-center gap-3 hover:bg-card/80 hover:border-border/60 transition-all group"
+          className="glass-card p-3.5 flex items-center gap-3 hover:border-primary/20 transition-all group"
         >
           <Trophy className="w-5 h-5 text-primary" />
           <div className="text-left">
@@ -367,12 +379,12 @@ const Lobby = () => {
       </div>
 
       {/* Time Control - integrated */}
-      <div className="rounded-xl border border-border/40 bg-card/60 p-4">
+      <div className="glass-card p-4">
         <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
       </div>
 
       {/* Chess960 toggle */}
-      <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center justify-between">
+      <div className="glass-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shuffle className="w-3.5 h-3.5 text-primary" />
           <span className="font-display text-xs font-bold">Chess960</span>
@@ -385,9 +397,10 @@ const Lobby = () => {
       {/* Match action */}
       {matchmaking.state === "idle" && (
         <motion.button
+          whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => matchmaking.startSearch("world_arena", durationFromTC)}
-          className="w-full rounded-xl bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider py-4 hover:opacity-90 transition-all shadow-[0_0_24px_-6px_hsl(var(--primary)/0.4)] flex items-center justify-center gap-2"
+          className="w-full rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-sm tracking-wider py-4 transition-all gold-glow hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2"
         >
           <Globe className="w-4 h-4" />
           {selectedTimeControl ? `ENTER ARENA · ${selectedTimeControl.label}` : "ENTER ARENA"}
@@ -417,7 +430,7 @@ const Lobby = () => {
       )}
 
       {/* World Chat */}
-      <div className="rounded-xl border border-border/40 bg-card/60 overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-primary" />
@@ -456,24 +469,24 @@ const Lobby = () => {
   // --------------- PRIVATE ROOM ---------------
   const renderPrivateRoom = () => (
     <motion.div key="private" {...cardMotion} className="space-y-4">
-      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back
+      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 mb-3">
-          <Users className="w-6 h-6 text-primary" />
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-3 gold-glow">
+          <Users className="w-7 h-7 text-primary" />
         </div>
         <h2 className="font-display text-xl font-bold">Private Room</h2>
         <p className="text-xs text-muted-foreground mt-1">Create or join a private match</p>
       </div>
 
       {/* Time control integrated */}
-      <div className="rounded-xl border border-border/40 bg-card/60 p-4">
+      <div className="glass-card p-4">
         <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
       </div>
 
       {/* Chess960 */}
-      <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center justify-between">
+      <div className="glass-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shuffle className="w-3.5 h-3.5 text-primary" />
           <span className="font-display text-xs font-bold">Chess960</span>
@@ -495,14 +508,15 @@ const Lobby = () => {
       {privateRoom.status === "idle" && (
         <div className="space-y-3">
           <motion.button
-            whileTap={{ scale: 0.995 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationFromTC); setCreatingRoom(false); }}
             disabled={creatingRoom}
-            className="w-full rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 p-6 text-center disabled:opacity-70 transition-all shadow-[0_0_20px_-8px_hsl(var(--primary)/0.3)]"
+            className="w-full glass-card p-6 text-center disabled:opacity-70 transition-all hover:border-primary/25 border-glow"
           >
             {creatingRoom
               ? <Loader2 className="w-7 h-7 text-primary mx-auto mb-2 animate-spin" />
-              : <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-3"><Users className="w-6 h-6 text-primary" /></div>
+              : <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 flex items-center justify-center mx-auto mb-3 gold-glow"><Users className="w-7 h-7 text-primary" /></div>
             }
             <h3 className="font-display font-bold text-sm">Create Room</h3>
             <p className="text-xs text-muted-foreground mt-1">Get a code to share with a friend</p>
@@ -514,7 +528,7 @@ const Lobby = () => {
             <div className="flex-1 h-px bg-border/30" />
           </div>
 
-          <div className="rounded-xl border border-border/40 bg-card/60 p-5">
+          <div className="glass-card p-5">
             <h3 className="font-display font-bold text-sm mb-3">Join a Room</h3>
             <div className="flex gap-2">
               <input

@@ -421,10 +421,10 @@ const Play = () => {
     : null;
 
   const PlayerLabel = ({ name, avatarUrl, title, isTop }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null; isTop?: boolean }) => (
-    <div className="flex items-center gap-2 min-w-0">
-      <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-border/50 shrink-0">
+    <div className="flex items-center gap-2.5 min-w-0">
+      <Avatar className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-border/40 shrink-0 shadow-sm">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[10px] bg-secondary font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+        <AvatarFallback className="text-[10px] bg-gradient-to-br from-secondary to-secondary/60 font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">
         <span className="font-display font-bold text-xs sm:text-sm truncate block">{name}</span>
@@ -440,18 +440,25 @@ const Play = () => {
   if (isOnline && online.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
+        <div className="glass-card p-8 flex flex-col items-center gap-3 gold-glow">
+          <Crown className="w-12 h-12 text-primary animate-pulse" />
+          <p className="text-sm text-muted-foreground font-display">Loading match…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-18 pb-16 lg:pb-8 px-2 sm:px-4">
+    <div className="min-h-screen bg-background pt-14 sm:pt-18 pb-16 lg:pb-8 px-2 sm:px-4 relative">
+      {/* Subtle ambient */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[140px]" />
+      </div>
       <div className="container mx-auto max-w-[1500px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
           <div className="lg:col-span-9 flex flex-col items-center">
             {/* Top player bar */}
-            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-2.5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5`}>
+            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-2.5 glass-card px-3 sm:px-4 py-2 sm:py-2.5`}>
               <div className="flex items-center justify-between">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} isTop />
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -506,7 +513,7 @@ const Play = () => {
             )}
 
             {/* Bottom player bar */}
-            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-2.5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5`}>
+            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-2.5 glass-card px-3 sm:px-4 py-2 sm:py-2.5`}>
               <div className="flex items-center justify-between">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -605,9 +612,11 @@ const Play = () => {
             className="lg:col-span-3 space-y-3"
           >
             {/* Game info card */}
-            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5 space-y-3">
+            <div className="glass-card p-4 sm:p-5 space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                <Crown className="w-4 h-4 text-primary" />
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Crown className="w-3.5 h-3.5 text-primary" />
+                </div>
                 {isOnline ? "Live Match" : isComputerGame ? "vs Computer" : "Local Game"}
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -641,9 +650,12 @@ const Play = () => {
             </div>
 
             {/* Latest move / board info */}
-            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5">
+            <div className="glass-card p-4 sm:p-5">
               <h3 className="font-display font-bold text-sm mb-1.5 flex items-center gap-2">
-                <Swords className="w-4 h-4 text-primary" />Board Info
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Swords className="w-3.5 h-3.5 text-primary" />
+                </div>
+                Board Info
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">Last move is highlighted on the board.</p>
               {!isOnline && !isComputerGame && (
@@ -671,8 +683,8 @@ const Play = () => {
             )}
 
             {/* Move History */}
-            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5">
-              <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
+            <div className="glass-card p-4 sm:p-5">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2">Move History</h3>
               <div className="max-h-64 overflow-y-auto space-y-0.5 text-sm font-mono">
                 {movePairs.length === 0 && (
                   <p className="text-xs text-muted-foreground italic">No moves yet</p>
@@ -692,10 +704,10 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-xl border border-primary/25 bg-primary/5 p-5 sm:p-6 text-center space-y-4 shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]"
+                className="glass-card p-5 sm:p-6 text-center space-y-4 border-glow gold-glow"
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto">
-                  <Crown className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 border border-primary/20 flex items-center justify-center mx-auto gold-glow">
+                  <Crown className="w-8 h-8 text-primary" />
                 </div>
                 <p className="font-display font-bold text-lg">{gameStatus}</p>
 
@@ -709,7 +721,7 @@ const Play = () => {
                     <>
                       <button
                         onClick={() => navigate("/lobby")}
-                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg transition-all gold-glow hover:shadow-lg hover:shadow-primary/25"
                       >
                         Find New Match
                       </button>
@@ -736,7 +748,7 @@ const Play = () => {
                     <>
                       <button
                         onClick={resetLocalGame}
-                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg transition-all gold-glow hover:shadow-lg hover:shadow-primary/25"
                       >
                         Rematch
                       </button>
@@ -768,7 +780,7 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-primary/20 bg-card/60 backdrop-blur-sm p-5"
+                className="glass-card p-5"
               >
                 <p className="font-display font-bold text-sm">Post-Game Analysis</p>
                 <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
