@@ -32,7 +32,8 @@ const Play = () => {
   const playerElo = profile?.crown_score || 400;
   const aiElo = playerElo + 20;
 
-  const [localGame, setLocalGame] = useState(new Chess());
+  const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
+  const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [syncAgo, setSyncAgo] = useState("just now");
