@@ -368,7 +368,7 @@ const Lobby = () => {
         </div>
         <button
           onClick={() => navigate("/leaderboard")}
-          className="rounded-xl border border-border/40 bg-card/60 p-3.5 flex items-center gap-3 hover:bg-card/80 hover:border-border/60 transition-all group"
+          className="glass-card p-3.5 flex items-center gap-3 hover:border-primary/20 transition-all group"
         >
           <Trophy className="w-5 h-5 text-primary" />
           <div className="text-left">
