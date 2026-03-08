@@ -39,6 +39,8 @@ const BoardSquare = React.memo(({
   showFile,
   onClick,
   onTouchStart,
+  slideFrom,
+  slideAnimKey,
 }: BoardSquareProps) => {
   const { theme, pieceSet, moveAnimation } = useBoardSettings();
   const hasPiece = !!pieceColor && !!pieceType;
