@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake, XCircle } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake, XCircle, Undo2 } from "lucide-react";
 import { ResignConfirmDialog, GameOverPopup, type RematchState } from "@/components/chess/ResignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { generateChess960Fen } from "@/utils/chess960";
@@ -100,6 +100,7 @@ const Play = () => {
   const [rematchState, setRematchState] = useState<RematchState>("idle");
   const rematchChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [drawOfferState, setDrawOfferState] = useState<"idle" | "sent" | "received">("idle");
+  const [takebackState, setTakebackState] = useState<"idle" | "sent" | "received">("idle");
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -419,6 +420,21 @@ const Play = () => {
           setDrawOfferState("idle");
         }
       })
+      .on("broadcast", { event: "takeback_request" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setTakebackState("received");
+        }
+      })
+      .on("broadcast", { event: "takeback_accept" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setTakebackState("idle");
+        }
+      })
+      .on("broadcast", { event: "takeback_decline" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setTakebackState("idle");
+        }
+      })
       .subscribe();
 
     rematchChannelRef.current = channel;
@@ -511,6 +527,37 @@ const Play = () => {
     await rematchChannelRef.current.send({
       type: "broadcast",
       event: "draw_decline",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
+  const handleRequestTakeback = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setTakebackState("sent");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "takeback_request",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
+  const handleAcceptTakeback = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setTakebackState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "takeback_accept",
+      payload: { from: user.id },
+    });
+    await online.performTakeback();
+  }, [user, online]);
+
+  const handleDeclineTakeback = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setTakebackState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "takeback_decline",
       payload: { from: user.id },
     });
   }, [user]);
@@ -918,6 +965,35 @@ const Play = () => {
               </motion.div>
             )}
 
+            {/* Incoming takeback request banner */}
+            {isOnline && takebackState === "received" && !online.isGameOver && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`w-full ${boardSizeClass} mt-2 glass-card px-3 sm:px-4 py-2.5 flex items-center justify-between`}
+              >
+                <div className="flex items-center gap-2 text-sm font-display">
+                  <Undo2 className="w-4 h-4 text-primary" />
+                  <span className="font-semibold">{online.opponentName}</span>
+                  <span className="text-muted-foreground">requests a takeback</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAcceptTakeback}
+                    className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-display font-bold text-primary hover:bg-primary/20 transition-all"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={handleDeclineTakeback}
+                    className="rounded-lg border border-border/40 bg-card/60 px-3 py-1.5 text-xs font-display font-bold text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Controls bar */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -949,6 +1025,21 @@ const Play = () => {
                 )}
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* Takeback button - online */}
+                {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) > 0 && (
+                  <button
+                    onClick={handleRequestTakeback}
+                    disabled={takebackState !== "idle"}
+                    className={`rounded-lg border p-2 sm:px-3 sm:py-2 transition-all ${
+                      takebackState === "sent"
+                        ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
+                        : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
+                    }`}
+                    title={takebackState === "sent" ? "Takeback requested…" : "Request takeback"}
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </button>
+                )}
                 {/* Draw offer button - online */}
                 {isOnline && !online.isGameOver && (
                   <button

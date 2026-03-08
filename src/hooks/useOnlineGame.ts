@@ -414,6 +414,32 @@ export const useOnlineGame = (gameId: string | null) => {
       })
       .eq("id", gameData.id);
   }, [gameData, user]);
+
+  const performTakeback = useCallback(async () => {
+    if (!gameData || !user) return;
+    if (gameData.result_type !== "in_progress") return;
+    const moves = Array.isArray(gameData.moves) ? [...gameData.moves] : [];
+    if (moves.length === 0) return;
+
+    // Undo last move by replaying all moves except the last
+    const startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const replay = new Chess(startingFen);
+    const newMoves = moves.slice(0, -1);
+    for (const m of newMoves) {
+      replay.move({ from: (m as any).from, to: (m as any).to, promotion: (m as any).promotion });
+    }
+
+    await supabase
+      .from("games")
+      .update({
+        current_fen: replay.fen(),
+        moves: newMoves as any,
+        pgn: replay.pgn(),
+        last_move_at: new Date().toISOString(),
+      } as any)
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
   return {
     game,
     gameData,
@@ -429,6 +455,7 @@ export const useOnlineGame = (gameId: string | null) => {
     claimTimeout,
     acceptDraw,
     abortGame,
+    performTakeback,
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",
