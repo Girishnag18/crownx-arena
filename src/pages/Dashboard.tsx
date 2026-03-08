@@ -498,7 +498,7 @@ const Dashboard = () => {
               {/* Global Rank */}
               {globalRank !== null && (
                 <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                       <Trophy className="w-5 h-5 text-primary" />
                     </div>
