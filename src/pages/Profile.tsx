@@ -401,6 +401,10 @@ const Profile = () => {
                   {user && <AchievementShowcase playerId={user.id} />}
                 </TabsContent>
 
+                <TabsContent value="cosmetics" className="mt-0">
+                  {user && <MyCosmeticsSection userId={user.id} onEquipChange={loadEquippedItems} />}
+                </TabsContent>
+
                 <TabsContent value="social" className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Incoming Requests */}
