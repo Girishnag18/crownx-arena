@@ -242,13 +242,18 @@ const Spectate = () => {
                 </div>
               </div>
 
-              <ChessBoard
-                game={spectateGame}
-                onMove={() => false}
-                disabled={true}
-                lastMove={lastMove}
-                sizeClassName="max-w-[96vw]"
-              />
+              <div className="flex gap-2 items-stretch w-full max-w-[96vw]">
+                <EvalBar fen={selectedGame.current_fen} height={400} />
+                <div className="flex-1">
+                  <ChessBoard
+                    game={spectateGame}
+                    onMove={() => false}
+                    disabled={true}
+                    lastMove={lastMove}
+                    sizeClassName="w-full"
+                  />
+                </div>
+              </div>
 
               <div className="w-full max-w-[96vw] mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2">
                 <div className="flex items-center justify-between text-sm">
