@@ -186,7 +186,16 @@ const Play = () => {
     soundManager.play("gameEnd");
   }, []);
 
-  const game = isOnline && online.game ? online.game : localGame;
+  const clockActiveSide = (game.isGameOver() || clockGameOver) ? null : game.turn();
+  const { whiteMs, blackMs } = useChessClock(
+    timeControl,
+    clockActiveSide,
+    displayMoves.length > 0,
+    isGameOver,
+    handleTimeUp,
+  );
+
+  const game2 = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
   const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver);
 
