@@ -102,6 +102,7 @@ const App = () => (
             <Navbar />
             <AchievementListener />
             <StreakBanner />
+            <RealtimeNotificationToast />
             <RouteAnimator />
           </BoardSettingsProvider>
         </AuthProvider>
