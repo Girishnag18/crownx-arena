@@ -169,9 +169,19 @@ const Lobby = () => {
                 </motion.button>
               ))}
 
-              {/* Time control selector */}
-              <div className="glass-card p-5">
+              {/* Time control & variant selectors */}
+              <div className="glass-card p-5 space-y-4">
                 <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Shuffle className="w-4 h-4 text-primary" />
+                    <span className="font-display text-sm font-bold">Chess960</span>
+                    <span className="text-xs text-muted-foreground">Fischer Random</span>
+                  </div>
+                  <button onClick={() => setChess960((v) => !v)} className={`relative w-10 h-5 rounded-full transition-colors ${chess960 ? "bg-primary" : "bg-secondary border border-border"}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary-foreground transition-transform ${chess960 ? "translate-x-5" : ""}`} />
+                  </button>
+                </div>
               </div>
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
