@@ -1051,17 +1051,24 @@ const Play = () => {
         moveCount={displayMoves.length}
         timeControlLabel={timeControl?.label}
         isOnline={isOnline}
+        rematchState={rematchState}
         onNewGame={() => {
           setShowGameOverPopup(false);
           navigate("/lobby");
         }}
         onRematch={() => {
-          setShowGameOverPopup(false);
           if (isOnline) {
-            navigate("/lobby");
+            handleOfferRematch();
           } else {
+            setShowGameOverPopup(false);
             resetLocalGame();
           }
+        }}
+        onAcceptRematch={() => {
+          handleAcceptRematch();
+        }}
+        onDeclineRematch={() => {
+          handleDeclineRematch();
         }}
         onAnalyze={() => {
           setShowGameOverPopup(false);
