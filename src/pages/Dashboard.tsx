@@ -318,7 +318,7 @@ const Dashboard = () => {
                     loading: createTournamentLoading, onCreate: createTournament,
                   }}
                 />
-                <DailyPuzzleCard />
+                
               </motion.div>
             </div>
 
