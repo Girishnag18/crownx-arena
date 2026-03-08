@@ -86,8 +86,7 @@ const Play = () => {
   const [showEngineReview, setShowEngineReview] = useState(false);
   const [showAICoach, setShowAICoach] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
-  const [showArrows, setShowArrows] = useState(true);
+  const [engineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const [streamerMode, setStreamerMode] = useState(false);
   const [timeControl, setTimeControl] = useState<TimeControl | null>(() => {
