@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2, Gift } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2, Gift, Shield, Star, Sparkles } from "lucide-react";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
@@ -61,8 +61,12 @@ interface RecentGame {
 }
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+};
+
+const stagger = {
+  show: { transition: { staggerChildren: 0.04 } },
 };
 
 const rankEmoji: Record<string, string> = {
@@ -75,12 +79,21 @@ const rankEmoji: Record<string, string> = {
 };
 
 const rankGradient: Record<string, string> = {
-  Bronze: "from-amber-700/20 to-amber-900/10",
-  Silver: "from-slate-300/15 to-slate-500/10",
-  Gold: "from-yellow-500/15 to-amber-600/10",
-  Platinum: "from-cyan-400/15 to-blue-500/10",
-  Diamond: "from-violet-400/15 to-purple-600/10",
-  "Crown Master": "from-primary/20 to-amber-500/10",
+  Bronze: "from-amber-700/25 via-amber-800/10 to-transparent",
+  Silver: "from-slate-300/20 via-slate-400/8 to-transparent",
+  Gold: "from-yellow-500/20 via-amber-500/8 to-transparent",
+  Platinum: "from-cyan-400/20 via-blue-500/8 to-transparent",
+  Diamond: "from-violet-400/20 via-purple-500/8 to-transparent",
+  "Crown Master": "from-primary/25 via-amber-500/10 to-transparent",
+};
+
+const rankBorderColor: Record<string, string> = {
+  Bronze: "border-amber-600/30",
+  Silver: "border-slate-400/30",
+  Gold: "border-yellow-500/30",
+  Platinum: "border-cyan-400/30",
+  Diamond: "border-violet-400/30",
+  "Crown Master": "border-primary/40",
 };
 
 const Dashboard = () => {
@@ -114,7 +127,6 @@ const Dashboard = () => {
       .single();
     if (data) {
       const p = data as unknown as Profile;
-      // Detect rank promotion
       if (prevRankRef.current && prevRankRef.current !== p.rank_tier) {
         const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown Master"];
         const oldIdx = ranks.indexOf(prevRankRef.current);
@@ -350,7 +362,9 @@ const Dashboard = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+          <Crown className="w-10 h-10 text-primary" />
+        </motion.div>
       </div>
     );
   }
@@ -358,8 +372,7 @@ const Dashboard = () => {
   const rank = profile?.rank_tier || "Bronze";
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-1.5 sm:px-3">
-      {/* Rank Promotion Overlay */}
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-2 sm:px-4">
       {promotion && (
         <RankPromotionOverlay
           oldRank={promotion.oldRank}
@@ -367,88 +380,120 @@ const Dashboard = () => {
           onDismiss={() => setPromotion(null)}
         />
       )}
+
       <div className="container mx-auto max-w-7xl">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-1.5 sm:space-y-2">
+        <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-2">
 
-          {/* ═══════════ HERO SECTION ═══════════ */}
-          <motion.div variants={fadeUp} className={`rounded-xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-3.5 sm:p-5 relative overflow-hidden`}>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              {/* Avatar */}
-              <div className="relative">
-                <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-primary/30 shadow-[0_0_16px_-5px_hsl(var(--primary)/0.3)]">
-                  <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-secondary text-primary text-lg font-display font-bold">
-                    <User className="w-6 h-6" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-card bg-emerald-500" />
+          {/* ═══════════ HERO CARD ═══════════ */}
+          <motion.div
+            variants={fadeUp}
+            className={`relative rounded-xl border ${rankBorderColor[rank] || "border-border/40"} bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} overflow-hidden`}
+          >
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.08),transparent_50%)]" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-[radial-gradient(circle,hsl(var(--primary)/0.04),transparent_70%)]" />
+
+            <div className="relative p-4 sm:p-5">
+              <div className="flex items-start sm:items-center gap-3.5 sm:gap-5">
+                {/* Avatar with rank ring */}
+                <div className="relative shrink-0">
+                  <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent blur-sm" />
+                  <Avatar className="relative w-14 h-14 sm:w-16 sm:h-16 border-2 border-primary/40 ring-2 ring-primary/10 ring-offset-2 ring-offset-background">
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                    <AvatarFallback className="bg-secondary text-primary font-display font-bold text-lg">
+                      <User className="w-6 h-6" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full border-2 border-background bg-success flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Player identity */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="font-display text-lg sm:text-xl font-black tracking-tight truncate">{displayName}</h1>
+                    <span className="inline-flex items-center gap-1 text-[10px] bg-primary/15 border border-primary/25 text-primary font-display font-bold px-2 py-0.5 rounded-full">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      Lvl {profile?.level || 1}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2.5 mt-1">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-display font-bold">
+                      {rankEmoji[rank]} {rank}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-border" />
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium">
+                      <Crown className="w-3 h-3 text-primary" />{profile?.crown_score || 400}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stats chips — desktop */}
+                <div className="hidden sm:flex items-center gap-1.5">
+                  {[
+                    { label: "Games", value: profile?.games_played || 0, icon: Gamepad2 },
+                    { label: "Wins", value: profile?.wins || 0, icon: Trophy },
+                    { label: "Win%", value: `${winRate}%`, icon: Target },
+                    { label: "Streak", value: profile?.win_streak || 0, icon: Flame },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-lg border border-border/30 bg-card/70 backdrop-blur-sm px-2.5 py-1.5 text-center min-w-[3.8rem] hover:border-primary/20 transition-colors">
+                      <s.icon className="w-3 h-3 text-primary mx-auto mb-0.5" />
+                      <div className="font-display text-xs font-bold leading-none">{s.value}</div>
+                      <div className="text-[8px] text-muted-foreground mt-0.5">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Player Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-display text-lg sm:text-xl font-black tracking-tight truncate">{displayName}</h1>
-                  <span className="text-xs bg-primary/10 border border-primary/20 text-primary font-display font-bold px-2.5 py-0.5 rounded-full">
-                    Lvl {profile?.level || 1}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-sm font-display font-bold flex items-center gap-1.5">
-                    {rankEmoji[rank]} {rank}
-                  </span>
-                  <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground font-medium">
-                    <Crown className="w-3 h-3 text-primary inline mr-1" />{profile?.crown_score || 400} Rating
-                  </span>
-                </div>
-              </div>
-
-              {/* Quick stats row */}
-              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+              {/* Stats chips — mobile */}
+              <div className="flex sm:hidden gap-1.5 mt-3">
                 {[
                   { label: "Games", value: profile?.games_played || 0, icon: Gamepad2 },
                   { label: "Wins", value: profile?.wins || 0, icon: Trophy },
                   { label: "Win%", value: `${winRate}%`, icon: Target },
                   { label: "Streak", value: profile?.win_streak || 0, icon: Flame },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-lg border border-border/30 bg-card/60 backdrop-blur-sm px-2 py-1.5 sm:px-2.5 sm:py-2 text-center min-w-[3.5rem]">
+                  <div key={s.label} className="flex-1 rounded-lg border border-border/30 bg-card/50 backdrop-blur-sm px-1.5 py-1.5 text-center">
                     <s.icon className="w-3 h-3 text-primary mx-auto mb-0.5" />
-                    <div className="font-display text-xs font-bold leading-none">{s.value}</div>
-                    <div className="text-[8px] text-muted-foreground mt-0.5">{s.label}</div>
+                    <div className="font-display text-[11px] font-bold leading-none">{s.value}</div>
+                    <div className="text-[7px] text-muted-foreground mt-0.5 uppercase tracking-wider">{s.label}</div>
                   </div>
                 ))}
               </div>
-            </div>
 
-            {/* XP Bar */}
-            <div className="mt-3 relative">
-              <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
+              {/* XP Bar — integrated */}
+              <div className="mt-3">
+                <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
+              </div>
             </div>
           </motion.div>
 
-          {/* ═══════════ QUICK ACTIONS ROW ═══════════ */}
-          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1 sm:gap-1.5">
+          {/* ═══════════ QUICK ACTIONS ═══════════ */}
+          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1.5">
             {[
               { title: "Play Online", desc: "Quick Play & Arena", icon: Globe, onClick: () => navigate("/lobby"), accent: true },
-              { title: "Puzzles", desc: "Sharpen your tactics", icon: Target, onClick: () => navigate("/puzzles") },
-              { title: "Leaderboard", desc: "Global rankings", icon: BarChart3, onClick: () => navigate("/leaderboard") },
+              { title: "Puzzles", desc: "Sharpen tactics", icon: Target, onClick: () => navigate("/puzzles") },
+              { title: "Leaderboard", desc: "Global ranks", icon: BarChart3, onClick: () => navigate("/leaderboard") },
               { title: "Settings", desc: "Profile & prefs", icon: Settings, onClick: () => navigate("/settings") },
-            ].map((action, i) => (
+            ].map((action) => (
               <motion.button
                 key={action.title}
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={action.onClick}
-                className={`rounded-lg border p-2.5 sm:p-3 text-left group transition-all duration-200 ${
+                className={`rounded-xl border p-2.5 sm:p-3 text-left group transition-all duration-200 ${
                   action.accent
-                    ? "bg-primary/5 border-primary/25 hover:bg-primary/10"
-                    : "bg-card/60 border-border/40 hover:bg-card/80"
+                    ? "bg-primary/8 border-primary/30 hover:bg-primary/12 hover:border-primary/40 hover:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.15)]"
+                    : "bg-card/60 border-border/30 hover:bg-card/80 hover:border-border/50"
                 }`}
               >
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-1.5 transition-colors ${
-                  action.accent ? "bg-primary/15" : "bg-secondary/60"
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1.5 transition-all ${
+                  action.accent
+                    ? "bg-primary/15 group-hover:bg-primary/20"
+                    : "bg-secondary/60 group-hover:bg-secondary/80"
                 }`}>
-                  <action.icon className={`w-3.5 h-3.5 ${action.accent ? "text-primary" : "text-muted-foreground"}`} />
+                  <action.icon className={`w-4 h-4 transition-colors ${action.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
                 </div>
                 <h3 className="font-display font-bold text-[10px] sm:text-xs leading-tight">{action.title}</h3>
                 <p className="text-[8px] sm:text-[10px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
@@ -457,32 +502,33 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ═══════════ MAIN GRID ═══════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
 
-            {/* Left Column — Wallet, Rank, Daily Puzzle */}
-            <div className="lg:col-span-4 space-y-1.5">
+            {/* ── Left Column ── */}
+            <div className="lg:col-span-4 space-y-2">
               {/* Wallet */}
-              <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
+              <motion.div variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
                 <button
                   onClick={() => setWalletPanelOpen((prev) => !prev)}
-                  className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors"
+                  className="w-full px-3.5 py-3 flex items-center justify-between text-left hover:bg-secondary/15 transition-colors"
                 >
-                    <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Wallet className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center">
+                      <Wallet className="w-4.5 h-4.5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-display font-bold text-sm">Wallet</p>
+                      <p className="font-display font-bold text-sm leading-tight">Wallet</p>
                       <p className="text-[10px] text-muted-foreground">{Number(profile?.wallet_crowns || 0).toFixed(0)} Crowns available</p>
                     </div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${walletPanelOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${walletPanelOpen ? "rotate-180" : ""}`} />
                 </button>
                 {walletPanelOpen && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="border-t border-border/30 px-3 py-3 space-y-2"
+                    transition={{ duration: 0.2 }}
+                    className="border-t border-border/20 px-3.5 py-3 space-y-2.5 bg-secondary/5"
                   >
                     <div className="flex items-center gap-2 text-lg font-display font-bold">
                       <Crown className="w-5 h-5 text-primary" />
@@ -497,19 +543,19 @@ const Dashboard = () => {
 
               {/* Global Rank */}
               {globalRank !== null && (
-                <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <Trophy className="w-5 h-5 text-primary" />
+                <motion.div variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm p-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Global Rank</p>
                       <div className="flex items-baseline gap-1.5">
-                        <span className="font-display font-black text-2xl text-primary">#{globalRank}</span>
-                        <span className="text-xs text-muted-foreground">/ {liveLeaderboardSize}</span>
+                        <span className="font-display font-black text-2xl text-primary leading-none">#{globalRank}</span>
+                        <span className="text-[10px] text-muted-foreground">/ {liveLeaderboardSize}</span>
                       </div>
                     </div>
-                    <button onClick={() => navigate("/leaderboard")} className="p-2 rounded-lg border border-border/40 hover:border-primary/30 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary">
+                    <button onClick={() => navigate("/leaderboard")} className="p-2 rounded-lg border border-border/30 hover:border-primary/30 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -527,17 +573,17 @@ const Dashboard = () => {
               <motion.div variants={fadeUp}>
                 <button
                   onClick={() => navigate("/daily-spin")}
-                  className="w-full rounded-lg border border-primary/25 bg-primary/5 hover:bg-primary/10 p-3 text-left group transition-all duration-200"
+                  className="w-full rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 p-3.5 text-left group transition-all duration-200"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                      <Gift className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/15 border border-primary/15 flex items-center justify-center">
+                      <Gift className="w-4.5 h-4.5 text-primary" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-display font-bold text-xs">Daily Spin</p>
                       <p className="text-[10px] text-muted-foreground">Free daily Crown rewards</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </button>
               </motion.div>
@@ -555,21 +601,23 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Right Column — Tournaments */}
+            {/* ── Right Column — Tournaments ── */}
             <motion.div variants={fadeUp} className="lg:col-span-8">
-              <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
+              <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
                 {/* Header */}
-                <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
-                   <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                     <Trophy className="w-4 h-4 text-primary" />
-                     Tournaments
-                     {activeTournaments.length > 0 && (
-                       <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full ml-1">{activeTournaments.length} active</span>
-                     )}
-                   </h3>
+                <div className="px-4 py-3 border-b border-border/20 flex items-center justify-between bg-gradient-to-r from-card/80 to-transparent">
+                  <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                      <Trophy className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    Tournaments
+                    {activeTournaments.length > 0 && (
+                      <span className="text-[9px] bg-primary/15 text-primary font-bold px-2 py-0.5 rounded-full">{activeTournaments.length} active</span>
+                    )}
+                  </h3>
                   <button
                     onClick={() => setShowCreateTournament(!showCreateTournament)}
-                    className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Create
@@ -581,28 +629,29 @@ const Dashboard = () => {
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="border-b border-border/30 px-4 py-3 bg-secondary/10"
+                    transition={{ duration: 0.25 }}
+                    className="border-b border-border/20 px-4 py-3.5 bg-secondary/8"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <div className="space-y-1 sm:col-span-2">
+                      <div className="space-y-1.5 sm:col-span-2">
                         <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Tournament Name</label>
-                        <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Weekend Crown Clash" className="w-full bg-secondary/50 border border-border/40 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Weekend Crown Clash" className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Prize Pool</label>
-                        <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="500" type="number" min={0} className="w-full bg-secondary/50 border border-border/40 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="500" type="number" min={0} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Max Players</label>
-                        <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="128" type="number" min={2} className="w-full bg-secondary/50 border border-border/40 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="128" type="number" min={2} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Start Time</label>
-                        <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary/50 border border-border/40 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                        <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Format</label>
-                        <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-secondary/50 border border-border/40 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all">
+                        <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all">
                           <option value="swiss">Swiss</option>
                           <option value="arena">Arena</option>
                         </select>
@@ -615,139 +664,143 @@ const Dashboard = () => {
                 )}
 
                 {/* Tournament list */}
-                <div className="max-h-[20rem] overflow-y-auto">
-                   {activeTournaments.length === 0 && (
-                     <div className="px-4 py-8 text-center">
-                       <Trophy className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                       <p className="text-xs text-muted-foreground">No active tournaments. Create one to get started!</p>
-                     </div>
-                   )}
-                   {activeTournaments.map((tournament) => {
-                     const count = tournament.registration_count?.[0]?.count || 0;
-                     const isRegistered = registeredTournamentIds.includes(tournament.id);
-                     const isFull = count >= tournament.max_players;
-                     const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
-                     const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
+                <div className="max-h-[22rem] overflow-y-auto">
+                  {activeTournaments.length === 0 && (
+                    <div className="px-4 py-10 text-center">
+                      <div className="w-12 h-12 rounded-xl bg-secondary/40 flex items-center justify-center mx-auto mb-3">
+                        <Trophy className="w-6 h-6 text-muted-foreground/30" />
+                      </div>
+                      <p className="text-xs text-muted-foreground font-medium">No active tournaments</p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">Create one to get started!</p>
+                    </div>
+                  )}
+                  {activeTournaments.map((tournament, i) => {
+                    const count = tournament.registration_count?.[0]?.count || 0;
+                    const isRegistered = registeredTournamentIds.includes(tournament.id);
+                    const isFull = count >= tournament.max_players;
+                    const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
+                    const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
 
-                     return (
-                       <div key={tournament.id} className="px-4 py-3 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors">
-                         <div className="flex items-center justify-between gap-3">
-                           <div className="flex-1 min-w-0">
-                             <div className="flex items-center gap-2">
-                               <h4 className="font-display font-bold text-xs truncate">{tournament.name}</h4>
-                               {isReady && (
-                                 <span className="flex items-center gap-1 text-[9px] bg-emerald-500/15 text-emerald-400 font-bold px-1.5 py-0.5 rounded-full">
-                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                   LIVE
-                                 </span>
-                               )}
-                             </div>
-                             <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                               <span>{count}/{tournament.max_players} players</span>
-                               <span>₹{tournament.prize_pool} prize</span>
-                               {tournament.starts_at && (
-                                 <span>{new Date(tournament.starts_at).toLocaleDateString()} {new Date(tournament.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                               )}
-                             </div>
-                           </div>
+                    return (
+                      <div key={tournament.id} className={`px-4 py-3 border-b border-border/15 last:border-0 hover:bg-secondary/8 transition-colors ${i === 0 ? "" : ""}`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-display font-bold text-xs truncate">{tournament.name}</h4>
+                              {isReady && (
+                                <span className="inline-flex items-center gap-1 text-[8px] bg-success/15 text-success font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                                  Live
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground">
+                              <span className="inline-flex items-center gap-1"><User className="w-2.5 h-2.5" />{count}/{tournament.max_players}</span>
+                              <span>₹{tournament.prize_pool}</span>
+                              {tournament.starts_at && (
+                                <span className="hidden sm:inline">{new Date(tournament.starts_at).toLocaleDateString()} {new Date(tournament.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              )}
+                            </div>
+                          </div>
 
-                           <div className="flex items-center gap-2 shrink-0">
-                             {isReady && (
-                               <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary font-display font-bold hover:bg-primary/20 transition-colors">
-                                 View
-                               </button>
-                             )}
-                             <button
-                               onClick={() => registerTournament(tournament.id)}
-                               disabled={isRegistered || isFull || registeringTournamentId === tournament.id}
-                               className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-colors ${
-                                 isRegistered
-                                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                   : isFull
-                                     ? "bg-muted text-muted-foreground"
-                                     : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
-                               }`}
-                             >
-                               {isRegistered ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === tournament.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
-                             </button>
-                           </div>
-                         </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {isReady && (
+                              <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary font-display font-bold hover:bg-primary/15 transition-colors">
+                                View
+                              </button>
+                            )}
+                            <button
+                              onClick={() => registerTournament(tournament.id)}
+                              disabled={isRegistered || isFull || registeringTournamentId === tournament.id}
+                              className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-all ${
+                                isRegistered
+                                  ? "bg-success/10 text-success border border-success/20"
+                                  : isFull
+                                    ? "bg-muted text-muted-foreground"
+                                    : "bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 hover:border-primary/30"
+                              }`}
+                            >
+                              {isRegistered ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === tournament.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
+                            </button>
+                          </div>
+                        </div>
 
-                         {tournament.created_by === user?.id && (
-                           <button onClick={() => cancelTournament(tournament)} className="mt-2 text-[10px] px-2 py-1 rounded-md bg-destructive/10 text-destructive font-semibold hover:bg-destructive/20 transition-colors">
-                             Cancel & Refund
-                           </button>
-                         )}
-                       </div>
-                     );
-                   })}
-                 </div>
-               </div>
-             </motion.div>
+                        {tournament.created_by === user?.id && (
+                          <button onClick={() => cancelTournament(tournament)} className="mt-2 text-[10px] px-2.5 py-1 rounded-md bg-destructive/10 text-destructive font-semibold hover:bg-destructive/15 transition-colors">
+                            Cancel & Refund
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
 
-             {/* Recent Tournaments (Completed / Cancelled) */}
-             {recentTournaments.length > 0 && (
-               <motion.div variants={fadeUp} className="lg:col-span-12">
-                 <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
-                    <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
-                     <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                       <Clock className="w-4 h-4 text-muted-foreground" />
-                       Recent Tournaments
-                     </h3>
-                     <span className="text-[10px] text-muted-foreground">{recentTournaments.length} past</span>
-                   </div>
-                   <div className="divide-y divide-border/20 max-h-[16rem] overflow-y-auto">
-                     {recentTournaments.map((t) => {
-                       const count = t.registration_count?.[0]?.count || 0;
-                       const isCompleted = t.status === "completed";
-                       return (
-                          <div key={t.id} className="px-4 py-3 flex items-center justify-between gap-2 hover:bg-secondary/10 transition-colors">
-                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCompleted ? "bg-primary/10" : "bg-destructive/10"}`}>
-                               <Trophy className={`w-4 h-4 ${isCompleted ? "text-primary" : "text-destructive"}`} />
-                             </div>
-                             <div className="min-w-0">
-                               <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
-                               <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
-                                 <span className="capitalize">{t.tournament_type || "swiss"}</span>
-                                 <span>{count} players</span>
-                                 <span>₹{t.prize_pool} prize</span>
-                                 {t.starts_at && <span>{new Date(t.starts_at).toLocaleDateString()}</span>}
-                               </div>
-                             </div>
-                           </div>
-                           <div className="flex items-center gap-2 shrink-0">
-                             <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${
-                               isCompleted ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-                             }`}>
-                               {t.status.toUpperCase()}
-                             </span>
-                             {isCompleted && (
-                               <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg border border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/30 font-display font-bold transition-colors">
-                                 Details
-                               </button>
-                             )}
-                           </div>
-                         </div>
-                       );
-                     })}
-                   </div>
-                 </div>
-               </motion.div>
-             )}
-           </div>
+            {/* Recent Tournaments */}
+            {recentTournaments.length > 0 && (
+              <motion.div variants={fadeUp} className="lg:col-span-12">
+                <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
+                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                      Recent Tournaments
+                    </h3>
+                    <span className="text-[10px] text-muted-foreground">{recentTournaments.length} past</span>
+                  </div>
+                  <div className="divide-y divide-border/15 max-h-[14rem] overflow-y-auto">
+                    {recentTournaments.map((t) => {
+                      const count = t.registration_count?.[0]?.count || 0;
+                      const isCompleted = t.status === "completed";
+                      return (
+                        <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/8 transition-colors">
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isCompleted ? "bg-primary/10" : "bg-destructive/10"}`}>
+                              <Trophy className={`w-3.5 h-3.5 ${isCompleted ? "text-primary" : "text-destructive"}`} />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
+                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                                <span className="capitalize">{t.tournament_type || "swiss"}</span>
+                                <span>{count} players</span>
+                                <span>₹{t.prize_pool}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${
+                              isCompleted ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+                            }`}>
+                              {t.status.toUpperCase()}
+                            </span>
+                            {isCompleted && (
+                              <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1 rounded-lg border border-border/30 text-muted-foreground hover:text-foreground hover:border-primary/30 font-display font-bold transition-colors">
+                                Details
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
 
           {/* ═══════════ RECENT GAMES ═══════════ */}
           {recentGames.length > 0 && (
-            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
-              <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
+            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
+              <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
                 <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
+                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                  </div>
                   Recent Games
                 </h3>
                 <span className="text-[10px] text-muted-foreground">{recentGames.filter((g) => g.result_type !== "in_progress").length} games</span>
               </div>
-              <div className="divide-y divide-border/20">
+              <div className="divide-y divide-border/15">
                 {recentGames.filter((g) => g.result_type !== "in_progress").map((g) => {
                   const userWon = g.winner_id === user?.id;
                   const userPlayedWhite = g.player_white === user?.id;
@@ -755,17 +808,17 @@ const Dashboard = () => {
                   const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
 
                   return (
-                    <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/10 transition-colors">
+                    <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/8 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${result === "Win" ? "bg-emerald-500" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${result === "Win" ? "bg-success" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
                         <div>
                           <span className="text-xs font-display font-bold">{opponent}</span>
                           <p className="text-[10px] text-muted-foreground">{userPlayedWhite ? "♔ White" : "♚ Black"} · {g.result_type}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${
-                          result === "Win" ? "bg-emerald-500/10 text-emerald-400" : result === "Loss" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
+                          result === "Win" ? "bg-success/10 text-success" : result === "Loss" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
                         }`}>
                           {result}
                         </span>
@@ -779,7 +832,7 @@ const Dashboard = () => {
           )}
 
           {/* ═══════════ ACHIEVEMENTS ═══════════ */}
-          <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3 sm:p-4">
+          <motion.div variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm p-3.5 sm:p-4">
             <AchievementsPanel
               wins={profile?.wins || 0}
               winStreak={profile?.win_streak || 0}
