@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { soundManager } from "@/services/soundManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateChess960Fen } from "@/utils/chess960";
+import { toast } from "sonner";
 
 export const usePrivateRoom = () => {
   const { user } = useAuth();
@@ -223,6 +224,17 @@ export const usePrivateRoom = () => {
           if (updated.status === "joined" && updated.guest_id) {
             setStatus("joined");
             soundManager.play("playerJoined");
+
+            // Fetch guest username and show toast
+            supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", updated.guest_id)
+              .single()
+              .then(({ data }) => {
+                const name = data?.username || "An opponent";
+                toast(`👋 ${name} joined your room!`, { duration: 4000 });
+              });
           }
 
           if (updated.status === "playing" && updated.game_id) {
