@@ -155,63 +155,74 @@ const Lobby = () => {
 
   // --------------- MODE SELECTION ---------------
   const renderModeSelection = () => (
-    <motion.div key="modes" {...cardMotion} className="space-y-5">
-      <div className="text-center mb-2">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
-          <Swords className="w-7 h-7 text-primary" />
+    <motion.div key="modes" {...cardMotion} className="space-y-6">
+      {/* Hero header */}
+      <div className="text-center relative">
+        <div className="absolute inset-0 -top-20 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-primary/6 blur-[120px]" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight">Choose Game Mode</h1>
-        <p className="text-sm text-muted-foreground mt-1">Select how you want to play</p>
+        <div className="relative">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-4 gold-glow">
+            <Swords className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight">Choose Game Mode</h1>
+          <p className="text-sm text-muted-foreground mt-1.5">Select how you want to play</p>
+        </div>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {gameModes.map((gm, i) => (
           <motion.button
             key={gm.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
+            transition={{ delay: i * 0.07, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setMode(gm.id)}
-            className={`w-full rounded-xl border p-4 text-left group transition-all duration-200 flex items-center gap-4 ${
+            className={`w-full rounded-xl border p-4 text-left group transition-all duration-300 flex items-center gap-4 backdrop-blur-sm ${
               gm.accent
-                ? "bg-primary/5 border-primary/25 hover:bg-primary/10 hover:border-primary/40 shadow-[0_0_20px_-8px_hsl(var(--primary)/0.3)]"
-                : "bg-card/60 border-border/40 hover:bg-card/80 hover:border-border/60"
+                ? "bg-primary/5 border-primary/25 hover:bg-primary/10 hover:border-primary/40 shadow-[0_0_24px_-8px_hsl(var(--primary)/0.3)]"
+                : "glass-card hover:border-primary/20"
             }`}
           >
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              gm.accent ? "bg-primary/15 group-hover:bg-primary/25" : "bg-secondary/60 group-hover:bg-secondary/80"
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+              gm.accent ? "bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 group-hover:shadow-sm group-hover:shadow-primary/15" : "bg-secondary/60 group-hover:bg-secondary/80"
             }`}>
-              <gm.icon className={`w-5 h-5 ${gm.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+              <gm.icon className={`w-5 h-5 ${gm.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} transition-colors`} />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-bold text-sm">{gm.title}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{gm.desc}</p>
             </div>
-            <ChevronRight className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${gm.accent ? "text-primary/50" : "text-muted-foreground/30"}`} />
+            <ChevronRight className={`w-4 h-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1 ${gm.accent ? "text-primary/50" : "text-muted-foreground/30"}`} />
           </motion.button>
         ))}
       </div>
 
       {/* Secondary modes */}
       <div>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-2.5 px-1">More Ways to Play</p>
-        <div className="grid grid-cols-2 gap-2.5">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 px-1">More Ways to Play</p>
+        <div className="grid grid-cols-2 gap-3">
           {secondaryModes.map((sm, i) => (
             <motion.button
               key={sm.title}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.05 }}
+              transition={{ delay: 0.25 + i * 0.06, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={sm.onClick}
-              className="rounded-xl border border-border/40 bg-card/60 p-4 text-left hover:bg-card/80 hover:border-border/60 transition-all group"
+              className="glass-card p-4 text-left hover:border-primary/20 transition-all duration-300 group relative overflow-hidden"
             >
-              <div className="w-9 h-9 rounded-lg bg-secondary/60 group-hover:bg-secondary/80 flex items-center justify-center mb-2.5 transition-colors">
-                <sm.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-secondary/60 group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-colors duration-300 border border-border/30 group-hover:border-primary/15">
+                  <sm.icon className="w-4.5 h-4.5 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                </div>
+                <h3 className="font-display font-bold text-xs">{sm.title}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{sm.desc}</p>
               </div>
-              <h3 className="font-display font-bold text-xs">{sm.title}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{sm.desc}</p>
             </motion.button>
           ))}
         </div>
