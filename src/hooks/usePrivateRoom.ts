@@ -143,7 +143,7 @@ export const usePrivateRoom = () => {
       .eq("status", "waiting")
       .is("guest_id", null)
       .select("*")
-      .single();
+      .maybeSingle();
 
     if (claimErr || !claimedRoom) {
       setError("This room is no longer available. Ask the host for a new code.");
