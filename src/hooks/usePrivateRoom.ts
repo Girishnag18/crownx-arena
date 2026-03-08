@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { soundManager } from "@/services/soundManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateChess960Fen } from "@/utils/chess960";
 
