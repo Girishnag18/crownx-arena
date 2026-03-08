@@ -24,6 +24,7 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Spectate from "./pages/Spectate";
 import TournamentDetail from "./pages/TournamentDetail";
+import Puzzles from "./pages/Puzzles";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
@@ -56,6 +57,7 @@ const RouteAnimator = () => {
           <Route path="/play" element={<ProtectedRoute><Play /></ProtectedRoute>} />
           <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
           <Route path="/spectate" element={<ProtectedRoute><Spectate /></ProtectedRoute>} />
+          <Route path="/puzzles" element={<ProtectedRoute><Puzzles /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />
           <Route path="/crown-topup" element={<ProtectedRoute><CrownTopup /></ProtectedRoute>} />

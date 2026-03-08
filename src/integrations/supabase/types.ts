@@ -293,6 +293,9 @@ export type Database = {
           level: number
           losses: number
           player_uid: string | null
+          puzzle_rating: number
+          puzzle_streak: number
+          puzzles_solved: number
           rank_tier: string
           updated_at: string
           username: string | null
@@ -313,6 +316,9 @@ export type Database = {
           level?: number
           losses?: number
           player_uid?: string | null
+          puzzle_rating?: number
+          puzzle_streak?: number
+          puzzles_solved?: number
           rank_tier?: string
           updated_at?: string
           username?: string | null
@@ -333,6 +339,9 @@ export type Database = {
           level?: number
           losses?: number
           player_uid?: string | null
+          puzzle_rating?: number
+          puzzle_streak?: number
+          puzzles_solved?: number
           rank_tier?: string
           updated_at?: string
           username?: string | null
@@ -340,6 +349,74 @@ export type Database = {
           win_streak?: number
           wins?: number
           xp?: number
+        }
+        Relationships: []
+      }
+      puzzle_attempts: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          puzzle_id: string
+          solved: boolean
+          time_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          puzzle_id: string
+          solved?: boolean
+          time_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          puzzle_id?: string
+          solved?: boolean
+          time_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "puzzle_attempts_puzzle_id_fkey"
+            columns: ["puzzle_id"]
+            isOneToOne: false
+            referencedRelation: "puzzles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      puzzles: {
+        Row: {
+          created_at: string
+          fen: string
+          id: string
+          rating: number
+          solution: string[]
+          source: string | null
+          themes: string[]
+        }
+        Insert: {
+          created_at?: string
+          fen: string
+          id?: string
+          rating?: number
+          solution: string[]
+          source?: string | null
+          themes?: string[]
+        }
+        Update: {
+          created_at?: string
+          fen?: string
+          id?: string
+          rating?: number
+          solution?: string[]
+          source?: string | null
+          themes?: string[]
         }
         Relationships: []
       }
