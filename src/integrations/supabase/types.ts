@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string
+          description: string
+          icon: string
+          id: string
+          key: string
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          category?: string
+          description?: string
+          icon?: string
+          id?: string
+          key: string
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          description?: string
+          icon?: string
+          id?: string
+          key?: string
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      daily_puzzles: {
+        Row: {
+          active_date: string
+          id: string
+          puzzle_id: string
+        }
+        Insert: {
+          active_date?: string
+          id?: string
+          puzzle_id: string
+        }
+        Update: {
+          active_date?: string
+          id?: string
+          puzzle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_puzzles_puzzle_id_fkey"
+            columns: ["puzzle_id"]
+            isOneToOne: false
+            referencedRelation: "puzzles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       elo_history: {
         Row: {
           elo_after: number
@@ -337,6 +393,35 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
             referencedColumns: ["id"]
           },
         ]

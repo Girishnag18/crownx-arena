@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap } from "lucide-react";
+import XPProgressBar from "@/components/gamification/XPProgressBar";
+import AchievementsPanel from "@/components/gamification/AchievementsPanel";
+import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,6 +23,8 @@ interface Profile {
   level: number;
   win_streak: number;
   wallet_crowns: number;
+  xp: number;
+  puzzles_solved: number;
 }
 
 interface Tournament {
@@ -88,7 +93,7 @@ const Dashboard = () => {
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns")
+      .select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns, xp, puzzles_solved")
       .eq("id", userId)
       .single();
     if (data) setProfile(data as unknown as Profile);
@@ -456,6 +461,10 @@ const Dashboard = () => {
           </motion.div>
 
           <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
+            <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
+
+            <DailyPuzzleCard />
+
             <div className="space-y-3">
               {[{ icon: Globe, title: "Online Mode", desc: "Quick Play, World Arena and Private Rooms", to: "/lobby", accent: true }].map((mode) => (
                 <motion.button key={mode.title} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate(mode.to)} className={`glass-card p-5 text-left group transition-all duration-300 ${mode.accent ? "border-primary/30 gold-glow" : "hover:border-primary/20"}`}>
@@ -592,6 +601,16 @@ const Dashboard = () => {
                 );
               })}
             </div>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="lg:col-span-12 glass-card p-6">
+            <AchievementsPanel
+              wins={profile?.wins || 0}
+              winStreak={profile?.win_streak || 0}
+              puzzlesSolved={profile?.puzzles_solved || 0}
+              crownScore={profile?.crown_score || 0}
+              gamesPlayed={profile?.games_played || 0}
+            />
           </motion.div>
         </motion.div>
       </div>
