@@ -44,6 +44,92 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_progress: {
+        Row: {
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          current_value: number
+          id: string
+          reward_claimed: boolean
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          current_value?: number
+          id?: string
+          reward_claimed?: boolean
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          current_value?: number
+          id?: string
+          reward_claimed?: boolean
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          active_from: string
+          active_until: string
+          category: string
+          challenge_type: string
+          created_at: string
+          crown_reward: number
+          description: string
+          icon: string
+          id: string
+          target_value: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          active_from?: string
+          active_until?: string
+          category?: string
+          challenge_type?: string
+          created_at?: string
+          crown_reward?: number
+          description?: string
+          icon?: string
+          id?: string
+          target_value?: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          active_from?: string
+          active_until?: string
+          category?: string
+          challenge_type?: string
+          created_at?: string
+          crown_reward?: number
+          description?: string
+          icon?: string
+          id?: string
+          target_value?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       daily_puzzles: {
         Row: {
           active_date: string
