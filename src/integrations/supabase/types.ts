@@ -44,6 +44,144 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_pass_claims: {
+        Row: {
+          claimed_at: string
+          id: string
+          tier_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          id?: string
+          tier_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          id?: string
+          tier_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_pass_claims_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "battle_pass_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_pass_progress: {
+        Row: {
+          created_at: string
+          current_xp: number
+          id: string
+          is_premium: boolean
+          season_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_xp?: number
+          id?: string
+          is_premium?: boolean
+          season_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_xp?: number
+          id?: string
+          is_premium?: boolean
+          season_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_pass_progress_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "battle_pass_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_pass_seasons: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          name: string
+          season_number: number
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          name: string
+          season_number?: number
+          starts_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          name?: string
+          season_number?: number
+          starts_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      battle_pass_tiers: {
+        Row: {
+          id: string
+          is_premium: boolean
+          reward_amount: number
+          reward_icon: string
+          reward_label: string
+          reward_type: string
+          season_id: string
+          tier_number: number
+          xp_required: number
+        }
+        Insert: {
+          id?: string
+          is_premium?: boolean
+          reward_amount?: number
+          reward_icon?: string
+          reward_label?: string
+          reward_type?: string
+          season_id: string
+          tier_number: number
+          xp_required?: number
+        }
+        Update: {
+          id?: string
+          is_premium?: boolean
+          reward_amount?: number
+          reward_icon?: string
+          reward_label?: string
+          reward_type?: string
+          season_id?: string
+          tier_number?: number
+          xp_required?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_pass_tiers_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "battle_pass_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_progress: {
         Row: {
           challenge_id: string
