@@ -67,7 +67,6 @@ const Play = () => {
   const aiConfig = useMemo(() => getAdaptiveConfig(AI_CONFIG[difficulty] || AI_CONFIG.intermediate, aiStreak), [difficulty, aiStreak]);
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
-  const aiElo = isRankedAI ? playerElo + 20 : parseInt((AI_CONFIG[difficulty] || AI_CONFIG.intermediate).eloLabel.replace("~", ""));
 
   const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
   const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
