@@ -617,7 +617,7 @@ const Dashboard = () => {
                 {/* Tournament list */}
                 <div className="max-h-[20rem] overflow-y-auto">
                    {activeTournaments.length === 0 && (
-                     <div className="px-5 py-10 text-center">
+                     <div className="px-4 py-8 text-center">
                        <Trophy className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
                        <p className="text-xs text-muted-foreground">No active tournaments. Create one to get started!</p>
                      </div>
