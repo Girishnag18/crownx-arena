@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
