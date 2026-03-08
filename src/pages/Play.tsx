@@ -542,19 +542,24 @@ const Play = () => {
                 <span className="truncate">{gameStatus}</span>
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* Resign button - online */}
                 {isOnline && !online.isGameOver && (
                   <button
-                    onClick={async () => {
-                      if (!window.confirm("Are you sure to resign?")) return;
-                      setResignPending(true);
-                      await online.resign();
-                      setResignPending(false);
-                    }}
-                    disabled={resignPending}
-                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive disabled:opacity-60"
+                    onClick={() => setShowResignDialog(true)}
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
                     title="Resign"
                   >
-                    {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+                    <Flag className="w-4 h-4" />
+                  </button>
+                )}
+                {/* Resign button - local & computer */}
+                {!isOnline && !isGameOver && (isComputerGame || displayMoves.length > 0) && (
+                  <button
+                    onClick={() => setShowResignDialog(true)}
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
+                    title="Resign"
+                  >
+                    <Flag className="w-4 h-4" />
                   </button>
                 )}
                 {[
