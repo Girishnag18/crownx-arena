@@ -270,16 +270,6 @@ const Dashboard = () => {
     { label: "Streak", value: profile?.win_streak || 0, icon: Flame },
   ];
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-          <Crown className="w-10 h-10 text-primary" />
-        </motion.div>
-      </div>
-    );
-  }
-
   const handlePullRefresh = useCallback(async () => {
     if (!user) return;
     await Promise.all([
@@ -291,6 +281,16 @@ const Dashboard = () => {
       loadRatingOverview(user.id),
     ]);
   }, [user]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+          <Crown className="w-10 h-10 text-primary" />
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-16 pb-24 lg:pb-6">
