@@ -244,6 +244,10 @@ const Shop = () => {
     );
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadShop();
+  }, [user]);
+
   return (
     <main className="page-container relative overflow-hidden">
       {/* Ambient glows */}
@@ -252,6 +256,7 @@ const Shop = () => {
         <div className="absolute bottom-20 right-1/4 w-[320px] h-[320px] bg-accent/6 rounded-full blur-[100px]" />
       </div>
 
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl relative z-10 space-y-5">
         <BackButton label="Back" />
         {/* Header */}
