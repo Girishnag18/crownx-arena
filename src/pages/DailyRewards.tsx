@@ -87,7 +87,7 @@ const DailyRewards = () => {
   const loginDatesSet = new Set(loginHistory.map((l) => l.login_date));
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <button
