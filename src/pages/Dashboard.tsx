@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { publishInGameNotification } from "@/components/InGameNotificationBar";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Profile {
   username: string | null;
