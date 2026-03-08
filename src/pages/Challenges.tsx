@@ -244,6 +244,7 @@ const Challenges = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </main>
   );
 };

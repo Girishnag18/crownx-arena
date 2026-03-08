@@ -289,6 +289,7 @@ const BattlePass = () => {
           <p className="text-center text-muted-foreground py-12">No active battle pass season.</p>
         )}
       </div>
+      </div>
     </main>
   );
 };
