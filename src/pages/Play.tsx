@@ -780,7 +780,7 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-primary/20 bg-card/60 backdrop-blur-sm p-5"
+                className="glass-card p-5"
               >
                 <p className="font-display font-bold text-sm">Post-Game Analysis</p>
                 <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
