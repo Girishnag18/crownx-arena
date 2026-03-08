@@ -214,8 +214,14 @@ const Challenges = () => {
     );
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadChallenges();
+    await loadProgress();
+  }, [challenges]);
+
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl mx-auto space-y-6">
       <BackButton label="Back" to="/dashboard" />
       <div className="space-y-1">
