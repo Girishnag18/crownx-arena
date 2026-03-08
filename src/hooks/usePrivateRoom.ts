@@ -153,6 +153,8 @@ export const usePrivateRoom = () => {
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
     const durationSeconds = (claimedRoom as any).duration_seconds ?? null;
+    const incrementSeconds = (claimedRoom as any).increment_seconds ?? null;
+    const initialTimeMs = durationSeconds ? durationSeconds * 1000 : null;
     const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     // player1_id must be auth.uid() due to RLS policy
@@ -165,10 +167,14 @@ export const usePrivateRoom = () => {
         player_black: blackId,
         game_mode: "private",
         duration_seconds: durationSeconds,
+        increment_seconds: incrementSeconds,
+        white_time_ms: initialTimeMs,
+        black_time_ms: initialTimeMs,
+        last_move_at: new Date().toISOString(),
         result_type: "in_progress",
         current_fen: startingFen,
         moves: [],
-      })
+      } as any)
       .select()
       .single();
 
