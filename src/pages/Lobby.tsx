@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Eye, Timer, Shuffle, ChevronRight, Zap, Flame, Clock, Trophy, MessageSquare, Send, UserCheck, BrainCircuit, GraduationCap, Rocket } from "lucide-react";
-import { TimeControlSelector, TIME_CONTROLS, type TimeControl } from "@/components/chess/ChessClock";
+import { TimeControlSelector, TIME_CONTROLS, CATEGORY_ICONS, type TimeControl } from "@/components/chess/ChessClock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
@@ -618,7 +618,7 @@ const Lobby = () => {
                     {roomPreview.duration_seconds
                       ? (() => {
                           const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds && t.incrementSeconds === (roomPreview.increment_seconds ?? 0));
-                          if (tc) return `${tc.label} (${tc.category})`;
+                          if (tc) return `${CATEGORY_ICONS[tc.category] || ""} ${tc.label} (${tc.category})`;
                           const mins = roomPreview.duration_seconds / 60;
                           const inc = roomPreview.increment_seconds ?? 0;
                           return inc > 0 ? `${mins}+${inc}` : `${mins} min`;

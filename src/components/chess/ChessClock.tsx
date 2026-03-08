@@ -29,7 +29,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   classical: "text-primary",
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
+export const CATEGORY_ICONS: Record<string, string> = {
   bullet: "⚡",
   blitz: "🔥",
   rapid: "⏱️",
