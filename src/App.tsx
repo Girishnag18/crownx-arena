@@ -35,6 +35,7 @@ import BattlePass from "./pages/BattlePass";
 import Tutorial from "./pages/Tutorial";
 import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
+import Referrals from "./pages/Referrals";
 import Shop from "./pages/Shop";
 import DailyRewards from "./pages/DailyRewards";
 import DailySpin from "./pages/DailySpin";
