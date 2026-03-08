@@ -18,7 +18,7 @@ export const usePrivateRoom = () => {
     return code;
   };
 
-  const createRoom = useCallback(async () => {
+  const createRoom = useCallback(async (durationSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
     let createdRoom: { room_code: string; id: string } | null = null;
@@ -27,7 +27,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id })
+        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds } as any)
         .select()
         .single();
 
