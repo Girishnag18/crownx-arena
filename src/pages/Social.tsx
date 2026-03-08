@@ -309,6 +309,12 @@ const FriendRow = ({ friend, online, onChallenge, onMessage, onGift }: {
         className="p-1.5 rounded-md hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors">
         <MessageCircle className="w-3.5 h-3.5" />
       </button>
+      {onGift && (
+        <button onClick={onGift} title="Gift Crowns"
+          className="p-1.5 rounded-md hover:bg-primary/15 text-primary transition-colors">
+          <Crown className="w-3.5 h-3.5" />
+        </button>
+      )}
       {online && onChallenge && (
         <button onClick={onChallenge} title="Challenge"
           className="p-1.5 rounded-md hover:bg-primary/15 text-primary transition-colors">
