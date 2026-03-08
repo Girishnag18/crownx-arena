@@ -748,7 +748,7 @@ const Play = () => {
                     <>
                       <button
                         onClick={resetLocalGame}
-                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg transition-all gold-glow hover:shadow-lg hover:shadow-primary/25"
                       >
                         Rematch
                       </button>
