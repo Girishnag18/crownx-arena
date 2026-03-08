@@ -360,6 +360,34 @@ const Play = () => {
     return () => { cancelled = true; };
   }, [game, showArrows, isGameOver]);
 
+  // Adaptive difficulty: track win/loss streak against AI
+  const streakUpdatedRef = useRef(false);
+  useEffect(() => {
+    if (!isComputerGame || streakUpdatedRef.current) return;
+    const gameOver = game.isGameOver() || clockGameOver || resignPending;
+    if (!gameOver) return;
+
+    streakUpdatedRef.current = true;
+    let newStreak = aiStreak;
+
+    if (game.isCheckmate()) {
+      // The side whose turn it is lost
+      const playerLost = game.turn() !== computerColor;
+      newStreak = playerLost ? Math.min(aiStreak - 1, -1) : Math.max(aiStreak + 1, 1);
+    } else if (clockGameOver) {
+      const playerLostOnTime = game.turn() !== computerColor;
+      newStreak = playerLostOnTime ? Math.min(aiStreak - 1, -1) : Math.max(aiStreak + 1, 1);
+    } else if (resignPending) {
+      newStreak = Math.min(aiStreak - 1, -1); // player resigned = loss
+    } else {
+      // Draw resets streak toward 0
+      newStreak = aiStreak > 0 ? aiStreak - 1 : aiStreak < 0 ? aiStreak + 1 : 0;
+    }
+
+    setAiStreak(newStreak);
+    saveStreak(newStreak);
+  }, [game, clockGameOver, resignPending, isComputerGame, computerColor, aiStreak]);
+
   useEffect(() => {
     if (!game.isCheckmate() && !clockGameOver) {
       setShowCheckmateBanner(false);
