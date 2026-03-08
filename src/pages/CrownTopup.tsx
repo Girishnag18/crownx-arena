@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Crown, Gift, Loader2, Puzzle, Swords, Target, Trophy, Wallet, Zap } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Crown, Gift, Loader2, Puzzle, ShoppingBag, Swords, Target, Trophy, Wallet, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import BackButton from "@/components/common/BackButton";
 
 interface WalletProfile {
   wallet_crowns: number;
