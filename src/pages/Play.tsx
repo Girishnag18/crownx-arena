@@ -546,7 +546,7 @@ const Play = () => {
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     if (isComputerGame && aiThinking) return "AI is thinking…";
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
-  }, [game, isInCheck, isOnline, online, user, clockGameOver]);
+  }, [game, isInCheck, isOnline, online, user, clockGameOver, onlineClockWhiteMs, onlineClockBlackMs]);
 
   const displayMoves = isOnline && online.gameData?.moves
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
