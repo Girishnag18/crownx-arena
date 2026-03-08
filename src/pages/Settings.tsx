@@ -180,7 +180,7 @@ const Settings = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="font-display text-xl font-bold">{displayName}</h2>
+                <h2 className="font-display text-lg sm:text-xl font-bold truncate">{displayName}</h2>
                 <p className="text-sm text-muted-foreground">{email}</p>
               </div>
             </div>
