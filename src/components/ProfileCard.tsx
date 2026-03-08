@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Crown, Trophy, TrendingDown, MapPin, Shield } from "lucide-react";
+import { Crown, Trophy, TrendingDown, MapPin, Shield, Flame, Target, User } from "lucide-react";
 
 export interface EquippedItem {
   name: string;
@@ -25,19 +24,19 @@ interface ProfileCardProps {
   equippedItems?: EquippedItem[];
 }
 
-const getSkillLevel = (elo: number): { label: string; color: string } => {
-  if (elo >= 1600) return { label: "Grand Master", color: "text-yellow-400" };
-  if (elo >= 1200) return { label: "Expert", color: "text-purple-400" };
-  if (elo >= 800) return { label: "Intermediate", color: "text-blue-400" };
-  if (elo >= 500) return { label: "Apprentice", color: "text-emerald-400" };
-  return { label: "Beginner", color: "text-muted-foreground" };
+const getSkillLevel = (elo: number): { label: string; color: string; bg: string } => {
+  if (elo >= 1600) return { label: "Grand Master", color: "text-primary", bg: "bg-primary/10 border-primary/25" };
+  if (elo >= 1200) return { label: "Expert", color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/25" };
+  if (elo >= 800) return { label: "Intermediate", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/25" };
+  if (elo >= 500) return { label: "Apprentice", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/25" };
+  return { label: "Beginner", color: "text-muted-foreground", bg: "bg-secondary/60 border-border/40" };
 };
 
-const rarityBorder: Record<string, string> = {
-  legendary: "border-yellow-500/60 shadow-yellow-500/20 shadow-md",
-  epic: "border-purple-500/60 shadow-purple-500/20 shadow-md",
-  rare: "border-blue-500/60",
-  common: "border-border/60",
+const rarityGlow: Record<string, string> = {
+  legendary: "border-primary/50 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.4)]",
+  epic: "border-violet-500/50 shadow-[0_0_15px_-5px_rgba(139,92,246,0.3)]",
+  rare: "border-blue-500/40",
+  common: "border-border/50",
 };
 
 const ProfileCard = ({
@@ -62,122 +61,121 @@ const ProfileCard = ({
   const equippedFrame = equippedItems.find((i) => i.category === "frame");
   const equippedBadges = equippedItems.filter((i) => i.category === "badge");
 
-  const frameClass = equippedFrame ? (rarityBorder[equippedFrame.rarity] || "") : "";
+  const frameClass = equippedFrame ? (rarityGlow[equippedFrame.rarity] || "") : "";
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3">
+      <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3 hover:bg-card/80 transition-colors">
         <div className="relative">
-          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/30"}`}>
+          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/20"}`}>
             <AvatarImage src={avatar_url || undefined} alt={username} />
-            <AvatarFallback className="bg-secondary text-primary font-bold">
+            <AvatarFallback className="bg-secondary text-primary font-display font-bold text-xs">
               {(username || "P").slice(0, 1).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           {isOnline !== undefined && (
-            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
           )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-display font-bold text-sm truncate">{username || "Player"}</p>
-            {equippedTitle && <span className="text-[10px] text-yellow-400 font-semibold">{equippedTitle.icon} {equippedTitle.name}</span>}
+            {equippedTitle && <span className="text-[9px] text-primary font-bold">{equippedTitle.icon}</span>}
           </div>
           <p className="text-[10px] text-muted-foreground font-mono">UID: {player_uid}</p>
         </div>
         <div className="text-right">
-          <p className="text-sm font-bold text-primary">{crown_score}</p>
-          <p className={`text-[10px] font-semibold ${skill.color}`}>{skill.label}</p>
+          <p className="text-sm font-display font-bold text-primary">{crown_score}</p>
+          <p className={`text-[9px] font-display font-bold ${skill.color}`}>{skill.label}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/90 backdrop-blur-sm overflow-hidden">
-      {/* Header gradient */}
-      <div className="h-20 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative">
-        <div className="absolute -bottom-8 left-6">
+    <div className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
+      {/* Header gradient band */}
+      <div className="h-24 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent relative">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.08),transparent_60%)]" />
+        {/* Skill badge */}
+        <div className="absolute top-4 right-4">
+          <span className={`inline-flex items-center gap-1 text-[10px] font-display font-bold px-2.5 py-1 rounded-full border ${skill.bg} ${skill.color}`}>
+            <Shield className="w-3 h-3" />
+            {skill.label}
+          </span>
+        </div>
+        {/* Avatar */}
+        <div className="absolute -bottom-10 left-6">
           <div className="relative">
-            <Avatar className={`w-16 h-16 border-4 shadow-lg ${frameClass || "border-card"}`}>
+            <Avatar className={`w-20 h-20 border-[3px] border-card shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)] ${frameClass}`}>
               <AvatarImage src={avatar_url || undefined} alt={username} />
-              <AvatarFallback className="bg-secondary text-primary text-xl font-bold">
-                {(username || "P").slice(0, 1).toUpperCase()}
+              <AvatarFallback className="bg-secondary text-primary text-xl font-display font-bold">
+                <User className="w-8 h-8" />
               </AvatarFallback>
             </Avatar>
             {isOnline !== undefined && (
-              <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[3px] border-card ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+              <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-[3px] border-card ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
             )}
           </div>
         </div>
       </div>
 
-      <div className="pt-10 px-6 pb-5">
-        {/* Name + Title + Skill */}
+      <div className="pt-12 px-6 pb-6">
+        {/* Name + UID */}
         <div className="flex items-start justify-between mb-1">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-lg font-bold">{username || "Player"}</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-display text-xl font-black tracking-tight">{username || "Player"}</h3>
               {equippedTitle && (
-                <span className="text-xs text-yellow-400 font-semibold bg-yellow-400/10 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-primary font-display font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
                   {equippedTitle.icon} {equippedTitle.name}
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground font-mono">UID: {player_uid}</p>
+            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">UID: {player_uid}</p>
           </div>
-          <Badge variant="outline" className={`${skill.color} border-current text-[10px]`}>
-            <Shield className="w-3 h-3 mr-1" />
-            {skill.label}
-          </Badge>
         </div>
 
         {/* Equipped Badges */}
         {equippedBadges.length > 0 && (
           <div className="flex gap-1.5 mt-2">
             {equippedBadges.map((badge, i) => (
-              <span key={i} className="text-xs bg-secondary/60 border border-border/50 px-2 py-0.5 rounded-full" title={badge.name}>
+              <span key={i} className="text-[10px] bg-secondary/50 border border-border/40 px-2 py-0.5 rounded-full font-medium" title={badge.name}>
                 {badge.icon} {badge.name}
               </span>
             ))}
           </div>
         )}
 
-        {bio && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{bio}</p>}
+        {bio && <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">{bio}</p>}
 
         {country && (
-          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+          <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
             <MapPin className="w-3 h-3" /> {country}
           </p>
         )}
 
         {/* Stats grid */}
-        <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-border/50">
-          <div className="text-center">
-            <Crown className="w-4 h-4 text-primary mx-auto mb-1" />
-            <p className="text-lg font-bold text-primary">{crown_score}</p>
-            <p className="text-[10px] text-muted-foreground">ELO</p>
-          </div>
-          <div className="text-center">
-            <Trophy className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            <p className="text-lg font-bold">{wins}</p>
-            <p className="text-[10px] text-muted-foreground">Wins</p>
-          </div>
-          <div className="text-center">
-            <TrendingDown className="w-4 h-4 text-destructive mx-auto mb-1" />
-            <p className="text-lg font-bold">{losses}</p>
-            <p className="text-[10px] text-muted-foreground">Losses</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold mt-5">{winRate}%</p>
-            <p className="text-[10px] text-muted-foreground">Win Rate</p>
-          </div>
+        <div className="grid grid-cols-4 gap-2.5 mt-5">
+          {[
+            { icon: Crown, label: "ELO", value: crown_score, color: "text-primary" },
+            { icon: Trophy, label: "Wins", value: wins, color: "text-emerald-400" },
+            { icon: TrendingDown, label: "Losses", value: losses, color: "text-destructive" },
+            { icon: Target, label: "Win Rate", value: `${winRate}%`, color: "text-foreground" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl border border-border/30 bg-secondary/20 backdrop-blur-sm p-3 text-center">
+              <stat.icon className={`w-3.5 h-3.5 ${stat.color} mx-auto mb-1.5`} />
+              <p className={`text-base font-display font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
         {win_streak > 0 && (
-          <p className="text-xs text-primary font-semibold mt-3 text-center">
-            🔥 {win_streak} win streak
-          </p>
+          <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-primary font-display font-bold">
+            <Flame className="w-3.5 h-3.5" />
+            {win_streak} win streak
+          </div>
         )}
       </div>
     </div>
