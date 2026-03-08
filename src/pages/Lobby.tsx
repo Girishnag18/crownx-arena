@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Eye, Timer, Shuffle, ChevronRight, Zap, Flame, Clock, Trophy, MessageSquare, Send, UserCheck, BrainCircuit, GraduationCap, Rocket } from "lucide-react";
-import { TimeControlSelector, TIME_CONTROLS, type TimeControl } from "@/components/chess/ChessClock";
+import { TimeControlSelector, TIME_CONTROLS, CATEGORY_ICONS, type TimeControl } from "@/components/chess/ChessClock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
