@@ -982,6 +982,7 @@ export type Database = {
           puzzle_streak: number
           puzzles_solved: number
           rank_tier: string
+          referral_code: string | null
           updated_at: string
           username: string | null
           wallet_crowns: number
@@ -1005,6 +1006,7 @@ export type Database = {
           puzzle_streak?: number
           puzzles_solved?: number
           rank_tier?: string
+          referral_code?: string | null
           updated_at?: string
           username?: string | null
           wallet_crowns?: number
@@ -1028,6 +1030,7 @@ export type Database = {
           puzzle_streak?: number
           puzzles_solved?: number
           rank_tier?: string
+          referral_code?: string | null
           updated_at?: string
           username?: string | null
           wallet_crowns?: number
@@ -1102,6 +1105,33 @@ export type Database = {
           solution?: string[]
           source?: string | null
           themes?: string[]
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_claimed: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_claimed?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_claimed?: boolean
         }
         Relationships: []
       }
@@ -1284,6 +1314,105 @@ export type Database = {
             columns: ["study_id"]
             isOneToOne: false
             referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_battle_boards: {
+        Row: {
+          battle_id: string
+          board_number: number
+          challenger_player_id: string
+          created_at: string
+          game_id: string | null
+          id: string
+          opponent_player_id: string | null
+          result: string
+        }
+        Insert: {
+          battle_id: string
+          board_number?: number
+          challenger_player_id: string
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          opponent_player_id?: string | null
+          result?: string
+        }
+        Update: {
+          battle_id?: string
+          board_number?: number
+          challenger_player_id?: string
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          opponent_player_id?: string | null
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_battle_boards_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "team_battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battle_boards_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_battles: {
+        Row: {
+          board_count: number
+          challenger_club_id: string
+          challenger_score: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          opponent_club_id: string
+          opponent_score: number
+          status: string
+        }
+        Insert: {
+          board_count?: number
+          challenger_club_id: string
+          challenger_score?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          opponent_club_id: string
+          opponent_score?: number
+          status?: string
+        }
+        Update: {
+          board_count?: number
+          challenger_club_id?: string
+          challenger_score?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          opponent_club_id?: string
+          opponent_score?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_battles_challenger_club_id_fkey"
+            columns: ["challenger_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battles_opponent_club_id_fkey"
+            columns: ["opponent_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
         ]

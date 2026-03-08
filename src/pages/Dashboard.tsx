@@ -6,6 +6,7 @@ import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
 import PlacementBadge from "@/components/gamification/PlacementBadge";
 import RankPromotionOverlay from "@/components/gamification/RankPromotionOverlay";
+import TrainingInsights from "@/components/gamification/TrainingInsights";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -545,6 +546,13 @@ const Dashboard = () => {
               <motion.div variants={fadeUp}>
                 <DailyPuzzleCard />
               </motion.div>
+
+              {/* Training Insights */}
+              {user && (
+                <motion.div variants={fadeUp}>
+                  <TrainingInsights userId={user.id} />
+                </motion.div>
+              )}
             </div>
 
             {/* Right Column — Tournaments */}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award } from "lucide-react";
+import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -166,6 +166,13 @@ const Social = () => {
           <Users className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Social Hub
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground">See who's online, chat, and challenge friends.</p>
+        <button
+          onClick={() => navigate("/referrals")}
+          className="mt-2 flex items-center gap-2 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg"
+        >
+          <Share2 className="w-3.5 h-3.5" /> Refer a Friend — Earn 25 Crowns
+          <ChevronRight className="w-3 h-3" />
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
