@@ -242,6 +242,7 @@ const Dashboard = () => {
       max_players: parsedMaxRegistrations,
       created_by: user.id,
       status: "open",
+      tournament_type: newTournamentType,
       starts_at: newStartsAt ? new Date(newStartsAt).toISOString() : new Date(Date.now() + 1000 * 60 * 45).toISOString(),
     }).select("id, name, prize_pool, max_players, status, starts_at").single();
     setCreateTournamentLoading(false);
