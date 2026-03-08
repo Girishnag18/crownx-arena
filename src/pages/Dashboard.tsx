@@ -290,37 +290,39 @@ const Dashboard = () => {
               </motion.div>
             )}
 
-            {/* ─── Two Column: Games + Tournaments ─── */}
+            {/* ─── Two Column: Games + Insights ─── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <motion.div variants={fadeUp} className="space-y-4">
+              <motion.div variants={fadeUp}>
                 <RecentGamesCard games={recentGames} userId={user?.id || ""} />
+              </motion.div>
+              <motion.div variants={fadeUp}>
                 {user && <TrainingInsights userId={user.id} />}
               </motion.div>
-
-              <motion.div variants={fadeUp} className="space-y-4">
-                <TournamentsCard
-                  activeTournaments={activeTournaments}
-                  recentTournaments={recentTournamentsList}
-                  registeredIds={registeredTournamentIds}
-                  registeringId={registeringTournamentId}
-                  userId={user?.id || ""}
-                  onRegister={registerTournament}
-                  onCancel={cancelTournament}
-                  onNavigateToTournament={(id) => navigate(`/tournament/${id}`)}
-                  showCreateForm={showCreateTournament}
-                  onToggleCreate={() => setShowCreateTournament(!showCreateTournament)}
-                  createFormProps={{
-                    name: newTournamentName, setName: setNewTournamentName,
-                    prizePool: newPrizePool, setPrizePool: setNewPrizePool,
-                    maxPlayers: newMaxRegistrations, setMaxPlayers: setNewMaxRegistrations,
-                    startsAt: newStartsAt, setStartsAt: setNewStartsAt,
-                    type: newTournamentType, setType: setNewTournamentType,
-                    loading: createTournamentLoading, onCreate: createTournament,
-                  }}
-                />
-                
-              </motion.div>
             </div>
+
+            {/* ─── Tournaments Full Width ─── */}
+            <motion.div variants={fadeUp}>
+              <TournamentsCard
+                activeTournaments={activeTournaments}
+                recentTournaments={recentTournamentsList}
+                registeredIds={registeredTournamentIds}
+                registeringId={registeringTournamentId}
+                userId={user?.id || ""}
+                onRegister={registerTournament}
+                onCancel={cancelTournament}
+                onNavigateToTournament={(id) => navigate(`/tournament/${id}`)}
+                showCreateForm={showCreateTournament}
+                onToggleCreate={() => setShowCreateTournament(!showCreateTournament)}
+                createFormProps={{
+                  name: newTournamentName, setName: setNewTournamentName,
+                  prizePool: newPrizePool, setPrizePool: setNewPrizePool,
+                  maxPlayers: newMaxRegistrations, setMaxPlayers: setNewMaxRegistrations,
+                  startsAt: newStartsAt, setStartsAt: setNewStartsAt,
+                  type: newTournamentType, setType: setNewTournamentType,
+                  loading: createTournamentLoading, onCreate: createTournament,
+                }}
+              />
+            </motion.div>
 
           </motion.div>
         </div>
