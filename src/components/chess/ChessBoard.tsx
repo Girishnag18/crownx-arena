@@ -265,11 +265,11 @@ const ChessBoard = ({
 
   const boardClasses = streamerMode
     ? "relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-none overflow-hidden border-0"
-    : "chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl";
+    : "chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-lg overflow-hidden shadow-board";
 
   return (
     <div
-      className={`relative w-full aspect-square ${sizeClassName || "max-w-[min(80vw,560px)]"}`}
+      className={`relative w-full aspect-square ${sizeClassName || "max-w-[min(92vw,640px)]"}`}
       style={maxBoardSizePx ? { maxWidth: `${maxBoardSizePx}px` } : undefined}
     >
       <AnimatePresence>
