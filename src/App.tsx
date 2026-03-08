@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./contexts/AuthContext";
+import { BoardSettingsProvider } from "./contexts/BoardSettingsContext";
 import Navbar from "./components/Navbar";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -86,9 +87,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Navbar />
-          
-          <RouteAnimator />
+          <BoardSettingsProvider>
+            <Navbar />
+            <RouteAnimator />
+          </BoardSettingsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
