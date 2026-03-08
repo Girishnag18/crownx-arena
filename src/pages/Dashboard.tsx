@@ -280,7 +280,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-16 pb-20 lg:pb-6">
+    <div className="min-h-screen bg-background pt-16 pb-24 lg:pb-6">
       {promotion && <RankPromotionOverlay oldRank={promotion.oldRank} newRank={promotion.newRank} onDismiss={() => setPromotion(null)} />}
 
       <div className="container mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
