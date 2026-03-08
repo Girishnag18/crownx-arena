@@ -191,7 +191,7 @@ const TournamentDetail = () => {
 
   if (!tournament) {
     return (
-      <div className="min-h-screen bg-background pt-24 px-4 text-center">
+      <div className="page-container text-center">
         <p className="text-muted-foreground">Tournament not found</p>
       </div>
     );
