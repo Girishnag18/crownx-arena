@@ -458,7 +458,7 @@ const Play = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
           <div className="lg:col-span-9 flex flex-col items-center">
             {/* Top player bar */}
-            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-2.5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5`}>
+            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-2.5 glass-card px-3 sm:px-4 py-2 sm:py-2.5`}>
               <div className="flex items-center justify-between">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} isTop />
                 <div className="flex items-center gap-2 sm:gap-3">
