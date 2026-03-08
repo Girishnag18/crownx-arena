@@ -229,6 +229,39 @@ export const usePrivateRoom = () => {
     };
   }, [roomId, status]);
 
+  // Auto-expire room after 5 minutes
+  useEffect(() => {
+    if (status !== "waiting" || !roomId) {
+      if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setExpirySeconds(0);
+      return;
+    }
+
+    const startTime = Date.now();
+    setExpirySeconds(Math.ceil(ROOM_EXPIRY_MS / 1000));
+
+    countdownRef.current = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((ROOM_EXPIRY_MS - (Date.now() - startTime)) / 1000));
+      setExpirySeconds(remaining);
+      if (remaining <= 0 && countdownRef.current) clearInterval(countdownRef.current);
+    }, 1000);
+
+    expiryTimerRef.current = window.setTimeout(async () => {
+      // Auto-cancel the room
+      await supabase.from("game_rooms").delete().eq("id", roomId).eq("host_id", user?.id ?? "");
+      setRoomCode(null);
+      setRoomId(null);
+      setStatus("idle");
+      setError("Room expired after 5 minutes. Create a new one.");
+    }, ROOM_EXPIRY_MS);
+
+    return () => {
+      if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [status, roomId, user?.id]);
+
   const reset = useCallback(() => {
     setRoomCode(null);
     setRoomId(null);
