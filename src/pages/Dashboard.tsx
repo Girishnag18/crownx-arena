@@ -500,13 +500,13 @@ const Dashboard = () => {
               <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                  <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-primary" />
-                    Tournaments
-                    {liveTournamentCount > 0 && (
-                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full ml-1">{liveTournamentCount} active</span>
-                    )}
-                  </h3>
+                   <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                     <Trophy className="w-4 h-4 text-primary" />
+                     Tournaments
+                     {activeTournaments.length > 0 && (
+                       <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full ml-1">{activeTournaments.length} active</span>
+                     )}
+                   </h3>
                   <button
                     onClick={() => setShowCreateTournament(!showCreateTournament)}
                     className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors"
