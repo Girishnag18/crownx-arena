@@ -593,6 +593,9 @@ const Play = () => {
     const activeTurn = game.turn();
     const lastMoveTime = new Date(gd.last_move_at).getTime();
 
+    const opponentColor = online.playerColor === "w" ? "b" : "w";
+    let claimed = false;
+
     const tick = () => {
       const elapsed = Date.now() - lastMoveTime;
       if (activeTurn === "w") {
@@ -601,6 +604,10 @@ const Play = () => {
         if (remaining <= 0) {
           setClockGameOver(true);
           soundManager.play("gameEnd");
+          if (!claimed && activeTurn === opponentColor) {
+            claimed = true;
+            online.claimTimeout();
+          }
           return;
         }
       } else {
@@ -609,6 +616,10 @@ const Play = () => {
         if (remaining <= 0) {
           setClockGameOver(true);
           soundManager.play("gameEnd");
+          if (!claimed && activeTurn === opponentColor) {
+            claimed = true;
+            online.claimTimeout();
+          }
           return;
         }
       }
@@ -861,19 +872,8 @@ const Play = () => {
                 )}
               </div>
               <div className="flex gap-1.5 shrink-0">
-                {/* Flag timeout button - online */}
-                {isOnline && !online.isGameOver && clockGameOver && (
-                  <button
-                    onClick={() => online.claimTimeout()}
-                    className="rounded-lg border border-primary/40 bg-primary/10 p-2 sm:px-3 sm:py-2 hover:bg-primary/20 transition-all text-primary font-display font-bold text-xs flex items-center gap-1.5"
-                    title="Claim victory on time"
-                  >
-                    <Flag className="w-4 h-4" />
-                    <span className="hidden sm:inline">Flag</span>
-                  </button>
-                )}
                 {/* Resign button - online */}
-                {isOnline && !online.isGameOver && !clockGameOver && (
+                {isOnline && !online.isGameOver && (
                   <button
                     onClick={() => setShowResignDialog(true)}
                     className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
