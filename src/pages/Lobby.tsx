@@ -40,6 +40,8 @@ const Lobby = () => {
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [chess960, setChess960] = useState(false);
+  const [roomPreview, setRoomPreview] = useState<{ host_username: string | null; duration_seconds: number | null } | null>(null);
+  const [fetchingPreview, setFetchingPreview] = useState(false);
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
