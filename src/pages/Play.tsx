@@ -852,7 +852,7 @@ const Play = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 lg:pb-4 relative">
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-24 lg:pb-4 relative">
       {/* Subtle ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[140px]" />

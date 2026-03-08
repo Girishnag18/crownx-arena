@@ -390,7 +390,7 @@ const Leaderboard = () => {
             ))}
           </div>
         </TabsContent>
-      </Tabs>
+        </Tabs>
       </div>
     </main>
   );
