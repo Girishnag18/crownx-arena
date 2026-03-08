@@ -1025,6 +1025,21 @@ const Play = () => {
                 )}
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* Takeback button - online */}
+                {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) > 0 && (
+                  <button
+                    onClick={handleRequestTakeback}
+                    disabled={takebackState !== "idle"}
+                    className={`rounded-lg border p-2 sm:px-3 sm:py-2 transition-all ${
+                      takebackState === "sent"
+                        ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
+                        : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
+                    }`}
+                    title={takebackState === "sent" ? "Takeback requested…" : "Request takeback"}
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </button>
+                )}
                 {/* Draw offer button - online */}
                 {isOnline && !online.isGameOver && (
                   <button
