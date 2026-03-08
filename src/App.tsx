@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BoardSettingsProvider } from "./contexts/BoardSettingsContext";
 import Navbar from "./components/Navbar";
+import MobileBottomNav from "./components/MobileBottomNav";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Rules from "./pages/Rules";
