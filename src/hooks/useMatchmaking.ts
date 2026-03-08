@@ -123,6 +123,7 @@ export const useMatchmaking = () => {
       if (data?.matched && data?.game?.id) {
         setState("matched");
         setGameId(data.game.id);
+        soundManager.play("matchFound");
         clearSearchState();
         return;
       }
