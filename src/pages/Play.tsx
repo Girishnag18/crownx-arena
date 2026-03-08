@@ -449,7 +449,11 @@ const Play = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-18 pb-16 lg:pb-8 px-2 sm:px-4">
+    <div className="min-h-screen bg-background pt-14 sm:pt-18 pb-16 lg:pb-8 px-2 sm:px-4 relative">
+      {/* Subtle ambient */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[140px]" />
+      </div>
       <div className="container mx-auto max-w-[1500px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
           <div className="lg:col-span-9 flex flex-col items-center">
