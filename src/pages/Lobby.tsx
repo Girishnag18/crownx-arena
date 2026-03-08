@@ -156,14 +156,14 @@ const Lobby = () => {
               </div>
 
               {gameModes.map((gm) => (
-                <motion.button key={gm.id} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => setMode(gm.id)} className={`w-full glass-card p-6 text-left group transition-all duration-300 ${gm.accent ? "border-primary/30 gold-glow" : "hover:border-primary/20"}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${gm.accent ? "bg-primary/20" : "bg-secondary"}`}>
-                      <gm.icon className={`w-6 h-6 ${gm.accent ? "text-primary" : "text-muted-foreground"}`} />
+                <motion.button key={gm.id} whileTap={{ scale: 0.98 }} onClick={() => setMode(gm.id)} className={`w-full glass-card p-5 text-left group transition-colors ${gm.accent ? "border-primary/25 gold-glow" : "hover:border-primary/15"}`}>
+                  <div className="flex items-center gap-3.5">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${gm.accent ? "bg-primary/15" : "bg-secondary/60"}`}>
+                      <gm.icon className={`w-5 h-5 ${gm.accent ? "text-primary" : "text-muted-foreground"}`} />
                     </div>
-                    <div>
-                      <h3 className="font-display font-bold">{gm.title}</h3>
-                      <p className="text-sm text-muted-foreground">{gm.desc}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-display font-bold text-sm">{gm.title}</h3>
+                      <p className="text-xs text-muted-foreground">{gm.desc}</p>
                     </div>
                   </div>
                 </motion.button>
