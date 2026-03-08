@@ -508,14 +508,15 @@ const Lobby = () => {
       {privateRoom.status === "idle" && (
         <div className="space-y-3">
           <motion.button
-            whileTap={{ scale: 0.995 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationFromTC); setCreatingRoom(false); }}
             disabled={creatingRoom}
-            className="w-full rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 p-6 text-center disabled:opacity-70 transition-all shadow-[0_0_20px_-8px_hsl(var(--primary)/0.3)]"
+            className="w-full glass-card p-6 text-center disabled:opacity-70 transition-all hover:border-primary/25 border-glow"
           >
             {creatingRoom
               ? <Loader2 className="w-7 h-7 text-primary mx-auto mb-2 animate-spin" />
-              : <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-3"><Users className="w-6 h-6 text-primary" /></div>
+              : <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 flex items-center justify-center mx-auto mb-3 gold-glow"><Users className="w-7 h-7 text-primary" /></div>
             }
             <h3 className="font-display font-bold text-sm">Create Room</h3>
             <p className="text-xs text-muted-foreground mt-1">Get a code to share with a friend</p>
