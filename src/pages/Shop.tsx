@@ -323,7 +323,7 @@ const Shop = () => {
   });
   const ownedItems = items.filter(i => purchases.has(i.id));
 
-  const ItemCard = ({ item, idx, showEquip }: { item: ShopItem; idx: number; showEquip?: boolean }) => {
+  const ItemCard = ({ item, idx }: { item: ShopItem; idx: number }) => {
     const owned = purchases.has(item.id);
     const equipped = purchases.get(item.id)?.is_equipped;
     const rBadge = RARITY_BADGE[item.rarity] || RARITY_BADGE.common;
