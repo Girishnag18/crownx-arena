@@ -190,24 +190,56 @@ const AchievementsPanel = ({ wins = 0, winStreak = 0, puzzlesSolved = 0, crownSc
                 {categoryAchievements.map((achievement) => {
                   const isUnlocked = unlocked.has(achievement.id);
                   return (
-                    <div
-                      key={achievement.id}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-                        isUnlocked
-                          ? "bg-primary/10 border border-primary/20"
-                          : "bg-secondary/30 border border-border/40 opacity-60"
-                      }`}
-                    >
-                      <span className={`text-xl ${isUnlocked ? "" : "grayscale"}`}>{achievement.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-display font-bold truncate">{achievement.title}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{achievement.description}</p>
-                      </div>
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <Star className={`w-3 h-3 ${isUnlocked ? "text-primary" : "text-muted-foreground/40"}`} />
-                        <span className="text-[10px] text-muted-foreground">{achievement.xp_reward}</span>
-                      </div>
-                    </div>
+                    (() => {
+                      const target = ACHIEVEMENT_TARGETS[achievement.key];
+                      const current = target ? Math.min(target.getter(stats), target.target) : 0;
+                      const pct = target ? Math.round((current / target.target) * 100) : 0;
+
+                      return (
+                        <div
+                          key={achievement.id}
+                          className={`rounded-lg px-3 py-2.5 transition-all ${
+                            isUnlocked
+                              ? "bg-primary/10 border border-primary/20"
+                              : "bg-secondary/30 border border-border/40"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`text-xl ${isUnlocked ? "" : "grayscale opacity-50"}`}>{achievement.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-display font-bold truncate ${isUnlocked ? "text-foreground" : "text-muted-foreground"}`}>{achievement.title}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{achievement.description}</p>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {isUnlocked ? (
+                                <span className="text-[10px] font-bold text-primary flex items-center gap-0.5">
+                                  <Star className="w-3 h-3 text-primary fill-primary" />
+                                  {achievement.xp_reward} XP
+                                </span>
+                              ) : target ? (
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                  {current}/{target.target}
+                                </span>
+                              ) : (
+                                <Star className="w-3 h-3 text-muted-foreground/40" />
+                              )}
+                            </div>
+                          </div>
+                          {!isUnlocked && target && (
+                            <div className="mt-1.5 ml-8">
+                              <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                                <motion.div
+                                  className="h-full rounded-full bg-primary/60"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${pct}%` }}
+                                  transition={{ duration: 0.6, ease: "easeOut" }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()
                   );
                 })}
               </div>
