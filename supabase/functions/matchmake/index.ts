@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
           current_fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           moves: [],
           duration_seconds: gameDuration,
+          increment_seconds: increment_seconds ?? null,
           white_time_ms: gameDuration ? gameDuration * 1000 : null,
           black_time_ms: gameDuration ? gameDuration * 1000 : null,
         })
