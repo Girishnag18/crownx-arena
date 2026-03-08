@@ -701,8 +701,8 @@ const Dashboard = () => {
                        const count = t.registration_count?.[0]?.count || 0;
                        const isCompleted = t.status === "completed";
                        return (
-                         <div key={t.id} className="px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-secondary/10 transition-colors">
-                           <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div key={t.id} className="px-4 py-3 flex items-center justify-between gap-2 hover:bg-secondary/10 transition-colors">
+                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCompleted ? "bg-primary/10" : "bg-destructive/10"}`}>
                                <Trophy className={`w-4 h-4 ${isCompleted ? "text-primary" : "text-destructive"}`} />
                              </div>
