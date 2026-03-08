@@ -80,6 +80,7 @@ export const useMatchmaking = () => {
       if (games && games.length > 0) {
         setState("matched");
         setGameId(games[0].id);
+        soundManager.play("matchFound");
         clearSearchState();
       }
     }, 3000);
