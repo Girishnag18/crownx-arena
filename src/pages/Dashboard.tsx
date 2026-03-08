@@ -428,7 +428,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ═══════════ QUICK ACTIONS ROW ═══════════ */}
-          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1.5 sm:gap-2">
+          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1 sm:gap-1.5">
             {[
               { title: "Play Online", desc: "Quick Play & Arena", icon: Globe, onClick: () => navigate("/lobby"), accent: true },
               { title: "Puzzles", desc: "Sharpen your tactics", icon: Target, onClick: () => navigate("/puzzles") },
