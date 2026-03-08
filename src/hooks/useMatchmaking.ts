@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { soundManager } from "@/services/soundManager";
 
 type MatchState = "idle" | "searching" | "matched" | "error" | "timeout";
 
