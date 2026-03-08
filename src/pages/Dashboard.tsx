@@ -185,7 +185,7 @@ const Dashboard = () => {
     const ch1 = supabase.channel(`profile-${user.id}`).on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, () => loadProfile(user.id)).subscribe();
     const ch2 = supabase.channel(`rating-games-${user.id}`).on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => { loadProfile(user.id); loadRecentGames(user.id); loadRatingOverview(user.id); }).subscribe();
     const ch3 = supabase.channel(`rating-overview-${user.id}`).on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => { loadProfile(user.id); loadRatingOverview(user.id); }).subscribe();
-    const ch4 = supabase.channel("tournaments-live").on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, loadTournaments).on("postgres_changes", { event: "*", schema: "public", table: "tournament_registrations" }, () => { loadTournaments(); loadMyRegistrations(user.id); }).subscribe();
+    const ch4 = supabase.channel("tournaments-live").on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, loadTournaments).on("postgres_changes", { event: "*", schema: "public", table: "tournament_registrations" }, () => { loadTournaments(); loadMyRegistrations(user.id); }).on("postgres_changes", { event: "*", schema: "public", table: "recent_tournaments" }, loadRecentTournaments).subscribe();
     return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); supabase.removeChannel(ch3); supabase.removeChannel(ch4); };
   }, [user]);
 
