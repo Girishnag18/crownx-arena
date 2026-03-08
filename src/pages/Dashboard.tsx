@@ -574,6 +574,7 @@ const Dashboard = () => {
 
         </motion.div>
       </div>
+      </PullToRefresh>
     </div>
   );
 };

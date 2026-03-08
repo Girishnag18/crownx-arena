@@ -392,6 +392,7 @@ const Puzzles = () => {
           </div>
         </div>
       </div>
+      </PullToRefresh>
     </div>
   );
 };
