@@ -172,7 +172,7 @@ const Lobby = () => {
         .from("profiles")
         .select("username")
         .eq("id", room.host_id)
-        .single();
+        .maybeSingle();
 
       if (cancelled) return;
       setRoomPreview({
