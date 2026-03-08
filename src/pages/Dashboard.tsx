@@ -546,6 +546,13 @@ const Dashboard = () => {
               <motion.div variants={fadeUp}>
                 <DailyPuzzleCard />
               </motion.div>
+
+              {/* Training Insights */}
+              {user && (
+                <motion.div variants={fadeUp}>
+                  <TrainingInsights userId={user.id} />
+                </motion.div>
+              )}
             </div>
 
             {/* Right Column — Tournaments */}
