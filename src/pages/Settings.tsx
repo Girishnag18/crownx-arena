@@ -171,7 +171,7 @@ const Settings = () => {
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Profile Settings</h1>
 
           {/* Avatar & identity */}
-          <div className="glass-card p-6 mb-6">
+          <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex items-center gap-4 mb-6">
               <Avatar className="w-16 h-16 border border-primary/30">
                 <AvatarImage src={avatarUrl || undefined} alt={displayName} />
