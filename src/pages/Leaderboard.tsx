@@ -166,8 +166,14 @@ const Leaderboard = () => {
     return idx >= 0 ? idx + 1 : null;
   }, [seasonEntries, user]);
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([loadLeaderboard(), loadSeasons(), loadFriendsLeaderboard()]);
+    if (activeSeason) await loadSeasonEntries(activeSeason.id);
+  }, [activeSeason]);
+
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-5xl mx-auto space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-bold font-display">Leaderboards</h1>
