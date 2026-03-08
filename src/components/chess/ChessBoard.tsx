@@ -58,6 +58,19 @@ const ChessBoard = ({
   } | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const prevTurnRef = useRef(game.turn());
+  const moveCountRef = useRef(0);
+  const [slideAnimKey, setSlideAnimKey] = useState(0);
+  const { moveAnimation } = useBoardSettings();
+
+  // Increment animation key when lastMove changes so slide plays once per move
+  const prevLastMoveRef = useRef(lastMove);
+  useEffect(() => {
+    if (lastMove && lastMove !== prevLastMoveRef.current) {
+      moveCountRef.current += 1;
+      setSlideAnimKey(moveCountRef.current);
+    }
+    prevLastMoveRef.current = lastMove;
+  }, [lastMove]);
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
