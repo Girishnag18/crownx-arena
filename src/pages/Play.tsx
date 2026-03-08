@@ -440,7 +440,10 @@ const Play = () => {
   if (isOnline && online.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
+        <div className="glass-card p-8 flex flex-col items-center gap-3 gold-glow">
+          <Crown className="w-12 h-12 text-primary animate-pulse" />
+          <p className="text-sm text-muted-foreground font-display">Loading match…</p>
+        </div>
       </div>
     );
   }
