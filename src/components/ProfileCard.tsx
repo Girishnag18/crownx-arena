@@ -70,7 +70,7 @@ const ProfileCard = ({
     return (
       <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3 hover:bg-card/80 transition-colors">
         <div className="relative">
-          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/20"}`}>
+          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/20"}`} style={frameStyle}>
             <AvatarImage src={avatar_url || undefined} alt={username} />
             <AvatarFallback className="bg-secondary text-primary font-display font-bold text-xs">
               {(username || "P").slice(0, 1).toUpperCase()}
