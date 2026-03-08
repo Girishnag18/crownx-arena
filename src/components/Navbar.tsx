@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/lobby", label: "Play Online" },
+  { to: "/puzzles", label: "Puzzles" },
   { to: "/ratings", label: "Ratings" },
   { to: "/profile", label: "Player Profile" },
   { to: "/dashboard", label: "Arena Hub" },
