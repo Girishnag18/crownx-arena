@@ -234,13 +234,13 @@ const Puzzles = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-2 sm:px-4">
       <div className="container mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
           {/* Board */}
           <div className="lg:col-span-8 flex flex-col items-center">
             {/* Puzzle info bar */}
-            <div className="w-full max-w-[96vw] mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-3">
+            <div className="w-full max-w-[96vw] mb-2 sm:mb-3 rounded-lg border border-border/60 bg-secondary/20 px-3 sm:px-4 py-2 sm:py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Target className="w-5 h-5 text-primary" />

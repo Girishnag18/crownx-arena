@@ -87,7 +87,7 @@ const DailyRewards = () => {
   const loginDatesSet = new Set(loginHistory.map((l) => l.login_date));
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <button
@@ -106,12 +106,12 @@ const DailyRewards = () => {
             >
               <Flame className="w-8 h-8 text-orange-500" />
             </motion.div>
-            <h1 className="font-display text-3xl font-bold">Daily Rewards</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold">Daily Rewards</h1>
             <p className="text-sm text-muted-foreground mt-1">Log in every day to earn escalating Crown bonuses</p>
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
             <div className="glass-card p-4 text-center">
               <Flame className="w-5 h-5 text-orange-500 mx-auto mb-1" />
               <p className="text-2xl font-bold font-display text-orange-500">{currentStreak}</p>
@@ -130,11 +130,11 @@ const DailyRewards = () => {
           </div>
 
           {/* 7-Day Streak Rewards */}
-          <div className="glass-card p-6 mb-6">
-            <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
+          <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" /> 7-Day Streak Rewards
             </h2>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2">
               {STREAK_BONUSES.map((bonus, i) => {
                 const dayNum = i + 1;
                 const isReached = currentStreak >= dayNum;

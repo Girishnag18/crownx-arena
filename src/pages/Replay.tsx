@@ -200,7 +200,7 @@ const Replay = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-2 sm:px-4">
       <div className="container mx-auto max-w-[1300px]">
         <button
           onClick={() => navigate(-1)}
@@ -209,7 +209,7 @@ const Replay = () => {
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
           {/* Board Column */}
           <div className="lg:col-span-8 flex flex-col items-center">
             {/* Top player */}
