@@ -139,7 +139,51 @@ const Lobby = () => {
     privateRoom.reset();
     setMode(null);
     setJoinCode("");
+    setRoomPreview(null);
   };
+
+  // Fetch room preview when a valid 6-char code is entered
+  useEffect(() => {
+    if (joinCode.length !== 6 || mode !== "private") {
+      setRoomPreview(null);
+      return;
+    }
+    const sanitized = joinCode.trim().toUpperCase();
+    if (!/^[A-Z2-9]{6}$/.test(sanitized)) return;
+
+    let cancelled = false;
+    setFetchingPreview(true);
+    (async () => {
+      const { data: room } = await supabase
+        .from("game_rooms")
+        .select("duration_seconds, host_id")
+        .eq("room_code", sanitized)
+        .eq("status", "waiting")
+        .single();
+
+      if (cancelled) return;
+      if (!room) {
+        setRoomPreview(null);
+        setFetchingPreview(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", room.host_id)
+        .single();
+
+      if (cancelled) return;
+      setRoomPreview({
+        host_username: profile?.username ?? "Unknown",
+        duration_seconds: (room as any).duration_seconds ?? null,
+      });
+      setFetchingPreview(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [joinCode, mode]);
 
   const durationFromTC = selectedTimeControl ? selectedTimeControl.initialSeconds : null;
 
