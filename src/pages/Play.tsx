@@ -175,7 +175,8 @@ const Play = () => {
   }, [online]);
 
   const resetLocalGame = () => {
-    setLocalGame(new Chess());
+    const newFen = isChess960 ? generateChess960Fen() : undefined;
+    setLocalGame(new Chess(newFen));
     setLastMove(null);
     setMoveHistory([]);
     setShowCheckmateBanner(false);
