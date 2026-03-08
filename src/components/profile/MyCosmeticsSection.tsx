@@ -44,6 +44,8 @@ const EFFECT_RARITIES = new Set(["legendary", "rare", "uncommon"]);
 
 interface MyCosmeticsSectionProps {
   userId: string;
+  username?: string;
+  avatarUrl?: string | null;
   onEquipChange?: () => void;
 }
 
