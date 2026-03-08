@@ -593,6 +593,9 @@ const Play = () => {
     const activeTurn = game.turn();
     const lastMoveTime = new Date(gd.last_move_at).getTime();
 
+    const opponentColor = online.playerColor === "w" ? "b" : "w";
+    let claimed = false;
+
     const tick = () => {
       const elapsed = Date.now() - lastMoveTime;
       if (activeTurn === "w") {
@@ -601,6 +604,10 @@ const Play = () => {
         if (remaining <= 0) {
           setClockGameOver(true);
           soundManager.play("gameEnd");
+          if (!claimed && activeTurn === opponentColor) {
+            claimed = true;
+            online.claimTimeout();
+          }
           return;
         }
       } else {
@@ -609,6 +616,10 @@ const Play = () => {
         if (remaining <= 0) {
           setClockGameOver(true);
           soundManager.play("gameEnd");
+          if (!claimed && activeTurn === opponentColor) {
+            claimed = true;
+            online.claimTimeout();
+          }
           return;
         }
       }
