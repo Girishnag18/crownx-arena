@@ -358,7 +358,7 @@ const Dashboard = () => {
   const rank = profile?.rank_tier || "Bronze";
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-2 sm:px-4">
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-1.5 sm:px-3">
       {/* Rank Promotion Overlay */}
       {promotion && (
         <RankPromotionOverlay
