@@ -884,7 +884,7 @@ const Play = () => {
             {/* Top Player Bar */}
             <div className="w-full max-w-[min(92vw,640px)] mb-1 sm:mb-1.5">
               <div className="flex items-center justify-between px-1 sm:px-2 py-1.5 sm:py-2">
-                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} isTop />
+                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} frame={topFrame} isTop />
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex gap-0.5 text-sm opacity-80" title="Captured pieces">
                     {(flipped ? capturedPieces.capturedByWhite : capturedPieces.capturedByBlack).length === 0
