@@ -486,14 +486,15 @@ const Play = () => {
               </motion.div>
             )}
 
-            <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
-              <div className="flex items-center justify-between text-sm">
+            {/* Bottom player bar */}
+            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
                     {capturedPieces.capturedByWhite.length === 0
-                      ? <span className="text-xs text-muted-foreground">No captures</span>
-                      : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      : capturedPieces.capturedByWhite.slice(0, 8).map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
                   </div>
                   {timeControl && (
                     <ClockFace
