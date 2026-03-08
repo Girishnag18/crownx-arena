@@ -597,7 +597,7 @@ const Play = () => {
   const bottomPlayerName = isOnline
     ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "w" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "w" ? `${diffLabel} AI` : `You (${playerElo})`}`
       : localBottomName;
 
   const topAvatar = isOnline
