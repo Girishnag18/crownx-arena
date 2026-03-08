@@ -3,7 +3,7 @@
  * Generates synthetic chess sounds using Web Audio API — no external files needed.
  */
 
-type SoundType = "move" | "capture" | "check" | "castle" | "promote" | "gameStart" | "gameEnd" | "illegal" | "playerJoined" | "matchFound" | "searchTimeout";
+type SoundType = "move" | "capture" | "check" | "castle" | "promote" | "gameStart" | "gameEnd" | "illegal" | "playerJoined" | "matchFound" | "searchTimeout" | "rangeExpand";
 
 class SoundManager {
   private ctx: AudioContext | null = null;
