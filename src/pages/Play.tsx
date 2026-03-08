@@ -299,12 +299,13 @@ const Play = () => {
         return online.isMyTurn ? "Your turn" : "Opponent's turn";
       }
     }
+    if (clockGameOver) return `Time's up! ${game.turn() === "w" ? "Black" : "White"} wins on time!`;
     if (game.isCheckmate()) return `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`;
     if (game.isStalemate()) return "Stalemate — Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
-  }, [game, isInCheck, isOnline, online, user]);
+  }, [game, isInCheck, isOnline, online, user, clockGameOver]);
 
   const displayMoves = isOnline && online.gameData?.moves
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
