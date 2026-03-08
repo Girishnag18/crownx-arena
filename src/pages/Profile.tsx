@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { uploadAvatarImage } from "@/lib/avatar";
 import ProfileCard from "@/components/ProfileCard";
 import PerformanceTab from "@/components/profile/PerformanceTab";
+import MatchHistory from "@/components/profile/MatchHistory";
+import AchievementShowcase from "@/components/profile/AchievementShowcase";
 import { motion } from "framer-motion";
 import { Edit3, X, Swords } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -308,8 +310,10 @@ const Profile = () => {
 
       {/* Tabs: Performance & Social */}
       <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
+        <TabsList className="w-full grid grid-cols-5 bg-secondary/40">
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="history">Match History</TabsTrigger>
+          <TabsTrigger value="achievements">Achievements</TabsTrigger>
           <TabsTrigger value="social">Social</TabsTrigger>
           <TabsTrigger value="search">Find Players</TabsTrigger>
         </TabsList>
@@ -318,6 +322,14 @@ const Profile = () => {
           {user && (
             <PerformanceTab playerId={user.id} currentElo={profileData?.crown_score || 400} />
           )}
+        </TabsContent>
+
+        <TabsContent value="history">
+          {user && <MatchHistory playerId={user.id} />}
+        </TabsContent>
+
+        <TabsContent value="achievements">
+          {user && <AchievementShowcase playerId={user.id} />}
         </TabsContent>
 
         <TabsContent value="social">
