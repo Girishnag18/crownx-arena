@@ -181,7 +181,7 @@ const Settings = () => {
               </Avatar>
               <div>
                 <h2 className="font-display text-lg sm:text-xl font-bold truncate">{displayName}</h2>
-                <p className="text-sm text-muted-foreground">{email}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">{email}</p>
               </div>
             </div>
 
