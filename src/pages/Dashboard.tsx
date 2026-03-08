@@ -177,7 +177,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
     if (!user) return;
-    loadProfile(user.id); loadTournaments(); loadMyRegistrations(user.id); loadRecentGames(user.id); loadRatingOverview(user.id);
+    loadProfile(user.id); loadTournaments(); loadRecentTournaments(); loadMyRegistrations(user.id); loadRecentGames(user.id); loadRatingOverview(user.id);
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
