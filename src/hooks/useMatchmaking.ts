@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { soundManager } from "@/services/soundManager";
 
 type MatchState = "idle" | "searching" | "matched" | "error" | "timeout";
 
@@ -49,6 +50,7 @@ export const useMatchmaking = () => {
           if (joined && row.result_type === "in_progress" && durationMatch) {
             setState("matched");
             setGameId(row.id);
+            soundManager.play("matchFound");
             clearSearchState();
           }
         },
@@ -78,6 +80,7 @@ export const useMatchmaking = () => {
       if (games && games.length > 0) {
         setState("matched");
         setGameId(games[0].id);
+        soundManager.play("matchFound");
         clearSearchState();
       }
     }, 3000);
@@ -120,6 +123,7 @@ export const useMatchmaking = () => {
       if (data?.matched && data?.game?.id) {
         setState("matched");
         setGameId(data.game.id);
+        soundManager.play("matchFound");
         clearSearchState();
         return;
       }
@@ -131,6 +135,7 @@ export const useMatchmaking = () => {
           if (d2?.matched && d2?.game?.id) {
             setState("matched");
             setGameId(d2.game.id);
+            soundManager.play("matchFound");
             clearSearchState();
           }
         } catch { /* polling will catch it */ }
@@ -142,7 +147,7 @@ export const useMatchmaking = () => {
         setState((prev) => {
           if (prev === "searching") {
             clearSearchState();
-            // Remove from queue
+            soundManager.play("searchTimeout");
             supabase.from("matchmaking_queue").delete().eq("player_id", user.id);
             return "timeout";
           }
