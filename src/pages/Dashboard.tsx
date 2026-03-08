@@ -779,7 +779,7 @@ const Dashboard = () => {
           )}
 
           {/* ═══════════ ACHIEVEMENTS ═══════════ */}
-          <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-5">
+          <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3 sm:p-4">
             <AchievementsPanel
               wins={profile?.wins || 0}
               winStreak={profile?.win_streak || 0}
