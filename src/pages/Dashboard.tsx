@@ -358,7 +358,7 @@ const Dashboard = () => {
   const rank = profile?.rank_tier || "Bronze";
 
   return (
-    <div className="page-container">
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-2 sm:px-4">
       {/* Rank Promotion Overlay */}
       {promotion && (
         <RankPromotionOverlay
@@ -368,18 +368,18 @@ const Dashboard = () => {
         />
       )}
       <div className="container mx-auto max-w-7xl">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-5">
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-2.5 sm:space-y-3">
 
           {/* ═══════════ HERO SECTION ═══════════ */}
-          <motion.div variants={fadeUp} className={`rounded-2xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-5 sm:p-7 relative overflow-hidden`}>
+          <motion.div variants={fadeUp} className={`rounded-xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-3.5 sm:p-5 relative overflow-hidden`}>
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
               {/* Avatar */}
               <div className="relative">
-                <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-primary/30 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.3)]">
+                <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-primary/30 shadow-[0_0_16px_-5px_hsl(var(--primary)/0.3)]">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-secondary text-primary text-xl font-display font-bold">
-                    <User className="w-8 h-8" />
+                  <AvatarFallback className="bg-secondary text-primary text-lg font-display font-bold">
+                    <User className="w-6 h-6" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-card bg-emerald-500" />
@@ -388,7 +388,7 @@ const Dashboard = () => {
               {/* Player Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight truncate">{displayName}</h1>
+                  <h1 className="font-display text-lg sm:text-xl font-black tracking-tight truncate">{displayName}</h1>
                   <span className="text-xs bg-primary/10 border border-primary/20 text-primary font-display font-bold px-2.5 py-0.5 rounded-full">
                     Lvl {profile?.level || 1}
                   </span>
@@ -405,30 +405,30 @@ const Dashboard = () => {
               </div>
 
               {/* Quick stats row */}
-              <div className="flex gap-2 sm:gap-3">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {[
                   { label: "Games", value: profile?.games_played || 0, icon: Gamepad2 },
                   { label: "Wins", value: profile?.wins || 0, icon: Trophy },
-                  { label: "Win Rate", value: `${winRate}%`, icon: Target },
+                  { label: "Win%", value: `${winRate}%`, icon: Target },
                   { label: "Streak", value: profile?.win_streak || 0, icon: Flame },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm px-3 py-2.5 text-center min-w-[4.5rem]">
-                    <s.icon className="w-3.5 h-3.5 text-primary mx-auto mb-1" />
-                    <div className="font-display text-sm font-bold leading-none">{s.value}</div>
-                    <div className="text-[9px] text-muted-foreground mt-0.5">{s.label}</div>
+                  <div key={s.label} className="rounded-lg border border-border/30 bg-card/60 backdrop-blur-sm px-2 py-1.5 sm:px-2.5 sm:py-2 text-center min-w-[3.5rem]">
+                    <s.icon className="w-3 h-3 text-primary mx-auto mb-0.5" />
+                    <div className="font-display text-xs font-bold leading-none">{s.value}</div>
+                    <div className="text-[8px] text-muted-foreground mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* XP Bar */}
-            <div className="mt-5 relative">
+            <div className="mt-3 relative">
               <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
             </div>
           </motion.div>
 
           {/* ═══════════ QUICK ACTIONS ROW ═══════════ */}
-          <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {[
               { title: "Play Online", desc: "Quick Play & Arena", icon: Globe, onClick: () => navigate("/lobby"), accent: true },
               { title: "Puzzles", desc: "Sharpen your tactics", icon: Target, onClick: () => navigate("/puzzles") },
@@ -439,36 +439,36 @@ const Dashboard = () => {
                 key={action.title}
                 whileTap={{ scale: 0.97 }}
                 onClick={action.onClick}
-                className={`rounded-xl border p-4 text-left group transition-all duration-200 ${
+                className={`rounded-lg border p-2.5 sm:p-3 text-left group transition-all duration-200 ${
                   action.accent
-                    ? "bg-primary/5 border-primary/25 hover:bg-primary/10 hover:border-primary/40 shadow-[0_0_20px_-8px_hsl(var(--primary)/0.25)]"
-                    : "bg-card/60 border-border/40 hover:bg-card/80 hover:border-border/60"
+                    ? "bg-primary/5 border-primary/25 hover:bg-primary/10"
+                    : "bg-card/60 border-border/40 hover:bg-card/80"
                 }`}
               >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 transition-colors ${
-                  action.accent ? "bg-primary/15 group-hover:bg-primary/25" : "bg-secondary/60 group-hover:bg-secondary/80"
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-1.5 transition-colors ${
+                  action.accent ? "bg-primary/15" : "bg-secondary/60"
                 }`}>
-                  <action.icon className={`w-4 h-4 ${action.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                  <action.icon className={`w-3.5 h-3.5 ${action.accent ? "text-primary" : "text-muted-foreground"}`} />
                 </div>
-                <h3 className="font-display font-bold text-xs">{action.title}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{action.desc}</p>
+                <h3 className="font-display font-bold text-[10px] sm:text-xs leading-tight">{action.title}</h3>
+                <p className="text-[8px] sm:text-[10px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
               </motion.button>
             ))}
           </motion.div>
 
           {/* ═══════════ MAIN GRID ═══════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3">
 
             {/* Left Column — Wallet, Rank, Daily Puzzle */}
-            <div className="lg:col-span-4 space-y-3">
+            <div className="lg:col-span-4 space-y-2">
               {/* Wallet */}
               <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 <button
                   onClick={() => setWalletPanelOpen((prev) => !prev)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors"
+                  className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Wallet className="w-4 h-4 text-primary" />
                     </div>
                     <div>
@@ -482,7 +482,7 @@ const Dashboard = () => {
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="border-t border-border/30 px-4 py-4 space-y-3"
+                    className="border-t border-border/30 px-3 py-3 space-y-2"
                   >
                     <div className="flex items-center gap-2 text-lg font-display font-bold">
                       <Crown className="w-5 h-5 text-primary" />
@@ -497,9 +497,9 @@ const Dashboard = () => {
 
               {/* Global Rank */}
               {globalRank !== null && (
-                <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                       <Trophy className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
@@ -527,10 +527,10 @@ const Dashboard = () => {
               <motion.div variants={fadeUp}>
                 <button
                   onClick={() => navigate("/daily-spin")}
-                  className="w-full rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 p-4 text-left group transition-all duration-200"
+                  className="w-full rounded-lg border border-primary/25 bg-primary/5 hover:bg-primary/10 p-3 text-left group transition-all duration-200"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
                       <Gift className="w-4 h-4 text-primary" />
                     </div>
                     <div>
@@ -559,7 +559,7 @@ const Dashboard = () => {
             <motion.div variants={fadeUp} className="lg:col-span-8">
               <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
                      <Trophy className="w-4 h-4 text-primary" />
                      Tournaments
@@ -581,7 +581,7 @@ const Dashboard = () => {
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="border-b border-border/30 px-5 py-4 bg-secondary/10"
+                    className="border-b border-border/30 px-4 py-3 bg-secondary/10"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div className="space-y-1 sm:col-span-2">
@@ -615,9 +615,9 @@ const Dashboard = () => {
                 )}
 
                 {/* Tournament list */}
-                <div className="max-h-[22rem] overflow-y-auto">
+                <div className="max-h-[20rem] overflow-y-auto">
                    {activeTournaments.length === 0 && (
-                     <div className="px-5 py-10 text-center">
+                     <div className="px-4 py-8 text-center">
                        <Trophy className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
                        <p className="text-xs text-muted-foreground">No active tournaments. Create one to get started!</p>
                      </div>
@@ -630,7 +630,7 @@ const Dashboard = () => {
                      const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
 
                      return (
-                       <div key={tournament.id} className="px-5 py-3.5 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors">
+                       <div key={tournament.id} className="px-4 py-3 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors">
                          <div className="flex items-center justify-between gap-3">
                            <div className="flex-1 min-w-0">
                              <div className="flex items-center gap-2">
@@ -689,20 +689,20 @@ const Dashboard = () => {
              {recentTournaments.length > 0 && (
                <motion.div variants={fadeUp} className="lg:col-span-12">
                  <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
-                   <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                    <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
                      <h3 className="font-display font-bold text-sm flex items-center gap-2">
                        <Clock className="w-4 h-4 text-muted-foreground" />
                        Recent Tournaments
                      </h3>
                      <span className="text-[10px] text-muted-foreground">{recentTournaments.length} past</span>
                    </div>
-                   <div className="divide-y divide-border/20 max-h-[18rem] overflow-y-auto">
+                   <div className="divide-y divide-border/20 max-h-[16rem] overflow-y-auto">
                      {recentTournaments.map((t) => {
                        const count = t.registration_count?.[0]?.count || 0;
                        const isCompleted = t.status === "completed";
                        return (
-                         <div key={t.id} className="px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-secondary/10 transition-colors">
-                           <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div key={t.id} className="px-4 py-3 flex items-center justify-between gap-2 hover:bg-secondary/10 transition-colors">
+                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCompleted ? "bg-primary/10" : "bg-destructive/10"}`}>
                                <Trophy className={`w-4 h-4 ${isCompleted ? "text-primary" : "text-destructive"}`} />
                              </div>
@@ -739,8 +739,8 @@ const Dashboard = () => {
 
           {/* ═══════════ RECENT GAMES ═══════════ */}
           {recentGames.length > 0 && (
-            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-28">
-              <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
+              <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
                 <h3 className="font-display font-bold text-sm flex items-center gap-2">
                   <Clock className="w-4 h-4 text-primary" />
                   Recent Games
@@ -755,7 +755,7 @@ const Dashboard = () => {
                   const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
 
                   return (
-                    <div key={g.id} className="px-5 py-3 flex items-center justify-between hover:bg-secondary/10 transition-colors">
+                    <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/10 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${result === "Win" ? "bg-emerald-500" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
                         <div>
@@ -779,7 +779,7 @@ const Dashboard = () => {
           )}
 
           {/* ═══════════ ACHIEVEMENTS ═══════════ */}
-          <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-5">
+          <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3 sm:p-4">
             <AchievementsPanel
               wins={profile?.wins || 0}
               winStreak={profile?.win_streak || 0}
