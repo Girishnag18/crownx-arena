@@ -86,8 +86,7 @@ const Play = () => {
   const [showEngineReview, setShowEngineReview] = useState(false);
   const [showAICoach, setShowAICoach] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
-  const [showArrows, setShowArrows] = useState(true);
+  const [engineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const [streamerMode, setStreamerMode] = useState(false);
   const [timeControl, setTimeControl] = useState<TimeControl | null>(() => {
@@ -344,22 +343,6 @@ const Play = () => {
     prevMoveCountRef.current = currentMoves;
   }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
 
-  // Engine best-move arrow
-  useEffect(() => {
-    if (!showArrows || isGameOver) {
-      setEngineArrows([]);
-      return;
-    }
-    let cancelled = false;
-    const fen = game.fen();
-    stockfish.getBestMove(fen, 10).then((bestMove) => {
-      if (cancelled || !bestMove || bestMove.length < 4) return;
-      const from = bestMove.slice(0, 2);
-      const to = bestMove.slice(2, 4);
-      setEngineArrows([{ from, to }]);
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [game, showArrows, isGameOver]);
 
   // Adaptive difficulty: track win/loss streak against AI
   const streakUpdatedRef = useRef(false);
@@ -597,7 +580,7 @@ const Play = () => {
                 lastMove={derivedLastMove}
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
-                arrows={showArrows ? engineArrows : []}
+                arrows={engineArrows}
                 premovesEnabled={isOnline}
                 playerColor={isOnline ? online.playerColor : null}
                 streamerMode={streamerMode}
@@ -680,7 +663,6 @@ const Play = () => {
                   </button>
                 )}
                 {[
-                  { icon: ArrowUpRight, active: showArrows, toggle: () => setShowArrows(!showArrows), label: showArrows ? "Hide engine arrows" : "Show engine arrows" },
                   { icon: soundEnabled ? Volume2 : VolumeX, active: false, toggle: () => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }, label: soundEnabled ? "Mute" : "Unmute" },
                 ].map(({ icon: Icon, active, toggle, label }) => (
                   <button
