@@ -58,12 +58,12 @@ const GameChat = ({ gameId, isSpectator = false }: GameChatProps) => {
       const { data } = await supabase
         .from("game_chat" as any)
         .select("*")
-        .eq("game_id", gameId)
-        .order("created_at", { ascending: true })
+        .eq("game_id" as any, gameId)
+        .order("created_at" as any, { ascending: true })
         .limit(100);
 
       if (data) {
-        const enriched = await enrichMessages(data as ChatMessage[]);
+        const enriched = await enrichMessages(data as unknown as ChatMessage[]);
         setMessages(enriched);
       }
     };
