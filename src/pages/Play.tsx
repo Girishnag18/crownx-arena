@@ -919,6 +919,21 @@ const Play = () => {
                 )}
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* Draw offer button - online */}
+                {isOnline && !online.isGameOver && (
+                  <button
+                    onClick={handleOfferDraw}
+                    disabled={drawOfferState !== "idle"}
+                    className={`rounded-lg border p-2 sm:px-3 sm:py-2 transition-all ${
+                      drawOfferState === "sent"
+                        ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
+                        : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
+                    }`}
+                    title={drawOfferState === "sent" ? "Draw offered…" : "Offer draw"}
+                  >
+                    <Handshake className="w-4 h-4" />
+                  </button>
+                )}
                 {/* Resign button - online */}
                 {isOnline && !online.isGameOver && (
                   <button
