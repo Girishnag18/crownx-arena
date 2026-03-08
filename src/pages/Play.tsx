@@ -663,7 +663,6 @@ const Play = () => {
                   </button>
                 )}
                 {[
-                  { icon: ArrowUpRight, active: showArrows, toggle: () => setShowArrows(!showArrows), label: showArrows ? "Hide engine arrows" : "Show engine arrows" },
                   { icon: soundEnabled ? Volume2 : VolumeX, active: false, toggle: () => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }, label: soundEnabled ? "Mute" : "Unmute" },
                 ].map(({ icon: Icon, active, toggle, label }) => (
                   <button
