@@ -317,6 +317,9 @@ const Shop = () => {
     });
 
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
+    if (newEquipped && item.rarity === "legendary") {
+      setLegendaryEffect({ icon: item.icon, name: item.name });
+    }
   };
 
   const RARITY_ORDER: Record<string, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
