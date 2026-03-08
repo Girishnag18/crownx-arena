@@ -6,6 +6,7 @@ export interface EquippedItem {
   icon: string;
   category: string;
   rarity: string;
+  metadata?: Record<string, any>;
 }
 
 interface ProfileCardProps {
