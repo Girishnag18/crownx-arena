@@ -196,8 +196,14 @@ const PreviewDialog = ({ item, onClose }: { item: ShopItem; onClose: () => void 
   );
 };
 
+const FRAME_GLOW: Record<string, string> = {
+  legendary: "border-primary/50 shadow-[0_0_14px_-3px_hsl(var(--primary)/0.4)]",
+  rare: "border-blue-500/40 shadow-[0_0_12px_-3px_rgba(59,130,246,0.3)]",
+  uncommon: "border-emerald-500/40",
+};
+
 const Shop = () => {
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const [items, setItems] = useState<ShopItem[]>([]);
   const [purchases, setPurchases] = useState<Map<string, Purchase>>(new Map());
   const [walletBalance, setWalletBalance] = useState(0);
@@ -208,6 +214,7 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
   const [equipEffect, setEquipEffect] = useState<{ icon: string; name: string; rarity: "legendary" | "rare" | "uncommon" } | null>(null);
+  const [showProfilePreview, setShowProfilePreview] = useState(true);
 
   useEffect(() => { loadShop(); }, [user?.id]);
 
