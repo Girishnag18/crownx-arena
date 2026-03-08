@@ -52,8 +52,8 @@ const Auth = () => {
   };
 
   const continueWithGoogle = async () => {
-    const { error } = await authService.signInWithGoogle();
-    if (error) toast.error(error.message || "Google sign-in is not available.");
+    const result = await authService.signInWithGoogle();
+    if (result?.error) toast.error(String(result.error) || "Google sign-in is not available.");
   };
 
   const titles: Record<Mode, string> = {
