@@ -287,6 +287,60 @@ const Leaderboard = () => {
           )}
         </TabsContent>
 
+        {/* Friends Tab */}
+        <TabsContent value="friends" className="space-y-4 mt-4">
+          {friendPlayers.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="font-display font-bold">No Friends Yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Add friends to see how you stack up against them!</p>
+            </div>
+          ) : (
+            <>
+              {(() => {
+                const myFriendRank = friendPlayers.findIndex(p => p.id === user?.id);
+                return myFriendRank >= 0 ? (
+                  <div className="rounded-lg bg-primary/10 border border-primary/30 px-4 py-2 flex items-center justify-between text-sm">
+                    <span className="font-semibold">Your Rank Among Friends</span>
+                    <span className="text-primary font-bold">#{myFriendRank + 1} of {friendPlayers.length}</span>
+                  </div>
+                ) : null;
+              })()}
+              <div className="space-y-2">
+                {friendPlayers.map((p, idx) => (
+                  <motion.div
+                    layout
+                    key={p.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`rounded-xl border p-4 flex items-center justify-between ${
+                      idx < 3 ? PODIUM_STYLES[idx] : "border-border bg-card/60"
+                    } ${p.id === user?.id ? "ring-1 ring-primary" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 text-center font-bold text-sm">
+                        {idx < 3 ? PODIUM_ICONS[idx] : `#${idx + 1}`}
+                      </span>
+                      <Avatar className="w-8 h-8 border border-border/60">
+                        <AvatarImage src={p.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">{(p.username || "P")[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {p.username || "Player"}
+                          {p.id === user?.id && <span className="text-xs text-primary ml-1">(You)</span>}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{p.wins}W / {p.losses}L</p>
+                      </div>
+                    </div>
+                    <p className="text-lg font-bold text-primary">{p.crown_score}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
+        </TabsContent>
+
         {/* All-Time Tab */}
         <TabsContent value="alltime" className="space-y-4 mt-4">
           <div className="relative">
