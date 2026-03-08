@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Crown, Lock, CheckCircle, Gift, Zap, Clock } from "lucide-react";
+import BackButton from "@/components/common/BackButton";
 
 interface Season {
   id: string;

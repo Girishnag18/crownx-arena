@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Crown, CheckCircle, Clock, Gift } from "lucide-react";
+import BackButton from "@/components/common/BackButton";
 
 interface Challenge {
   id: string;

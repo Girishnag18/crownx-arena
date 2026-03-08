@@ -131,6 +131,29 @@ const CrownTopup = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Link to Crown Store */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Link
+            to="/shop"
+            className="glass-card border-glow p-5 flex items-center justify-between group hover:border-primary/30 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+                <ShoppingBag className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-display font-bold text-sm">Crown Store</div>
+                <div className="text-xs text-muted-foreground">Spend crowns on titles, frames, badges & board themes</div>
+              </div>
+            </div>
+            <Zap className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </Link>
+        </motion.div>
       </div>
     </div>
   );
