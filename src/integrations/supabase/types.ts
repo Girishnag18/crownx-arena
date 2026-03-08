@@ -76,6 +76,59 @@ export type Database = {
         }
         Relationships: []
       }
+      game_reports: {
+        Row: {
+          admin_notes: string | null
+          analysis: Json | null
+          created_at: string
+          game_id: string
+          id: string
+          reason: string
+          reported_player_id: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suspicion_score: number | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          analysis?: Json | null
+          created_at?: string
+          game_id: string
+          id?: string
+          reason?: string
+          reported_player_id: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suspicion_score?: number | null
+        }
+        Update: {
+          admin_notes?: string | null
+          analysis?: Json | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          reason?: string
+          reported_player_id?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suspicion_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_reports_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_rooms: {
         Row: {
           created_at: string
