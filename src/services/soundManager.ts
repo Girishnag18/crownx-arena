@@ -81,6 +81,11 @@ class SoundManager {
           this.playTone(ctx, 440, 0.15, "triangle", 0.25);
           setTimeout(() => this.playTone(ctx, 330, 0.2, "triangle", 0.2), 180);
           break;
+        case "rangeExpand":
+          // Subtle whoosh-like rising tone
+          this.playTone(ctx, 400, 0.12, "sine", 0.15);
+          setTimeout(() => this.playTone(ctx, 550, 0.1, "sine", 0.2), 100);
+          break;
       }
     } catch {
       // Audio not available
