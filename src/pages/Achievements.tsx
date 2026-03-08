@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import { useNavigate } from "react-router-dom";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 const rankGradient: Record<string, string> = {
   Bronze: "from-amber-700/25 via-amber-800/10 to-transparent",
