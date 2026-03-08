@@ -511,7 +511,7 @@ const Lobby = () => {
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationFromTC); setCreatingRoom(false); }}
+            onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(); setCreatingRoom(false); }}
             disabled={creatingRoom}
             className="w-full glass-card p-6 text-center disabled:opacity-70 transition-all hover:border-primary/25 border-glow"
           >
