@@ -474,6 +474,13 @@ const Play = () => {
                   </button>
                 )}
                 <button
+                  onClick={() => setShowArrows(!showArrows)}
+                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
+                  title={showArrows ? "Hide engine arrows" : "Show engine arrows"}
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+                <button
                   onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
                   className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
                   title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
