@@ -29,6 +29,7 @@ import Studies from "./pages/Studies";
 import OpeningTrainer from "./pages/OpeningTrainer";
 import PgnAnalysis from "./pages/PgnAnalysis";
 import Challenges from "./pages/Challenges";
+import Tutorial from "./pages/Tutorial";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
