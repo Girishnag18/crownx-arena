@@ -832,6 +832,59 @@ const Play = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Resign confirmation dialog */}
+      <ResignConfirmDialog
+        open={showResignDialog}
+        onCancel={() => setShowResignDialog(false)}
+        onConfirmResign={async () => {
+          setShowResignDialog(false);
+          if (isOnline) {
+            setResignPending(true);
+            await online.resign();
+            setResignPending(false);
+          } else {
+            // Local resign — mark game over
+            setResignPending(true);
+            setClockGameOver(true);
+            soundManager.play("gameEnd");
+            setShowGameOverPopup(true);
+          }
+        }}
+      />
+
+      {/* Game Over popup */}
+      <GameOverPopup
+        open={showGameOverPopup}
+        result={gameStatus}
+        moveCount={displayMoves.length}
+        timeControlLabel={timeControl?.label}
+        isOnline={isOnline}
+        onNewGame={() => {
+          setShowGameOverPopup(false);
+          navigate("/lobby");
+        }}
+        onRematch={() => {
+          setShowGameOverPopup(false);
+          if (isOnline) {
+            navigate("/lobby");
+          } else {
+            resetLocalGame();
+          }
+        }}
+        onAnalyze={() => {
+          setShowGameOverPopup(false);
+          setShowEngineReview(true);
+        }}
+        onAICoach={() => {
+          setShowGameOverPopup(false);
+          setShowAICoach(true);
+        }}
+        onBackToLobby={() => {
+          setShowGameOverPopup(false);
+          navigate("/lobby");
+        }}
+      />
     </div>
   );
 };
