@@ -42,6 +42,20 @@ interface Tournament {
   registration_count?: { count: number }[];
 }
 
+interface RecentTournamentRow {
+  id: string;
+  original_id: string;
+  name: string;
+  prize_pool: number;
+  max_players: number;
+  created_by: string;
+  status: string;
+  tournament_type: string;
+  starts_at: string | null;
+  ended_at: string | null;
+  player_count: number;
+}
+
 interface TournamentLeaderboardRow {
   playerId: string;
   wins: number;
@@ -105,6 +119,7 @@ const Dashboard = () => {
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
+  const [recentTournamentsList, setRecentTournamentsList] = useState<RecentTournamentRow[]>([]);
   const [showCreateTournament, setShowCreateTournament] = useState(false);
   const [promotion, setPromotion] = useState<{ oldRank: string; newRank: string } | null>(null);
   const prevRankRef = useRef<string | null>(null);
@@ -149,6 +164,11 @@ const Dashboard = () => {
     if (data) setTournaments(data as Tournament[]);
   };
 
+  const loadRecentTournaments = async () => {
+    const { data } = await (supabase as any).from("recent_tournaments").select("*").order("ended_at", { ascending: false }).limit(5);
+    if (data) setRecentTournamentsList(data as RecentTournamentRow[]);
+  };
+
   const loadMyRegistrations = async (userId: string) => {
     const { data } = await (supabase as any).from("tournament_registrations").select("tournament_id").eq("player_id", userId);
     if (data) setRegisteredTournamentIds((data as any[]).map((e: any) => e.tournament_id));
@@ -157,7 +177,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
     if (!user) return;
-    loadProfile(user.id); loadTournaments(); loadMyRegistrations(user.id); loadRecentGames(user.id); loadRatingOverview(user.id);
+    loadProfile(user.id); loadTournaments(); loadRecentTournaments(); loadMyRegistrations(user.id); loadRecentGames(user.id); loadRatingOverview(user.id);
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
@@ -165,7 +185,7 @@ const Dashboard = () => {
     const ch1 = supabase.channel(`profile-${user.id}`).on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, () => loadProfile(user.id)).subscribe();
     const ch2 = supabase.channel(`rating-games-${user.id}`).on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => { loadProfile(user.id); loadRecentGames(user.id); loadRatingOverview(user.id); }).subscribe();
     const ch3 = supabase.channel(`rating-overview-${user.id}`).on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => { loadProfile(user.id); loadRatingOverview(user.id); }).subscribe();
-    const ch4 = supabase.channel("tournaments-live").on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, loadTournaments).on("postgres_changes", { event: "*", schema: "public", table: "tournament_registrations" }, () => { loadTournaments(); loadMyRegistrations(user.id); }).subscribe();
+    const ch4 = supabase.channel("tournaments-live").on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, loadTournaments).on("postgres_changes", { event: "*", schema: "public", table: "tournament_registrations" }, () => { loadTournaments(); loadMyRegistrations(user.id); }).on("postgres_changes", { event: "*", schema: "public", table: "recent_tournaments" }, loadRecentTournaments).subscribe();
     return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); supabase.removeChannel(ch3); supabase.removeChannel(ch4); };
   }, [user]);
 
@@ -207,10 +227,25 @@ const Dashboard = () => {
       await (supabase as any).from("player_notifications").insert({ user_id: reg.player_id, title: "Tournament cancelled", message: `Your tournament "${tournament.name}" was cancelled. Refund has been issued.`, kind: "tournament_cancelled" });
     }
     await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
-    await (supabase as any).from("tournaments").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", tournament.id);
+    const playerCount = (regs || []).length;
+    // Move to recent_tournaments
+    await (supabase as any).from("recent_tournaments").insert({
+      original_id: tournament.id,
+      name: tournament.name,
+      prize_pool: tournament.prize_pool,
+      max_players: tournament.max_players,
+      created_by: tournament.created_by || user.id,
+      status: "cancelled",
+      tournament_type: tournament.tournament_type || "swiss",
+      starts_at: tournament.starts_at,
+      ended_at: new Date().toISOString(),
+      player_count: playerCount,
+    });
+    // Delete from tournaments
+    await (supabase as any).from("tournaments").delete().eq("id", tournament.id);
     publishInGameNotification(`Sorry! Tournament "${tournament.name}" was called off. Crowns have been refunded.`, "warning");
     toast.success("Tournament called off, refunds issued.");
-    loadTournaments(); loadProfile(user.id);
+    loadTournaments(); loadRecentTournaments(); loadProfile(user.id);
   };
 
   /* ─── Derived ─── */
@@ -218,7 +253,6 @@ const Dashboard = () => {
   const winRate = profile && profile.games_played > 0 ? ((profile.wins / profile.games_played) * 100).toFixed(1) : "0.0";
   const rank = profile?.rank_tier || "Bronze";
   const activeTournaments = useMemo(() => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled"), [tournaments]);
-  const recentTournaments = useMemo(() => tournaments.filter((t) => t.status === "completed" || t.status === "cancelled").slice(0, 5), [tournaments]);
   const finishedGames = useMemo(() => recentGames.filter((g) => g.result_type !== "in_progress"), [recentGames]);
 
   useEffect(() => {
@@ -481,11 +515,11 @@ const Dashboard = () => {
                 <div className={sectionIcon}><Clock className="w-3 h-3 text-muted-foreground" /></div>
                 Recent Tournaments
               </h3>
-              {recentTournaments.length > 0 && (
-                <span className="text-[10px] text-muted-foreground font-medium">{recentTournaments.length} ended</span>
+              {recentTournamentsList.length > 0 && (
+                <span className="text-[10px] text-muted-foreground font-medium">{recentTournamentsList.length} ended</span>
               )}
             </div>
-            {recentTournaments.length === 0 ? (
+            {recentTournamentsList.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <div className="w-10 h-10 rounded-xl bg-secondary/30 flex items-center justify-center mx-auto mb-2">
                   <Clock className="w-5 h-5 text-muted-foreground/25" />
@@ -495,8 +529,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="divide-y divide-border/10 max-h-[14rem] overflow-y-auto">
-                {recentTournaments.map((t) => {
-                  const count = t.registration_count?.[0]?.count || 0;
+                {recentTournamentsList.map((t) => {
                   const isCancelled = t.status === "cancelled";
                   return (
                     <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/6 transition-colors">
@@ -508,7 +541,7 @@ const Dashboard = () => {
                           <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
                           <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
                             <span className="capitalize">{t.tournament_type || "swiss"}</span>
-                            <span>{count} players</span>
+                            <span>{t.player_count} players</span>
                             <span>₹{t.prize_pool}</span>
                           </div>
                         </div>
@@ -517,7 +550,6 @@ const Dashboard = () => {
                         <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${isCancelled ? "bg-destructive/10 text-destructive" : "bg-primary/8 text-primary"}`}>
                           {isCancelled ? "CANCELLED" : "COMPLETED"}
                         </span>
-                        <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1 rounded-lg border border-border/25 text-muted-foreground hover:text-foreground hover:border-primary/25 font-display font-bold transition-colors">Details</button>
                       </div>
                     </div>
                   );

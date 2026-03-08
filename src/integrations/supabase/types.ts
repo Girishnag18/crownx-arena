@@ -1108,6 +1108,48 @@ export type Database = {
         }
         Relationships: []
       }
+      recent_tournaments: {
+        Row: {
+          created_by: string
+          ended_at: string | null
+          id: string
+          max_players: number
+          name: string
+          original_id: string
+          player_count: number
+          prize_pool: number
+          starts_at: string | null
+          status: string
+          tournament_type: string
+        }
+        Insert: {
+          created_by: string
+          ended_at?: string | null
+          id?: string
+          max_players?: number
+          name: string
+          original_id: string
+          player_count?: number
+          prize_pool?: number
+          starts_at?: string | null
+          status?: string
+          tournament_type?: string
+        }
+        Update: {
+          created_by?: string
+          ended_at?: string | null
+          id?: string
+          max_players?: number
+          name?: string
+          original_id?: string
+          player_count?: number
+          prize_pool?: number
+          starts_at?: string | null
+          status?: string
+          tournament_type?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
