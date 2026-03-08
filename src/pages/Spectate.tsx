@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Chess } from "chess.js";
 import ChessBoard from "@/components/chess/ChessBoard";
+import GameChat from "@/components/chess/GameChat";
 import type { Square } from "chess.js";
 
 interface LiveGame {
