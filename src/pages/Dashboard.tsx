@@ -227,10 +227,25 @@ const Dashboard = () => {
       await (supabase as any).from("player_notifications").insert({ user_id: reg.player_id, title: "Tournament cancelled", message: `Your tournament "${tournament.name}" was cancelled. Refund has been issued.`, kind: "tournament_cancelled" });
     }
     await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
-    await (supabase as any).from("tournaments").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", tournament.id);
+    const playerCount = (regs || []).length;
+    // Move to recent_tournaments
+    await (supabase as any).from("recent_tournaments").insert({
+      original_id: tournament.id,
+      name: tournament.name,
+      prize_pool: tournament.prize_pool,
+      max_players: tournament.max_players,
+      created_by: tournament.created_by || user.id,
+      status: "cancelled",
+      tournament_type: tournament.tournament_type || "swiss",
+      starts_at: tournament.starts_at,
+      ended_at: new Date().toISOString(),
+      player_count: playerCount,
+    });
+    // Delete from tournaments
+    await (supabase as any).from("tournaments").delete().eq("id", tournament.id);
     publishInGameNotification(`Sorry! Tournament "${tournament.name}" was called off. Crowns have been refunded.`, "warning");
     toast.success("Tournament called off, refunds issued.");
-    loadTournaments(); loadProfile(user.id);
+    loadTournaments(); loadRecentTournaments(); loadProfile(user.id);
   };
 
   /* ─── Derived ─── */
