@@ -704,10 +704,10 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-xl border border-primary/25 bg-primary/5 p-5 sm:p-6 text-center space-y-4 shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]"
+                className="glass-card p-5 sm:p-6 text-center space-y-4 border-glow gold-glow"
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto">
-                  <Crown className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 border border-primary/20 flex items-center justify-center mx-auto gold-glow">
+                  <Crown className="w-8 h-8 text-primary" />
                 </div>
                 <p className="font-display font-bold text-lg">{gameStatus}</p>
 
