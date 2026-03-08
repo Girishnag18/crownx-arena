@@ -55,11 +55,11 @@ const GameChat = ({ gameId, isSpectator = false }: GameChatProps) => {
     if (!gameId) return;
 
     const load = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase
         .from("game_chat" as any)
-        .select("*")
-        .eq("game_id" as any, gameId)
-        .order("created_at" as any, { ascending: true })
+        .select("*") as any)
+        .eq("game_id", gameId)
+        .order("created_at", { ascending: true })
         .limit(100);
 
       if (data) {
