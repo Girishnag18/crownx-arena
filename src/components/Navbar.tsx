@@ -63,6 +63,7 @@ const flatNavLinks = navSections.flatMap((s) => s.items);
 const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: User, label: "Profile", to: "/profile" },
+  { icon: Trophy, label: "Achievements", to: "/achievements" },
   { icon: History, label: "Match History", to: "/dashboard?section=history" },
   { icon: BarChart3, label: "Ratings", to: "/ratings" },
   { icon: Settings, label: "Settings", to: "/settings" },
