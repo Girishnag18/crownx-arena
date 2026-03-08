@@ -130,6 +130,7 @@ export const useMatchmaking = () => {
 
       // After 15s, widen to 500
       expandRef.current = setTimeout(async () => {
+        soundManager.play("rangeExpand");
         try {
           const d2 = await invokeMatchmake(gameMode, durationSeconds, incrementSeconds, 500);
           if (d2?.matched && d2?.game?.id) {
