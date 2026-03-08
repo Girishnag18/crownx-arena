@@ -310,6 +310,15 @@ const Play = () => {
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
     : moveHistory;
 
+  const clockActiveSide = (game.isGameOver() || clockGameOver) ? null : game.turn();
+  const { whiteMs, blackMs } = useChessClock(
+    timeControl,
+    clockActiveSide,
+    displayMoves.length > 0,
+    isGameOver,
+    handleTimeUp,
+  );
+
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
     for (let i = 0; i < displayMoves.length; i += 2) {
