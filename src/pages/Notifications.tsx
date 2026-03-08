@@ -95,7 +95,17 @@ const Notifications = () => {
               <p className="text-xs sm:text-sm text-muted-foreground">Stay updated with messages from CrownX Arena.</p>
             </div>
           </div>
-          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Unread: {unreadCount}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllRead}
+                className="text-[10px] sm:text-xs text-primary font-semibold hover:underline whitespace-nowrap"
+              >
+                Mark all read
+              </button>
+            )}
+            <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{unreadCount}</span>
+          </div>
         </header>
 
         {notifications.length === 0 ? (
