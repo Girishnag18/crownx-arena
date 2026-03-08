@@ -96,6 +96,7 @@ const App = () => (
         <AuthProvider>
           <BoardSettingsProvider>
             <Navbar />
+            <AchievementListener />
             <RouteAnimator />
           </BoardSettingsProvider>
         </AuthProvider>
