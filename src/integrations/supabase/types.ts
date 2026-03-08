@@ -342,6 +342,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_logins: {
+        Row: {
+          bonus_claimed: boolean
+          created_at: string
+          crown_bonus: number
+          id: string
+          login_date: string
+          streak: number
+          user_id: string
+        }
+        Insert: {
+          bonus_claimed?: boolean
+          created_at?: string
+          crown_bonus?: number
+          id?: string
+          login_date?: string
+          streak?: number
+          user_id: string
+        }
+        Update: {
+          bonus_claimed?: boolean
+          created_at?: string
+          crown_bonus?: number
+          id?: string
+          login_date?: string
+          streak?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_puzzles: {
         Row: {
           active_date: string
