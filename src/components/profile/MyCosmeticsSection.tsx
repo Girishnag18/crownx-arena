@@ -1,10 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, Star, Sparkles, Crown } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Check, Star, Sparkles, Save, Trash2, FolderOpen, Plus } from "lucide-react";
 import { EquippedItem } from "@/components/ProfileCard";
-import LegendaryEquipEffect from "@/components/gamification/LegendaryEquipEffect";
+import EquipEffect from "@/components/gamification/EquipEffect";
 
 interface ShopItem {
   id: string;
@@ -18,6 +17,12 @@ interface ShopItem {
 interface Purchase {
   item_id: string;
   is_equipped: boolean;
+}
+
+interface Loadout {
+  id: string;
+  name: string;
+  item_ids: string[];
 }
 
 const RARITY_BADGE: Record<string, { text: string; bg: string }> = {
@@ -34,6 +39,8 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: string; exclusive: 
   board_theme: { label: "Board Themes", icon: "♟️", exclusive: true },
 };
 
+const EFFECT_RARITIES = new Set(["legendary", "rare", "uncommon"]);
+
 interface MyCosmeticsSectionProps {
   userId: string;
   onEquipChange?: () => void;
@@ -43,16 +50,21 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
   const [items, setItems] = useState<ShopItem[]>([]);
   const [purchases, setPurchases] = useState<Map<string, Purchase>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [legendaryEffect, setLegendaryEffect] = useState<{ icon: string; name: string } | null>(null);
+  const [equipEffect, setEquipEffect] = useState<{ icon: string; name: string; rarity: "legendary" | "rare" | "uncommon" } | null>(null);
+  const [loadouts, setLoadouts] = useState<Loadout[]>([]);
+  const [newLoadoutName, setNewLoadoutName] = useState("");
+  const [showLoadoutForm, setShowLoadoutForm] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const { data: purchaseData } = await (supabase as any)
-      .from("shop_purchases")
-      .select("item_id, is_equipped")
-      .eq("user_id", userId);
+    const [{ data: purchaseData }, { data: loadoutData }] = await Promise.all([
+      (supabase as any).from("shop_purchases").select("item_id, is_equipped").eq("user_id", userId),
+      (supabase as any).from("cosmetic_loadouts").select("id, name, item_ids").eq("user_id", userId).order("created_at"),
+    ]);
 
     const rows = (purchaseData || []) as Purchase[];
+    setLoadouts((loadoutData || []) as Loadout[]);
+
     if (rows.length === 0) { setLoading(false); return; }
 
     const map = new Map<string, Purchase>();
@@ -94,10 +106,66 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
     await (supabase as any).from("shop_purchases").update({ is_equipped: newEquipped }).eq("user_id", userId).eq("item_id", item.id);
     setPurchases(prev => { const next = new Map(prev); next.set(item.id, { ...current, is_equipped: newEquipped }); return next; });
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
-    if (newEquipped && item.rarity === "legendary") {
-      setLegendaryEffect({ icon: item.icon, name: item.name });
+
+    if (newEquipped && EFFECT_RARITIES.has(item.rarity)) {
+      setEquipEffect({ icon: item.icon, name: item.name, rarity: item.rarity as "legendary" | "rare" | "uncommon" });
     }
     onEquipChange?.();
+  };
+
+  // ─── Loadout functions ───
+  const saveLoadout = async () => {
+    const name = newLoadoutName.trim() || `Loadout ${loadouts.length + 1}`;
+    const equippedIds = Array.from(purchases.entries())
+      .filter(([, p]) => p.is_equipped)
+      .map(([id]) => id);
+
+    if (equippedIds.length === 0) { toast.error("Equip some items first!"); return; }
+    if (loadouts.length >= 5) { toast.error("Max 5 loadouts!"); return; }
+
+    const { data, error } = await (supabase as any)
+      .from("cosmetic_loadouts")
+      .insert({ user_id: userId, name, item_ids: equippedIds })
+      .select("id, name, item_ids")
+      .single();
+
+    if (error) { toast.error(error.message); return; }
+    setLoadouts(prev => [...prev, data as Loadout]);
+    setNewLoadoutName("");
+    setShowLoadoutForm(false);
+    toast.success(`Loadout "${name}" saved!`);
+  };
+
+  const applyLoadout = async (loadout: Loadout) => {
+    // Unequip all
+    for (const [itemId, p] of purchases) {
+      if (p.is_equipped) {
+        await (supabase as any).from("shop_purchases").update({ is_equipped: false }).eq("user_id", userId).eq("item_id", itemId);
+      }
+    }
+
+    // Equip loadout items (only ones we own)
+    const ownedLoadoutIds = loadout.item_ids.filter(id => purchases.has(id));
+    for (const itemId of ownedLoadoutIds) {
+      await (supabase as any).from("shop_purchases").update({ is_equipped: true }).eq("user_id", userId).eq("item_id", itemId);
+    }
+
+    setPurchases(prev => {
+      const next = new Map(prev);
+      for (const [id, p] of next) {
+        next.set(id, { ...p, is_equipped: ownedLoadoutIds.includes(id) });
+      }
+      return next;
+    });
+
+    onEquipChange?.();
+    toast.success(`Loadout "${loadout.name}" applied!`);
+  };
+
+  const deleteLoadout = async (id: string) => {
+    await (supabase as any).from("cosmetic_loadouts").delete().eq("id", id);
+    setLoadouts(prev => prev.filter(l => l.id !== id));
+    toast.success("Loadout deleted.");
   };
 
   if (loading) return null;
@@ -112,9 +180,82 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
   }
 
   const categories = Object.keys(CATEGORY_LABELS).filter(cat => items.some(i => i.category === cat));
+  const equippedCount = Array.from(purchases.values()).filter(p => p.is_equipped).length;
 
   return (
     <>
+      {/* ─── Loadouts Section ─── */}
+      <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden mb-4">
+        <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
+          <FolderOpen className="w-4 h-4 text-primary" />
+          <h3 className="font-display font-bold text-xs">Loadouts</h3>
+          <span className="text-[9px] text-muted-foreground ml-auto">{loadouts.length}/5</span>
+        </div>
+        <div className="p-3 space-y-2">
+          {loadouts.map(loadout => {
+            const loadoutItems = loadout.item_ids
+              .map(id => items.find(i => i.id === id))
+              .filter(Boolean) as ShopItem[];
+            return (
+              <div key={loadout.id} className="flex items-center gap-3 rounded-lg border border-border/30 bg-secondary/10 p-3 hover:bg-secondary/20 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="font-display font-bold text-xs truncate">{loadout.name}</p>
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {loadoutItems.map(item => (
+                      <span key={item.id} className="text-sm" title={item.name}>{item.icon}</span>
+                    ))}
+                    {loadout.item_ids.length > loadoutItems.length && (
+                      <span className="text-[9px] text-muted-foreground">+{loadout.item_ids.length - loadoutItems.length} more</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => applyLoadout(loadout)}
+                  className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-display font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
+                >
+                  <Check className="w-3 h-3" /> Apply
+                </button>
+                <button
+                  onClick={() => deleteLoadout(loadout.id)}
+                  className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            );
+          })}
+
+          {showLoadoutForm ? (
+            <div className="flex items-center gap-2">
+              <input
+                className="flex-1 bg-secondary/50 border border-border/40 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                placeholder="Loadout name..."
+                value={newLoadoutName}
+                onChange={e => setNewLoadoutName(e.target.value)}
+                maxLength={20}
+                onKeyDown={e => e.key === "Enter" && saveLoadout()}
+              />
+              <button onClick={saveLoadout} className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg text-[10px] font-display font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
+                <Save className="w-3 h-3" /> Save
+              </button>
+              <button onClick={() => setShowLoadoutForm(false)} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-2">
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowLoadoutForm(true)}
+              disabled={loadouts.length >= 5 || equippedCount === 0}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-border/40 py-2.5 text-[10px] font-display font-bold text-muted-foreground hover:text-foreground hover:border-border/60 hover:bg-secondary/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-3 h-3" />
+              {equippedCount === 0 ? "Equip items first" : "Save Current as Loadout"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ─── Items by Category ─── */}
       <div className="space-y-4">
         {categories.map(cat => {
           const info = CATEGORY_LABELS[cat];
@@ -162,11 +303,14 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
           );
         })}
       </div>
-      <LegendaryEquipEffect
-        show={!!legendaryEffect}
-        icon={legendaryEffect?.icon || ""}
-        name={legendaryEffect?.name || ""}
-        onComplete={() => setLegendaryEffect(null)}
+
+      {/* Equip Effect */}
+      <EquipEffect
+        show={!!equipEffect}
+        icon={equipEffect?.icon || ""}
+        name={equipEffect?.name || ""}
+        rarity={equipEffect?.rarity || "uncommon"}
+        onComplete={() => setEquipEffect(null)}
       />
     </>
   );
