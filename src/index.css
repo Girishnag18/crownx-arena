@@ -199,6 +199,14 @@
   .stat-card {
     @apply bg-secondary/40 rounded-lg p-3 text-center border border-border/30;
   }
+
+  .game-action-btn {
+    @apply rounded-md border border-border/30 bg-card/60 p-2 sm:px-3 sm:py-2 text-muted-foreground transition-all;
+  }
+
+  .game-action-btn:hover {
+    @apply border-primary/30 bg-primary/5;
+  }
 }
 
 @layer base {
