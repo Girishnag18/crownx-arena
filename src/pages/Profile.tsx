@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { uploadAvatarImage } from "@/lib/avatar";
 import ProfileCard from "@/components/ProfileCard";
 import PerformanceTab from "@/components/profile/PerformanceTab";
+import MatchHistory from "@/components/profile/MatchHistory";
+import AchievementShowcase from "@/components/profile/AchievementShowcase";
 import { motion } from "framer-motion";
 import { Edit3, X, Swords } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
