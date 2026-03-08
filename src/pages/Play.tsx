@@ -446,16 +446,17 @@ const Play = () => {
   const localTopName = localBottomColor === "w" ? "Black Player" : "White Player";
   const localBottomName = localBottomColor === "w" ? "White Player" : "Black Player";
 
+  const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "b" ? `AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "b" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
       : localTopName;
 
   const bottomPlayerName = isOnline
     ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "w" ? `AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "w" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
       : localBottomName;
 
   const topAvatar = isOnline
