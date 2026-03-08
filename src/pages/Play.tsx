@@ -404,14 +404,14 @@ const Play = () => {
     : null;
 
   const PlayerLabel = ({ name, avatarUrl, title }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null }) => (
-    <div className="flex items-center gap-2">
-      <Avatar className="w-7 h-7 border border-border/70">
+    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      <Avatar className="w-6 h-6 sm:w-7 sm:h-7 border border-border/70 shrink-0">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
+        <AvatarFallback className="text-[9px] sm:text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
       </Avatar>
-      <span className="font-display font-bold">{name}</span>
+      <span className="font-display font-bold text-xs sm:text-sm truncate">{name}</span>
       {title && (
-        <span className="text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1.5 py-0.5 rounded-full">
+        <span className="text-[9px] sm:text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1 py-0.5 rounded-full hidden sm:inline">
           {title.icon} {title.name}
         </span>
       )}
@@ -427,18 +427,19 @@ const Play = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-2 sm:px-4">
       <div className="container mx-auto max-w-[1500px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
           <div className="lg:col-span-9 flex flex-col items-center">
-            <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
-              <div className="flex items-center justify-between text-sm">
+            {/* Top player bar */}
+            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} />
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
                     {capturedPieces.capturedByBlack.length === 0
-                      ? <span className="text-xs text-muted-foreground">No captures</span>
-                      : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      : capturedPieces.capturedByBlack.slice(0, 8).map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
                   </div>
                   {timeControl && (
                     <ClockFace
@@ -485,14 +486,15 @@ const Play = () => {
               </motion.div>
             )}
 
-            <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
-              <div className="flex items-center justify-between text-sm">
+            {/* Bottom player bar */}
+            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
                     {capturedPieces.capturedByWhite.length === 0
-                      ? <span className="text-xs text-muted-foreground">No captures</span>
-                      : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      : capturedPieces.capturedByWhite.slice(0, 8).map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
                   </div>
                   {timeControl && (
                     <ClockFace
@@ -505,20 +507,21 @@ const Play = () => {
               </div>
             </div>
 
+            {/* Controls bar */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
+              className={`mt-2 sm:mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
             >
-              <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
+              <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
                 {!isOnline && (
-                  <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
+                  <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
-                {(isOnline && online.pendingMove) && <LoaderCircle className="w-4 h-4 animate-spin text-primary" />}
-                {gameStatus}
+                {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
+                <span className="truncate">{gameStatus}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2 shrink-0">
                 {isOnline && !online.isGameOver && (
                   <button
                     onClick={async () => {
@@ -528,7 +531,7 @@ const Play = () => {
                       setResignPending(false);
                     }}
                     disabled={resignPending}
-                    className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
+                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
                     title="Resign"
                   >
                     {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
@@ -536,21 +539,21 @@ const Play = () => {
                 )}
                 <button
                   onClick={() => setShowArrows(!showArrows)}
-                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
+                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
                   title={showArrows ? "Hide engine arrows" : "Show engine arrows"}
                 >
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
-                  className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                  className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
                   title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={() => setStreamerMode(!streamerMode)}
-                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${streamerMode ? "text-primary border-primary/40" : ""}`}
+                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors hidden sm:flex ${streamerMode ? "text-primary border-primary/40" : ""}`}
                   title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
                 >
                   <Monitor className="w-4 h-4" />
@@ -558,7 +561,7 @@ const Play = () => {
                 {!isOnline && (
                   <button
                     onClick={resetLocalGame}
-                    className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
                     title="New Game"
                   >
                     <RotateCcw className="w-4 h-4" />
@@ -568,13 +571,14 @@ const Play = () => {
             </motion.div>
           </div>
 
+          {/* Side panel - collapsible on mobile */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-4"
+            className="lg:col-span-3 space-y-3 sm:space-y-4"
           >
-            <div className="glass-card p-5 border-glow space-y-3">
+            <div className="glass-card p-3 sm:p-5 border-glow space-y-2 sm:space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
                 {isOnline ? `Live match: ${online.playerName} vs ${online.opponentName}` : "Local Game"}
