@@ -1015,7 +1015,7 @@ const Play = () => {
 
                 <div className="flex justify-center gap-4 text-xs text-muted-foreground">
                   <span>{displayMoves.length} moves</span>
-                  {timeControl && <span>{timeControl.label}</span>}
+                  {(effectiveTimeControl || timeControl) && <span>{(effectiveTimeControl || timeControl)!.label}</span>}
                 </div>
 
                 <div className="flex flex-col gap-2 pt-1">
