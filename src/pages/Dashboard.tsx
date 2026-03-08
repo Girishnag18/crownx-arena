@@ -358,7 +358,7 @@ const Dashboard = () => {
   const rank = profile?.rank_tier || "Bronze";
 
   return (
-    <div className="page-container">
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-2 sm:px-4">
       {/* Rank Promotion Overlay */}
       {promotion && (
         <RankPromotionOverlay
@@ -368,7 +368,7 @@ const Dashboard = () => {
         />
       )}
       <div className="container mx-auto max-w-7xl">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-5">
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-2.5 sm:space-y-3">
 
           {/* ═══════════ HERO SECTION ═══════════ */}
           <motion.div variants={fadeUp} className={`rounded-2xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-5 sm:p-7 relative overflow-hidden`}>
