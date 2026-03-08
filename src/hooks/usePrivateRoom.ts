@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { soundManager } from "@/services/soundManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateChess960Fen } from "@/utils/chess960";
+import { toast } from "sonner";
 
 export const usePrivateRoom = () => {
   const { user } = useAuth();
