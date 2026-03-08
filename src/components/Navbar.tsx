@@ -30,6 +30,7 @@ const navSections = [
       { to: "/dashboard", label: "Arena Hub", icon: Trophy },
       { to: "/challenges", label: "Challenges", icon: Sparkles },
       { to: "/battle-pass", label: "Battle Pass", icon: Gamepad2 },
+      { to: "/achievements", label: "Achievements", icon: Trophy },
       { to: "/ratings", label: "Ratings", icon: BarChart3 },
     ],
   },
