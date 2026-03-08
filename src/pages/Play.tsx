@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
 import GameReview from "@/components/chess/GameReview";
+import AICoach from "@/components/chess/AICoach";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
@@ -36,6 +37,7 @@ const Play = () => {
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
+  const [showAICoach, setShowAICoach] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
   const [showArrows, setShowArrows] = useState(true);
@@ -593,6 +595,7 @@ const Play = () => {
                 <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => setShowEngineReview(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">ENGINE REVIEW</button>
+                  <button onClick={() => setShowAICoach(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">AI COACH</button>
                   <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
                   <button
                     onClick={() => {
@@ -618,6 +621,23 @@ const Play = () => {
                 }
                 playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
                 onClose={() => setShowEngineReview(false)}
+              />
+            )}
+
+            {isGameOver && showAICoach && (
+              <AICoach
+                moves={
+                  isOnline && online.gameData?.moves
+                    ? (online.gameData.moves as Array<{ san: string; classification?: string }>)
+                    : moveHistory.map((san) => ({ san }))
+                }
+                playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
+                accuracy={0}
+                blunders={0}
+                mistakes={0}
+                inaccuracies={0}
+                brilliants={0}
+                onClose={() => setShowAICoach(false)}
               />
             )}
           </motion.div>
