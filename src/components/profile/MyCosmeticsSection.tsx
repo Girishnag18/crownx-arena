@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, Star, Sparkles, Save, Trash2, FolderOpen, Plus } from "lucide-react";
+import { Check, Star, Sparkles, Save, Trash2, FolderOpen, Plus, Eye } from "lucide-react";
 import { EquippedItem } from "@/components/ProfileCard";
 import EquipEffect from "@/components/gamification/EquipEffect";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ShopItem {
   id: string;
