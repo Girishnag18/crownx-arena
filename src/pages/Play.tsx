@@ -574,6 +574,13 @@ const Play = () => {
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
                     : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} pieces are at the bottom for the current player.`}
               </p>
+              {timeControl && (
+                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 text-xs">
+                  <span className="text-muted-foreground">Time control: </span>
+                  <span className="font-display font-bold text-primary">{timeControl.label}</span>
+                  <span className="text-muted-foreground"> ({timeControl.category})</span>
+                </div>
+              )}
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-display">
