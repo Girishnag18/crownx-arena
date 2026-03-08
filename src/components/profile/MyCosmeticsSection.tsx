@@ -54,6 +54,8 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
   const [loadouts, setLoadouts] = useState<Loadout[]>([]);
   const [newLoadoutName, setNewLoadoutName] = useState("");
   const [showLoadoutForm, setShowLoadoutForm] = useState(false);
+  const [editingLoadoutId, setEditingLoadoutId] = useState<string | null>(null);
+  const [editingLoadoutName, setEditingLoadoutName] = useState("");
 
   const load = async () => {
     setLoading(true);
