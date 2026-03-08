@@ -581,7 +581,7 @@ const Dashboard = () => {
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="border-b border-border/30 px-5 py-4 bg-secondary/10"
+                    className="border-b border-border/30 px-4 py-3 bg-secondary/10"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div className="space-y-1 sm:col-span-2">
