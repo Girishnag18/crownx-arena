@@ -412,10 +412,24 @@ const Play = () => {
             <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} />
-                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
-                  {capturedPieces.capturedByBlack.length === 0
-                    ? <span className="text-xs text-muted-foreground">No captures</span>
-                    : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                    {capturedPieces.capturedByBlack.length === 0
+                      ? <span className="text-xs text-muted-foreground">No captures</span>
+                      : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                  </div>
+                  {timeControl && (
+                    <div className="w-24">
+                      <ChessClock
+                        timeControl={timeControl}
+                        activeSide={game.isGameOver() || clockGameOver ? null : game.turn()}
+                        gameStarted={displayMoves.length > 0}
+                        gameOver={isGameOver}
+                        onTimeUp={handleTimeUp}
+                        flipped={flipped}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
