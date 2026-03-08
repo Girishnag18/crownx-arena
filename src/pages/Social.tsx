@@ -40,6 +40,7 @@ const Social = () => {
   const [loading, setLoading] = useState(true);
   const [dmFriend, setDmFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
   const [giftFriend, setGiftFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
   const presenceRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
