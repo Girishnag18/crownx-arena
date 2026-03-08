@@ -12,6 +12,7 @@ export const useMatchmaking = () => {
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const gameSubscriptionRef = useRef<RealtimeChannel | null>(null);
+  const searchStartedAt = useRef<string | null>(null);
 
   const clearSearchState = useCallback(() => {
     if (pollRef.current) {
@@ -73,6 +74,11 @@ export const useMatchmaking = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
+      // Only match games created after search started to avoid reconnecting to resigned games
+      if (searchStartedAt.current) {
+        gamesQuery = gamesQuery.gte("created_at", searchStartedAt.current);
+      }
+
       gamesQuery = durationSeconds === null
         ? gamesQuery.is("duration_seconds", null)
         : gamesQuery.eq("duration_seconds", durationSeconds);
@@ -89,6 +95,7 @@ export const useMatchmaking = () => {
   const startSearch = useCallback(async (gameMode = "quick_play", durationSeconds: number | null = null) => {
     if (!user) return;
 
+    searchStartedAt.current = new Date().toISOString();
     setState("searching");
     setError(null);
     setGameId(null);
