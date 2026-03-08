@@ -127,7 +127,7 @@ const Dashboard = () => {
 
   /* ─── Data loaders ─── */
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns, xp, puzzles_solved").eq("id", userId).single();
+    const { data } = await supabase.from("profiles").select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns, xp, puzzles_solved").eq("id", userId).maybeSingle();
     if (data) {
       const p = data as unknown as Profile;
       if (prevRankRef.current && prevRankRef.current !== p.rank_tier) {
