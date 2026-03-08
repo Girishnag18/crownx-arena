@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { uploadAvatarImage } from "@/lib/avatar";
-import ProfileCard from "@/components/ProfileCard";
+import ProfileCard, { EquippedItem } from "@/components/ProfileCard";
 import PerformanceTab from "@/components/profile/PerformanceTab";
 import MatchHistory from "@/components/profile/MatchHistory";
 import AchievementShowcase from "@/components/profile/AchievementShowcase";
@@ -46,6 +46,7 @@ const Profile = () => {
   const [searchUid, setSearchUid] = useState("");
   const [searchResult, setSearchResult] = useState<FullProfile | null>(null);
   const [dmFriend, setDmFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
+  const [equippedItems, setEquippedItems] = useState<EquippedItem[]>([]);
   const [friends, setFriends] = useState<FullProfile[]>([]);
   const [incoming, setIncoming] = useState<(Friendship & { requester?: FullProfile })[]>([]);
   const [outgoing, setOutgoing] = useState<(Friendship & { addressee?: FullProfile })[]>([]);
@@ -96,9 +97,30 @@ const Profile = () => {
     setOutgoing(outgoingRows.map((entry) => ({ ...entry, addressee: profileMap.get(entry.addressee_id) })));
   };
 
+  const loadEquippedItems = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("shop_purchases")
+      .select("item_id, is_equipped")
+      .eq("user_id", user.id)
+      .eq("is_equipped", true);
+
+    if (data && data.length > 0) {
+      const itemIds = data.map((p) => p.item_id);
+      const { data: items } = await supabase
+        .from("shop_items")
+        .select("name, icon, category, rarity")
+        .in("id", itemIds);
+      setEquippedItems((items || []) as EquippedItem[]);
+    } else {
+      setEquippedItems([]);
+    }
+  };
+
   useEffect(() => {
     loadMyProfile();
     loadSocialData();
+    loadEquippedItems();
   }, [user?.id]);
 
   useEffect(() => {
@@ -266,6 +288,7 @@ const Profile = () => {
             losses={profileData.losses}
             games_played={profileData.games_played}
             win_streak={profileData.win_streak}
+            equippedItems={equippedItems}
           />
         </motion.div>
       ) : (

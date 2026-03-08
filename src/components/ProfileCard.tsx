@@ -2,6 +2,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Trophy, TrendingDown, MapPin, Shield } from "lucide-react";
 
+export interface EquippedItem {
+  name: string;
+  icon: string;
+  category: string;
+  rarity: string;
+}
+
 interface ProfileCardProps {
   username: string;
   player_uid: string;
@@ -15,6 +22,7 @@ interface ProfileCardProps {
   win_streak: number;
   compact?: boolean;
   isOnline?: boolean;
+  equippedItems?: EquippedItem[];
 }
 
 const getSkillLevel = (elo: number): { label: string; color: string } => {
@@ -23,6 +31,13 @@ const getSkillLevel = (elo: number): { label: string; color: string } => {
   if (elo >= 800) return { label: "Intermediate", color: "text-blue-400" };
   if (elo >= 500) return { label: "Apprentice", color: "text-emerald-400" };
   return { label: "Beginner", color: "text-muted-foreground" };
+};
+
+const rarityBorder: Record<string, string> = {
+  legendary: "border-yellow-500/60 shadow-yellow-500/20 shadow-md",
+  epic: "border-purple-500/60 shadow-purple-500/20 shadow-md",
+  rare: "border-blue-500/60",
+  common: "border-border/60",
 };
 
 const ProfileCard = ({
@@ -38,15 +53,22 @@ const ProfileCard = ({
   win_streak,
   compact = false,
   isOnline,
+  equippedItems = [],
 }: ProfileCardProps) => {
   const skill = getSkillLevel(crown_score);
   const winRate = games_played > 0 ? Math.round((wins / games_played) * 100) : 0;
+
+  const equippedTitle = equippedItems.find((i) => i.category === "title");
+  const equippedFrame = equippedItems.find((i) => i.category === "frame");
+  const equippedBadges = equippedItems.filter((i) => i.category === "badge");
+
+  const frameClass = equippedFrame ? (rarityBorder[equippedFrame.rarity] || "") : "";
 
   if (compact) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3">
         <div className="relative">
-          <Avatar className="w-10 h-10 border border-primary/30">
+          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/30"}`}>
             <AvatarImage src={avatar_url || undefined} alt={username} />
             <AvatarFallback className="bg-secondary text-primary font-bold">
               {(username || "P").slice(0, 1).toUpperCase()}
@@ -57,7 +79,10 @@ const ProfileCard = ({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-display font-bold text-sm truncate">{username || "Player"}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-display font-bold text-sm truncate">{username || "Player"}</p>
+            {equippedTitle && <span className="text-[10px] text-yellow-400 font-semibold">{equippedTitle.icon} {equippedTitle.name}</span>}
+          </div>
           <p className="text-[10px] text-muted-foreground font-mono">UID: {player_uid}</p>
         </div>
         <div className="text-right">
@@ -74,7 +99,7 @@ const ProfileCard = ({
       <div className="h-20 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative">
         <div className="absolute -bottom-8 left-6">
           <div className="relative">
-            <Avatar className="w-16 h-16 border-4 border-card shadow-lg">
+            <Avatar className={`w-16 h-16 border-4 shadow-lg ${frameClass || "border-card"}`}>
               <AvatarImage src={avatar_url || undefined} alt={username} />
               <AvatarFallback className="bg-secondary text-primary text-xl font-bold">
                 {(username || "P").slice(0, 1).toUpperCase()}
@@ -88,10 +113,17 @@ const ProfileCard = ({
       </div>
 
       <div className="pt-10 px-6 pb-5">
-        {/* Name + UID + Skill */}
+        {/* Name + Title + Skill */}
         <div className="flex items-start justify-between mb-1">
           <div>
-            <h3 className="font-display text-lg font-bold">{username || "Player"}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-display text-lg font-bold">{username || "Player"}</h3>
+              {equippedTitle && (
+                <span className="text-xs text-yellow-400 font-semibold bg-yellow-400/10 px-2 py-0.5 rounded-full">
+                  {equippedTitle.icon} {equippedTitle.name}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground font-mono">UID: {player_uid}</p>
           </div>
           <Badge variant="outline" className={`${skill.color} border-current text-[10px]`}>
@@ -99,6 +131,17 @@ const ProfileCard = ({
             {skill.label}
           </Badge>
         </div>
+
+        {/* Equipped Badges */}
+        {equippedBadges.length > 0 && (
+          <div className="flex gap-1.5 mt-2">
+            {equippedBadges.map((badge, i) => (
+              <span key={i} className="text-xs bg-secondary/60 border border-border/50 px-2 py-0.5 rounded-full" title={badge.name}>
+                {badge.icon} {badge.name}
+              </span>
+            ))}
+          </div>
+        )}
 
         {bio && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{bio}</p>}
 
