@@ -23,7 +23,7 @@ interface ChessBoardProps {
   arrows?: Array<{ from: string; to: string; color?: string }>;
 }
 
-const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName, maxBoardSizePx }: ChessBoardProps) => {
+const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName, maxBoardSizePx, arrows = [] }: ChessBoardProps) => {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
