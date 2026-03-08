@@ -343,22 +343,6 @@ const Play = () => {
     prevMoveCountRef.current = currentMoves;
   }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
 
-  // Engine best-move arrow
-  useEffect(() => {
-    if (!showArrows || isGameOver) {
-      setEngineArrows([]);
-      return;
-    }
-    let cancelled = false;
-    const fen = game.fen();
-    stockfish.getBestMove(fen, 10).then((bestMove) => {
-      if (cancelled || !bestMove || bestMove.length < 4) return;
-      const from = bestMove.slice(0, 2);
-      const to = bestMove.slice(2, 4);
-      setEngineArrows([{ from, to }]);
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [game, showArrows, isGameOver]);
 
   // Adaptive difficulty: track win/loss streak against AI
   const streakUpdatedRef = useRef(false);
