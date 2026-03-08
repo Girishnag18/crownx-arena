@@ -178,11 +178,17 @@ const Play = () => {
     setShowCheckmateBanner(false);
     setShowPostGameReview(false);
     setLocalBottomColor("w");
+    setClockGameOver(false);
   };
+
+  const handleTimeUp = useCallback((side: "w" | "b") => {
+    setClockGameOver(true);
+    soundManager.play("gameEnd");
+  }, []);
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = isOnline ? online.isGameOver : game.isGameOver();
+  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
