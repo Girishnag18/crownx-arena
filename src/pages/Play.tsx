@@ -96,6 +96,8 @@ const Play = () => {
   });
   const [clockGameOver, setClockGameOver] = useState(false);
   const prevMoveCountRef = useRef(0);
+  const [rematchState, setRematchState] = useState<RematchState>("idle");
+  const rematchChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
