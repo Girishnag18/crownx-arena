@@ -370,25 +370,8 @@ const Dashboard = () => {
               {user && <motion.div variants={fadeUp}><TrainingInsights userId={user.id} /></motion.div>}
             </div>
 
-            {/* ── RIGHT ── */}
-            <div className="lg:col-span-8 space-y-3">
-
-              {/* Match History Quick Link */}
-              <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
-                <button onClick={() => navigate("/match-history")} className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-secondary/6 transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/12 to-primary/4 border border-primary/15 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-display font-bold text-sm">Match History</p>
-                      <p className="text-[10px] text-muted-foreground">View all your recent games & replays</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                </button>
-              </motion.div>
-            </div>
+            {/* ── RIGHT (empty for now, tournaments below) ── */}
+            <div className="lg:col-span-8" />
           </div>
 
           {/* ════════ TOURNAMENTS — FULL WIDTH ════════ */}
