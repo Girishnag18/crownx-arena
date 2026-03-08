@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
 import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle } from "lucide-react";
+import { ResignConfirmDialog, GameOverPopup } from "@/components/chess/ResignDialog";
 import { generateChess960Fen } from "@/utils/chess960";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
@@ -38,6 +39,8 @@ const Play = () => {
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [syncAgo, setSyncAgo] = useState("just now");
   const [resignPending, setResignPending] = useState(false);
+  const [showResignDialog, setShowResignDialog] = useState(false);
+  const [showGameOverPopup, setShowGameOverPopup] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
   const [aiAccuracy, setAiAccuracy] = useState(92);
@@ -192,7 +195,15 @@ const Play = () => {
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver);
+  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver || resignPending);
+
+  // Show game over popup when online game ends
+  useEffect(() => {
+    if (isOnline && online.isGameOver) {
+      const timer = setTimeout(() => setShowGameOverPopup(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, online.isGameOver]);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
@@ -271,9 +282,10 @@ const Play = () => {
   }, [game, showArrows, isGameOver]);
 
   useEffect(() => {
-    if (!game.isCheckmate()) {
+    if (!game.isCheckmate() && !clockGameOver) {
       setShowCheckmateBanner(false);
       setShowPostGameReview(false);
+      setShowGameOverPopup(false);
       return;
     }
 
@@ -281,10 +293,11 @@ const Play = () => {
     const timer = window.setTimeout(() => {
       setShowCheckmateBanner(false);
       setShowPostGameReview(true);
-    }, 5000);
+      setShowGameOverPopup(true);
+    }, 3000);
 
     return () => window.clearTimeout(timer);
-  }, [game]);
+  }, [game, clockGameOver]);
 
   const gameStatus = useMemo(() => {
     if (isOnline && online.gameData) {
@@ -529,19 +542,24 @@ const Play = () => {
                 <span className="truncate">{gameStatus}</span>
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* Resign button - online */}
                 {isOnline && !online.isGameOver && (
                   <button
-                    onClick={async () => {
-                      if (!window.confirm("Are you sure to resign?")) return;
-                      setResignPending(true);
-                      await online.resign();
-                      setResignPending(false);
-                    }}
-                    disabled={resignPending}
-                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive disabled:opacity-60"
+                    onClick={() => setShowResignDialog(true)}
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
                     title="Resign"
                   >
-                    {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+                    <Flag className="w-4 h-4" />
+                  </button>
+                )}
+                {/* Resign button - local & computer */}
+                {!isOnline && !isGameOver && (isComputerGame || displayMoves.length > 0) && (
+                  <button
+                    onClick={() => setShowResignDialog(true)}
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
+                    title="Resign"
+                  >
+                    <Flag className="w-4 h-4" />
                   </button>
                 )}
                 {[
@@ -814,6 +832,59 @@ const Play = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Resign confirmation dialog */}
+      <ResignConfirmDialog
+        open={showResignDialog}
+        onCancel={() => setShowResignDialog(false)}
+        onConfirmResign={async () => {
+          setShowResignDialog(false);
+          if (isOnline) {
+            setResignPending(true);
+            await online.resign();
+            setResignPending(false);
+          } else {
+            // Local resign — mark game over
+            setResignPending(true);
+            setClockGameOver(true);
+            soundManager.play("gameEnd");
+            setShowGameOverPopup(true);
+          }
+        }}
+      />
+
+      {/* Game Over popup */}
+      <GameOverPopup
+        open={showGameOverPopup}
+        result={gameStatus}
+        moveCount={displayMoves.length}
+        timeControlLabel={timeControl?.label}
+        isOnline={isOnline}
+        onNewGame={() => {
+          setShowGameOverPopup(false);
+          navigate("/lobby");
+        }}
+        onRematch={() => {
+          setShowGameOverPopup(false);
+          if (isOnline) {
+            navigate("/lobby");
+          } else {
+            resetLocalGame();
+          }
+        }}
+        onAnalyze={() => {
+          setShowGameOverPopup(false);
+          setShowEngineReview(true);
+        }}
+        onAICoach={() => {
+          setShowGameOverPopup(false);
+          setShowAICoach(true);
+        }}
+        onBackToLobby={() => {
+          setShowGameOverPopup(false);
+          navigate("/lobby");
+        }}
+      />
     </div>
   );
 };
