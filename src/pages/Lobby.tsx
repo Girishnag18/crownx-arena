@@ -596,6 +596,19 @@ const Lobby = () => {
               </button>
             </div>
 
+            {/* Joining in progress overlay */}
+            {joiningRoom && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-4 text-center space-y-2"
+              >
+                <Loader2 className="w-6 h-6 text-primary mx-auto animate-spin" />
+                <p className="font-display font-bold text-xs">Joining game…</p>
+                <p className="text-[10px] text-muted-foreground">Setting up the match</p>
+              </motion.div>
+            )}
+
             {/* Room preview */}
             {fetchingPreview && joinCode.length === 6 && (
               <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
