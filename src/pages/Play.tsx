@@ -822,23 +822,41 @@ const Play = () => {
   const bottomTitle = isOnline
     ? (online.playerColor === "w" ? online.whitePlayer?.equippedTitle : online.blackPlayer?.equippedTitle)
     : null;
+  const topFrame = isOnline
+    ? (online.playerColor === "w" ? online.blackPlayer?.equippedFrame : online.whitePlayer?.equippedFrame)
+    : null;
+  const bottomFrame = isOnline
+    ? (online.playerColor === "w" ? online.whitePlayer?.equippedFrame : online.blackPlayer?.equippedFrame)
+    : null;
 
-  const PlayerLabel = ({ name, avatarUrl, title, isTop }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null; isTop?: boolean }) => (
-    <div className="flex items-center gap-2.5 min-w-0">
-      <Avatar className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-border/40 shrink-0 shadow-sm">
-        <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[10px] bg-gradient-to-br from-secondary to-secondary/60 font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-      </Avatar>
-      <div className="min-w-0">
-        <span className="font-display font-bold text-xs sm:text-sm truncate block">{name}</span>
-        {title && (
-          <span className="text-[9px] text-primary/80 font-semibold">
-            {title.icon} {title.name}
-          </span>
-        )}
+  const frameGlowClass: Record<string, string> = {
+    legendary: "border-primary/50 shadow-[0_0_12px_-3px_hsl(var(--primary)/0.4)]",
+    rare: "border-blue-500/40 shadow-[0_0_10px_-3px_rgba(59,130,246,0.3)]",
+    uncommon: "border-emerald-500/40",
+  };
+
+  const PlayerLabel = ({ name, avatarUrl, title, frame, isTop }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null; frame?: { name: string; icon: string; rarity: string; metadata?: Record<string, any> } | null; isTop?: boolean }) => {
+    const frameBorderColor = frame?.metadata?.border_color;
+    const avatarFrameClass = frame && !frameBorderColor ? (frameGlowClass[frame.rarity] || "") : "";
+    const avatarFrameStyle = frameBorderColor ? { borderColor: frameBorderColor, boxShadow: `0 0 12px -3px ${frameBorderColor}` } : {};
+
+    return (
+      <div className="flex items-center gap-2.5 min-w-0">
+        <Avatar className={`w-8 h-8 sm:w-9 sm:h-9 border-2 shrink-0 shadow-sm ${avatarFrameClass || "border-border/40"}`} style={avatarFrameStyle}>
+          <AvatarImage src={avatarUrl || undefined} alt={name} />
+          <AvatarFallback className="text-[10px] bg-gradient-to-br from-secondary to-secondary/60 font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <span className="font-display font-bold text-xs sm:text-sm truncate block">{name}</span>
+          {title && (
+            <span className="text-[9px] text-primary/80 font-semibold">
+              {title.icon} {title.name}
+            </span>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (isOnline && online.loading) {
     return (
@@ -866,7 +884,7 @@ const Play = () => {
             {/* Top Player Bar */}
             <div className="w-full max-w-[min(92vw,640px)] mb-1 sm:mb-1.5">
               <div className="flex items-center justify-between px-1 sm:px-2 py-1.5 sm:py-2">
-                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} isTop />
+                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} frame={topFrame} isTop />
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex gap-0.5 text-sm opacity-80" title="Captured pieces">
                     {(flipped ? capturedPieces.capturedByWhite : capturedPieces.capturedByBlack).length === 0
@@ -923,7 +941,7 @@ const Play = () => {
             {/* Bottom Player Bar */}
             <div className="w-full max-w-[min(92vw,640px)] mt-1 sm:mt-1.5">
               <div className="flex items-center justify-between px-1 sm:px-2 py-1.5 sm:py-2">
-                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
+                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} frame={bottomFrame} />
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex gap-0.5 text-sm opacity-80" title="Captured pieces">
                     {(flipped ? capturedPieces.capturedByBlack : capturedPieces.capturedByWhite).length === 0

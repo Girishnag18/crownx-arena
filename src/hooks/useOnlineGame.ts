@@ -26,6 +26,7 @@ interface PlayerSummary {
   crown_score: number;
   avatar_url: string | null;
   equippedTitle?: { name: string; icon: string } | null;
+  equippedFrame?: { name: string; icon: string; rarity: string; metadata?: Record<string, any> } | null;
 }
 
 export const useOnlineGame = (gameId: string | null) => {
@@ -73,20 +74,21 @@ export const useOnlineGame = (gameId: string | null) => {
               .eq("is_equipped", true),
           ]);
 
-          // Fetch title items for equipped purchases
+          // Fetch cosmetic items for equipped purchases
           let titleMap = new Map<string, { name: string; icon: string }>();
+          let frameMap = new Map<string, { name: string; icon: string; rarity: string; metadata?: Record<string, any> }>();
           if (purchases && purchases.length > 0) {
             const itemIds = purchases.map((p) => p.item_id);
             const { data: items } = await supabase
               .from("shop_items")
-              .select("id, name, icon, category")
-              .in("id", itemIds)
-              .eq("category", "title");
+              .select("id, name, icon, category, rarity, metadata")
+              .in("id", itemIds);
             if (items) {
               const itemById = new Map(items.map((i) => [i.id, i]));
               for (const p of purchases) {
                 const item = itemById.get(p.item_id);
-                if (item) titleMap.set(p.user_id, { name: item.name, icon: item.icon });
+                if (item?.category === "title") titleMap.set(p.user_id, { name: item.name, icon: item.icon });
+                if (item?.category === "avatar_frame") frameMap.set(p.user_id, { name: item.name, icon: item.icon, rarity: item.rarity, metadata: (item.metadata as Record<string, any>) || {} });
               }
             }
           }
@@ -101,6 +103,7 @@ export const useOnlineGame = (gameId: string | null) => {
                   crown_score: profile.crown_score || 1200,
                   avatar_url: profile.avatar_url || null,
                   equippedTitle: titleMap.get(profile.id) || null,
+                  equippedFrame: frameMap.get(profile.id) || null,
                 } satisfies PlayerSummary,
               ]),
             );
