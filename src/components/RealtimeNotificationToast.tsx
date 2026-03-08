@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
 const kindConfig: Record<string, { icon: string; route?: string }> = {
   friend_request: { icon: "👋", route: "/profile" },
@@ -18,6 +19,7 @@ const RealtimeNotificationToast = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const mountedAt = useRef(Date.now());
+  const { isEnabled } = useNotificationPrefs();
 
   useEffect(() => {
     if (!user) return;
@@ -34,11 +36,14 @@ const RealtimeNotificationToast = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          // Skip notifications that were created before this component mounted
           const created = new Date((payload.new as any).created_at).getTime();
           if (created < mountedAt.current - 2000) return;
 
           const n = payload.new as { title: string; message: string; kind: string };
+
+          // Respect user preferences
+          if (!isEnabled(n.kind)) return;
+
           const cfg = kindConfig[n.kind] || kindConfig.info;
 
           toast(`${cfg.icon} ${n.title}`, {
@@ -55,7 +60,7 @@ const RealtimeNotificationToast = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, navigate]);
+  }, [user?.id, navigate, isEnabled]);
 
   return null;
 };
