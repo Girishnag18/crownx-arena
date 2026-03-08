@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Plus, Search, Trophy, ArrowLeft, Crown, Loader2, LogOut, UserPlus } from "lucide-react";
+import { Shield, Users, Plus, Search, Trophy, ArrowLeft, Crown, Loader2, LogOut, UserPlus, Swords } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import TeamBattlePanel from "@/components/social/TeamBattlePanel";
 
 interface Club {
   id: string;
