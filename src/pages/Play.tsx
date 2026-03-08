@@ -571,13 +571,14 @@ const Play = () => {
             </motion.div>
           </div>
 
+          {/* Side panel - collapsible on mobile */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-4"
+            className="lg:col-span-3 space-y-3 sm:space-y-4"
           >
-            <div className="glass-card p-5 border-glow space-y-3">
+            <div className="glass-card p-3 sm:p-5 border-glow space-y-2 sm:space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
                 {isOnline ? `Live match: ${online.playerName} vs ${online.opponentName}` : "Local Game"}
