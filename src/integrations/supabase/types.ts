@@ -343,6 +343,57 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_matches: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          id: string
+          player1_id: string
+          player2_id: string | null
+          result: string
+          round: number
+          tournament_id: string
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          player1_id: string
+          player2_id?: string | null
+          result?: string
+          round?: number
+          tournament_id: string
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          player1_id?: string
+          player2_id?: string | null
+          result?: string
+          round?: number
+          tournament_id?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_matches_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_registrations: {
         Row: {
           id: string
@@ -376,32 +427,41 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          current_round: number
           id: string
           max_players: number
+          max_rounds: number
           name: string
           prize_pool: number
           starts_at: string | null
           status: string
+          tournament_type: string
         }
         Insert: {
           created_at?: string
           created_by: string
+          current_round?: number
           id?: string
           max_players?: number
+          max_rounds?: number
           name: string
           prize_pool?: number
           starts_at?: string | null
           status?: string
+          tournament_type?: string
         }
         Update: {
           created_at?: string
           created_by?: string
+          current_round?: number
           id?: string
           max_players?: number
+          max_rounds?: number
           name?: string
           prize_pool?: number
           starts_at?: string | null
           status?: string
+          tournament_type?: string
         }
         Relationships: []
       }
