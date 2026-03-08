@@ -78,6 +78,7 @@ const Notifications = () => {
     setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
   };
 
+  const markNotificationRead = async (notificationId: string) => {
     await (supabase as any).from("player_notifications").update({ is_read: true }).eq("id", notificationId);
     setNotifications((prev) => prev.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item)));
   };
