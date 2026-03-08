@@ -72,6 +72,12 @@ const Notifications = () => {
   const unreadCount = useMemo(() => notifications.filter((item) => !item.is_read).length, [notifications]);
   const grouped = useMemo(() => groupByDate(notifications), [notifications]);
 
+  const markAllRead = async () => {
+    if (!user || unreadCount === 0) return;
+    await (supabase as any).from("player_notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+    setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+  };
+
   const markNotificationRead = async (notificationId: string) => {
     await (supabase as any).from("player_notifications").update({ is_read: true }).eq("id", notificationId);
     setNotifications((prev) => prev.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item)));
@@ -89,7 +95,17 @@ const Notifications = () => {
               <p className="text-xs sm:text-sm text-muted-foreground">Stay updated with messages from CrownX Arena.</p>
             </div>
           </div>
-          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Unread: {unreadCount}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllRead}
+                className="text-[10px] sm:text-xs text-primary font-semibold hover:underline whitespace-nowrap"
+              >
+                Mark all read
+              </button>
+            )}
+            <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{unreadCount}</span>
+          </div>
         </header>
 
         {notifications.length === 0 ? (
