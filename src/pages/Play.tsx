@@ -23,12 +23,12 @@ import { stockfish } from "@/services/stockfishService";
 
 type AIDifficulty = "beginner" | "intermediate" | "advanced";
 
-interface AILevelConfig { depth: number; eloLabel: string; thinkMs: [number, number]; useStockfish: boolean; blunderChance: number }
+interface AILevelConfig { depth: number; thinkMs: [number, number]; useStockfish: boolean; topN: number; noiseCP: number }
 
 const AI_CONFIG: Record<AIDifficulty, AILevelConfig> = {
-  beginner:     { depth: 2,  eloLabel: "~600",  thinkMs: [200, 600],  useStockfish: false, blunderChance: 0.35 },
-  intermediate: { depth: 10, eloLabel: "~1200", thinkMs: [400, 1200], useStockfish: true,  blunderChance: 0.12 },
-  advanced:     { depth: 16, eloLabel: "~2000", thinkMs: [600, 1800], useStockfish: true,  blunderChance: 0.02 },
+  beginner:     { depth: 2,  thinkMs: [300, 800],  useStockfish: false, topN: 5, noiseCP: 200 },
+  intermediate: { depth: 12, thinkMs: [500, 1400], useStockfish: true,  topN: 3, noiseCP: 60 },
+  advanced:     { depth: 18, thinkMs: [700, 2000], useStockfish: true,  topN: 2, noiseCP: 15 },
 };
 
 const STREAK_KEY = "chess_ai_streak"; // positive = player winning streak, negative = losing streak
