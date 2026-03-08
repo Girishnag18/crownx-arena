@@ -18,6 +18,10 @@ interface BoardSquareProps {
   showFile?: string;
   onClick: () => void;
   onTouchStart?: (e: React.TouchEvent) => void;
+  /** Slide offset in square units — piece slides from this offset to (0,0) */
+  slideFrom?: { dx: number; dy: number };
+  /** Key that changes per move to retrigger slide animation */
+  slideAnimKey?: number;
 }
 
 const BoardSquare = React.memo(({
