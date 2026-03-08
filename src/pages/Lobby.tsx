@@ -40,7 +40,7 @@ const Lobby = () => {
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [chess960, setChess960] = useState(false);
-  const [roomPreview, setRoomPreview] = useState<{ host_username: string | null; duration_seconds: number | null } | null>(null);
+  const [roomPreview, setRoomPreview] = useState<{ host_username: string | null; duration_seconds: number | null; increment_seconds: number | null } | null>(null);
   const [fetchingPreview, setFetchingPreview] = useState(false);
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -156,7 +156,7 @@ const Lobby = () => {
     (async () => {
       const { data: room } = await supabase
         .from("game_rooms")
-        .select("duration_seconds, host_id")
+        .select("duration_seconds, increment_seconds, host_id")
         .eq("room_code", sanitized)
         .eq("status", "waiting")
         .single();
@@ -178,6 +178,7 @@ const Lobby = () => {
       setRoomPreview({
         host_username: profile?.username ?? "Unknown",
         duration_seconds: (room as any).duration_seconds ?? null,
+        increment_seconds: (room as any).increment_seconds ?? null,
       });
       setFetchingPreview(false);
     })();
@@ -557,7 +558,7 @@ const Lobby = () => {
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationFromTC); setCreatingRoom(false); }}
+            onClick={async () => { setCreatingRoom(true); await privateRoom.createRoom(durationFromTC, selectedTimeControl?.incrementSeconds ?? null); setCreatingRoom(false); }}
             disabled={creatingRoom}
             className="w-full glass-card p-6 text-center disabled:opacity-70 transition-all hover:border-primary/25 border-glow"
           >
@@ -616,8 +617,11 @@ const Lobby = () => {
                   <span className="font-display font-bold text-xs">
                     {roomPreview.duration_seconds
                       ? (() => {
-                          const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds);
-                          return tc ? `${tc.label} (${tc.category})` : `${roomPreview.duration_seconds / 60} min`;
+                          const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds && t.incrementSeconds === (roomPreview.increment_seconds ?? 0));
+                          if (tc) return `${tc.label} (${tc.category})`;
+                          const mins = roomPreview.duration_seconds / 60;
+                          const inc = roomPreview.increment_seconds ?? 0;
+                          return inc > 0 ? `${mins}+${inc}` : `${mins} min`;
                         })()
                       : "No time limit"}
                   </span>

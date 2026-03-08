@@ -618,6 +618,7 @@ export type Database = {
           guest_id: string | null
           host_id: string
           id: string
+          increment_seconds: number | null
           room_code: string
           status: string
         }
@@ -628,6 +629,7 @@ export type Database = {
           guest_id?: string | null
           host_id: string
           id?: string
+          increment_seconds?: number | null
           room_code: string
           status?: string
         }
@@ -638,6 +640,7 @@ export type Database = {
           guest_id?: string | null
           host_id?: string
           id?: string
+          increment_seconds?: number | null
           room_code?: string
           status?: string
         }

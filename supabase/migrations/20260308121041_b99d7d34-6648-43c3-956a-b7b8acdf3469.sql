@@ -1,0 +1,1 @@
+ALTER TABLE public.game_rooms ADD COLUMN increment_seconds integer DEFAULT NULL;
