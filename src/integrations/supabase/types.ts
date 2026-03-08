@@ -507,6 +507,45 @@ export type Database = {
           },
         ]
       }
+      leaderboard_seasons: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          name: string
+          reward_1st: number
+          reward_2nd: number
+          reward_3rd: number
+          season_number: number
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          name: string
+          reward_1st?: number
+          reward_2nd?: number
+          reward_3rd?: number
+          season_number?: number
+          starts_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          name?: string
+          reward_1st?: number
+          reward_2nd?: number
+          reward_3rd?: number
+          season_number?: number
+          starts_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       matchmaking_queue: {
         Row: {
           created_at: string
@@ -823,6 +862,44 @@ export type Database = {
           themes?: string[]
         }
         Relationships: []
+      }
+      season_entries: {
+        Row: {
+          games_played: number
+          id: string
+          score: number
+          season_id: string
+          updated_at: string
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          games_played?: number
+          id?: string
+          score?: number
+          season_id: string
+          updated_at?: string
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          games_played?: number
+          id?: string
+          score?: number
+          season_id?: string
+          updated_at?: string
+          user_id?: string
+          wins?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_entries_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       studies: {
         Row: {
