@@ -421,10 +421,10 @@ const Play = () => {
     : null;
 
   const PlayerLabel = ({ name, avatarUrl, title, isTop }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null; isTop?: boolean }) => (
-    <div className="flex items-center gap-2 min-w-0">
-      <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-border/50 shrink-0">
+    <div className="flex items-center gap-2.5 min-w-0">
+      <Avatar className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-border/40 shrink-0 shadow-sm">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[10px] bg-secondary font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+        <AvatarFallback className="text-[10px] bg-gradient-to-br from-secondary to-secondary/60 font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">
         <span className="font-display font-bold text-xs sm:text-sm truncate block">{name}</span>
