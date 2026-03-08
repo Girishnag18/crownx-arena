@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface BoardTheme {
   id: string;
@@ -75,6 +76,7 @@ export const BoardSettingsProvider = ({ children }: { children: ReactNode }) => 
   const [soundEnabled, setSoundEnabled] = useState(() => load("soundEnabled", defaults.soundEnabled));
   const [moveAnimation, setMoveAnimation] = useState(() => load("moveAnimation", defaults.moveAnimation));
   const [showCoordinates, setShowCoordinates] = useState(() => load("showCoordinates", defaults.showCoordinates));
+  const [shopTheme, setShopTheme] = useState<BoardTheme | null>(null);
 
   useEffect(() => { localStorage.setItem("board_themeId", JSON.stringify(themeId)); }, [themeId]);
   useEffect(() => { localStorage.setItem("board_pieceSetId", JSON.stringify(pieceSetId)); }, [pieceSetId]);
@@ -82,7 +84,54 @@ export const BoardSettingsProvider = ({ children }: { children: ReactNode }) => 
   useEffect(() => { localStorage.setItem("board_moveAnimation", JSON.stringify(moveAnimation)); }, [moveAnimation]);
   useEffect(() => { localStorage.setItem("board_showCoordinates", JSON.stringify(showCoordinates)); }, [showCoordinates]);
 
-  const theme = BOARD_THEMES.find(t => t.id === themeId) || BOARD_THEMES[0];
+  // Load equipped board_theme from shop purchases
+  useEffect(() => {
+    const loadEquippedBoardTheme = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setShopTheme(null); return; }
+
+      const { data: purchases } = await (supabase as any)
+        .from("shop_purchases")
+        .select("item_id")
+        .eq("user_id", session.user.id)
+        .eq("is_equipped", true);
+
+      if (!purchases || purchases.length === 0) { setShopTheme(null); return; }
+
+      const itemIds = purchases.map((p: any) => p.item_id);
+      const { data: items } = await (supabase as any)
+        .from("shop_items")
+        .select("name, category, metadata")
+        .in("id", itemIds)
+        .eq("category", "board_theme");
+
+      if (items && items.length > 0) {
+        const meta = items[0].metadata as any;
+        if (meta?.light_square && meta?.dark_square) {
+          setShopTheme({
+            id: "shop_equipped",
+            name: items[0].name,
+            lightSquare: meta.light_square,
+            darkSquare: meta.dark_square,
+          });
+        }
+      } else {
+        setShopTheme(null);
+      }
+    };
+
+    loadEquippedBoardTheme();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadEquippedBoardTheme();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const baseTheme = BOARD_THEMES.find(t => t.id === themeId) || BOARD_THEMES[0];
+  // Shop-equipped theme overrides the local setting
+  const theme = shopTheme || baseTheme;
   const pieceSet = PIECE_SETS.find(p => p.id === pieceSetId) || PIECE_SETS[0];
 
   return (
