@@ -130,6 +130,80 @@ export type Database = {
         }
         Relationships: []
       }
+      club_members: {
+        Row: {
+          club_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          avg_rating: number
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          logo_url: string | null
+          member_count: number
+          name: string
+          owner_id: string
+          total_games: number
+          total_wins: number
+        }
+        Insert: {
+          avg_rating?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          logo_url?: string | null
+          member_count?: number
+          name: string
+          owner_id: string
+          total_games?: number
+          total_wins?: number
+        }
+        Update: {
+          avg_rating?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          logo_url?: string | null
+          member_count?: number
+          name?: string
+          owner_id?: string
+          total_games?: number
+          total_wins?: number
+        }
+        Relationships: []
+      }
       daily_puzzles: {
         Row: {
           active_date: string

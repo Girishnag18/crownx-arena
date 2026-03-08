@@ -12,6 +12,7 @@ const navLinks = [
   { to: "/", label: "Home" },
   { to: "/lobby", label: "Play Online" },
   { to: "/puzzles", label: "Puzzles" },
+  { to: "/clubs", label: "Clubs" },
   { to: "/studies", label: "Studies" },
   { to: "/openings", label: "Openings" },
   { to: "/challenges", label: "Challenges" },
