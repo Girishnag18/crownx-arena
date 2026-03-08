@@ -1,8 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 const buildRedirect = (path: string) => `${window.location.origin}${path}`;
-const oauthCallbackPath = "/auth/callback";
-
 const passwordPolicyValid = (password: string) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(password);
 
 export const authService = {
