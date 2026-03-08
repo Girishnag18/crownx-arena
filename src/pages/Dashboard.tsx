@@ -373,53 +373,21 @@ const Dashboard = () => {
             {/* ── RIGHT ── */}
             <div className="lg:col-span-8 space-y-3">
 
-              {/* Recent Games */}
-              {finishedGames.length > 0 && (
-                <motion.div id="history-section" variants={fadeUp} className={`${card} overflow-hidden scroll-mt-20`}>
-                  <div className={cardHeader}>
-                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                      <div className={sectionIcon}><Clock className="w-3 h-3 text-primary" /></div>
-                      Recent Games
-                    </h3>
-                    <span className="text-[10px] text-muted-foreground font-medium">{finishedGames.length} games</span>
+              {/* Match History Quick Link */}
+              <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
+                <button onClick={() => navigate("/match-history")} className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-secondary/6 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/12 to-primary/4 border border-primary/15 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display font-bold text-sm">Match History</p>
+                      <p className="text-[10px] text-muted-foreground">View all your recent games & replays</p>
+                    </div>
                   </div>
-                  <div className="divide-y divide-border/10">
-                    {finishedGames.map((g) => {
-                      const userWon = g.winner_id === user?.id;
-                      const white = g.player_white === user?.id;
-                      const opponent = white ? g.black_name || "Opponent" : g.white_name || "Opponent";
-                      const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
-                      return (
-                        <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/6 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${result === "Win" ? "bg-emerald-500" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
-                            <div>
-                              <span className="text-xs font-display font-bold">{opponent}</span>
-                              <p className="text-[10px] text-muted-foreground">{white ? "♔ White" : "♚ Black"} · {g.result_type}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2.5">
-                            <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${result === "Win" ? "bg-emerald-500/10 text-emerald-500" : result === "Loss" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>{result}</span>
-                            <span className="text-[10px] text-muted-foreground tabular-nums">{new Date(g.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Empty state for right column when no games */}
-              {finishedGames.length === 0 && (
-                <motion.div variants={fadeUp} className={`${card} p-8 text-center`}>
-                  <div className="w-12 h-12 rounded-xl bg-secondary/30 flex items-center justify-center mx-auto mb-3">
-                    <Gamepad2 className="w-6 h-6 text-muted-foreground/30" />
-                  </div>
-                  <p className="text-sm font-display font-bold text-muted-foreground">No games yet</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">Play your first game to see results here</p>
-                  <button onClick={() => navigate("/lobby")} className="mt-3 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-display font-bold hover:opacity-90 transition-opacity">Play Now</button>
-                </motion.div>
-              )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </button>
+              </motion.div>
             </div>
           </div>
 
