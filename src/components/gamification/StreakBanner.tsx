@@ -105,13 +105,22 @@ const StreakBanner = () => {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: -60 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -60 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
           transition={{ type: "spring", damping: 20 }}
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <div className="rounded-xl border border-primary/30 bg-card/95 backdrop-blur-lg shadow-xl p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+            onClick={() => setVisible(false)}
+          />
+
+          <div className="relative w-full max-w-sm rounded-xl border border-primary/30 bg-card/95 backdrop-blur-lg shadow-xl p-5">
             <button
               onClick={() => setVisible(false)}
               className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
