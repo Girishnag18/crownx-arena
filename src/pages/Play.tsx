@@ -79,6 +79,8 @@ const Play = () => {
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
   const [aiThinking, setAiThinking] = useState(false);
+  const [aiThinkProgress, setAiThinkProgress] = useState(0);
+  const aiThinkTimerRef = useRef<number | null>(null);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
