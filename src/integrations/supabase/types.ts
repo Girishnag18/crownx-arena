@@ -670,12 +670,15 @@ export type Database = {
       }
       games: {
         Row: {
+          black_time_ms: number | null
           created_at: string
           current_fen: string | null
           duration_seconds: number | null
           ended_at: string | null
           game_mode: string
           id: string
+          increment_seconds: number | null
+          last_move_at: string | null
           moves: Json | null
           pgn: string | null
           player_black: string | null
@@ -683,15 +686,19 @@ export type Database = {
           player1_id: string
           player2_id: string | null
           result_type: string
+          white_time_ms: number | null
           winner_id: string | null
         }
         Insert: {
+          black_time_ms?: number | null
           created_at?: string
           current_fen?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
+          last_move_at?: string | null
           moves?: Json | null
           pgn?: string | null
           player_black?: string | null
@@ -699,15 +706,19 @@ export type Database = {
           player1_id: string
           player2_id?: string | null
           result_type?: string
+          white_time_ms?: number | null
           winner_id?: string | null
         }
         Update: {
+          black_time_ms?: number | null
           created_at?: string
           current_fen?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
+          last_move_at?: string | null
           moves?: Json | null
           pgn?: string | null
           player_black?: string | null
@@ -715,6 +726,7 @@ export type Database = {
           player1_id?: string
           player2_id?: string | null
           result_type?: string
+          white_time_ms?: number | null
           winner_id?: string | null
         }
         Relationships: [
