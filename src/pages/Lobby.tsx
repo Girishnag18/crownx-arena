@@ -182,7 +182,7 @@ const Lobby = () => {
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Shuffle className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Chess960</h3><p className="text-sm text-muted-foreground">Fischer Random — randomized starting position</p></div></div>
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play${selectedTimeControl ? `?tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => { const params = new URLSearchParams(); if (selectedTimeControl) params.set("tc", selectedTimeControl.label); if (chess960) params.set("variant", "chess960"); navigate(`/play${params.toString() ? `?${params}` : ""}`); }} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Crown className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Local Play</h3><p className="text-sm text-muted-foreground">Play against a friend on this device</p></div></div>
               </motion.button>
 
