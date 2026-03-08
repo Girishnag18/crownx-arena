@@ -142,7 +142,7 @@ const Index = () => {
               </Link>
             </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* Stats bar — outside parallax so it stays visible */}
         <motion.div
