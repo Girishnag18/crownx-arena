@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { soundManager } from "@/services/soundManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateChess960Fen } from "@/utils/chess960";
 
@@ -214,6 +215,7 @@ export const usePrivateRoom = () => {
 
           if (updated.status === "joined" && updated.guest_id) {
             setStatus("joined");
+            soundManager.play("playerJoined");
           }
 
           if (updated.status === "playing" && updated.game_id) {

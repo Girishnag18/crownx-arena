@@ -3,7 +3,7 @@
  * Generates synthetic chess sounds using Web Audio API — no external files needed.
  */
 
-type SoundType = "move" | "capture" | "check" | "castle" | "promote" | "gameStart" | "gameEnd" | "illegal";
+type SoundType = "move" | "capture" | "check" | "castle" | "promote" | "gameStart" | "gameEnd" | "illegal" | "playerJoined";
 
 class SoundManager {
   private ctx: AudioContext | null = null;
@@ -63,6 +63,11 @@ class SoundManager {
           break;
         case "illegal":
           this.playTone(ctx, 200, 0.1, "sawtooth", 0.15);
+          break;
+        case "playerJoined":
+          this.playTone(ctx, 523, 0.1, "sine", 0.3);
+          setTimeout(() => this.playTone(ctx, 784, 0.1, "sine", 0.3), 120);
+          setTimeout(() => this.playTone(ctx, 1047, 0.15, "sine", 0.35), 240);
           break;
       }
     } catch {
