@@ -1,21 +1,7 @@
 import React from "react";
 import { Square } from "chess.js";
 import { motion } from "framer-motion";
-
-const PIECE_SPRITES: Record<string, string> = {
-  wp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wp.png",
-  wn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wn.png",
-  wb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wb.png",
-  wr: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wr.png",
-  wq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wq.png",
-  wk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
-  bp: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bp.png",
-  bn: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bn.png",
-  bb: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bb.png",
-  br: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/br.png",
-  bq: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bq.png",
-  bk: "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bk.png",
-};
+import { useBoardSettings } from "@/contexts/BoardSettingsContext";
 
 interface BoardSquareProps {
   square: Square;
@@ -50,24 +36,36 @@ const BoardSquare = React.memo(({
   onClick,
   onTouchStart,
 }: BoardSquareProps) => {
+  const { theme, pieceSet, moveAnimation } = useBoardSettings();
   const hasPiece = !!pieceColor && !!pieceType;
   const spriteKey = hasPiece ? pieceColor + pieceType : "";
+  const spriteUrl = hasPiece ? `${pieceSet.baseUrl}/${spriteKey}.png` : "";
+
+  const bgColor = isSelected
+    ? "rgba(var(--primary-rgb, 139, 92, 246), 0.35)"
+    : isLastMove
+    ? "rgba(255, 255, 100, 0.45)"
+    : isKingInCheck
+    ? "rgba(239, 68, 68, 0.45)"
+    : isPremove
+    ? "rgba(96, 165, 250, 0.4)"
+    : isLight
+    ? theme.lightSquare
+    : theme.darkSquare;
+
+  const coordColor = isLight ? theme.darkSquare : theme.lightSquare;
 
   return (
     <button
       onClick={onClick}
       onTouchStart={onTouchStart}
-      className={`board-square relative flex items-center justify-center transition-all duration-300 touch-none ${
-        isLight ? "chess-board-light" : "chess-board-dark"
-      } ${isSelected ? "!bg-primary/35" : ""} ${
-        isLastMove ? "!bg-yellow-300/60" : ""
-      } ${isKingInCheck ? "!bg-destructive/45" : ""} ${
-        isPremove ? "!bg-blue-400/40" : ""
-      }`}
+      className="board-square relative flex items-center justify-center touch-none"
+      style={{ backgroundColor: bgColor, transition: "background-color 0.15s" }}
     >
       {isMoveDestination && (
         <motion.div
-          className="absolute inset-[14%] rounded-full border-2 border-yellow-400/80"
+          className="absolute inset-[14%] rounded-full border-2"
+          style={{ borderColor: "rgba(234, 179, 8, 0.8)" }}
           initial={{ scale: 0.7, opacity: 0.2 }}
           animate={{ scale: 1.15, opacity: 0 }}
           transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
@@ -75,7 +73,8 @@ const BoardSquare = React.memo(({
       )}
       {isPremove && (
         <motion.div
-          className="absolute inset-0 border-2 border-blue-400/60"
+          className="absolute inset-0 border-2"
+          style={{ borderColor: "rgba(96, 165, 250, 0.6)" }}
           initial={{ opacity: 0.4 }}
           animate={{ opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 1.5, repeat: Infinity }}
@@ -85,28 +84,38 @@ const BoardSquare = React.memo(({
         <div className="absolute w-[28%] h-[28%] rounded-full bg-black/15" />
       )}
       {isLegal && hasPiece && (
-        <div className="absolute inset-[5%] rounded-full border-[3px] border-yellow-500/45" />
+        <div className="absolute inset-[5%] rounded-full border-[3px]" style={{ borderColor: "rgba(234, 179, 8, 0.45)" }} />
       )}
       {hasPiece && (
-        <motion.img
-          layout
-          initial={{ scale: 0.9, opacity: 0.85 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
-          src={PIECE_SPRITES[spriteKey]}
-          alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
-          draggable={false}
-          className="w-[82%] h-[82%] object-contain select-none pointer-events-none"
-          style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
-        />
+        moveAnimation ? (
+          <motion.img
+            layout
+            initial={{ scale: 0.9, opacity: 0.85 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
+            src={spriteUrl}
+            alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
+            draggable={false}
+            className="w-[82%] h-[82%] object-contain select-none pointer-events-none"
+            style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
+          />
+        ) : (
+          <img
+            src={spriteUrl}
+            alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
+            draggable={false}
+            className="w-[82%] h-[82%] object-contain select-none pointer-events-none"
+            style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
+          />
+        )
       )}
       {showRank && (
-        <span className={`absolute top-0.5 left-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
+        <span className="absolute top-0.5 left-1 text-[0.55rem] font-bold" style={{ color: coordColor, opacity: 0.7 }}>
           {showRank}
         </span>
       )}
       {showFile && (
-        <span className={`absolute bottom-0.5 right-1 text-[0.55rem] font-bold ${isLight ? "text-amber-900/60" : "text-amber-100/60"}`}>
+        <span className="absolute bottom-0.5 right-1 text-[0.55rem] font-bold" style={{ color: coordColor, opacity: 0.7 }}>
           {showFile}
         </span>
       )}
