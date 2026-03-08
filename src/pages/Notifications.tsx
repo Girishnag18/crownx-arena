@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 type PlayerNotification = {
   id: string;
@@ -16,20 +17,19 @@ const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<PlayerNotification[]>([]);
 
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("player_notifications")
+      .select("id,title,message,kind,is_read,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(60);
+    setNotifications((data || []) as PlayerNotification[]);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
-
-    const loadNotifications = async () => {
-      const { data } = await (supabase as any)
-        .from("player_notifications")
-        .select("id,title,message,kind,is_read,created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(60);
-
-      setNotifications((data || []) as PlayerNotification[]);
-    };
-
     loadNotifications();
 
     const channel = supabase
@@ -51,6 +51,7 @@ const Notifications = () => {
 
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={loadNotifications}>
       <header className="glass-card p-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6 text-primary" />
@@ -75,6 +76,7 @@ const Notifications = () => {
           </button>
         ))}
       </section>
+      </PullToRefresh>
     </main>
   );
 };

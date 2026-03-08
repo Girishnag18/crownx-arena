@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight, Crown, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import CrownGiftDialog from "@/components/social/CrownGiftDialog";
 import FriendSearchPanel from "@/components/social/FriendSearchPanel";
 import PendingRequestsPanel from "@/components/social/PendingRequestsPanel";
 import { format } from "date-fns";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface FriendProfile {
   id: string;
@@ -156,6 +157,10 @@ const Social = () => {
   const onlineFriends = friends.filter(f => onlineIds.has(f.id));
   const offlineFriends = friends.filter(f => !onlineIds.has(f.id));
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadData();
+  }, [user]);
+
   if (loading) {
     return (
       <main className="page-container flex items-center justify-center min-h-[60vh]">
@@ -166,6 +171,7 @@ const Social = () => {
 
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl mx-auto space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-xl sm:text-3xl font-bold font-display flex items-center gap-2">
@@ -309,6 +315,7 @@ const Social = () => {
         )}
       </AnimatePresence>
       </div>
+      </PullToRefresh>
     </main>
   );
 };

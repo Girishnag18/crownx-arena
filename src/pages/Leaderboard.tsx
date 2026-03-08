@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, Crown, Trophy, Clock, Medal, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface LeaderboardPlayer {
   id: string;
@@ -165,8 +166,14 @@ const Leaderboard = () => {
     return idx >= 0 ? idx + 1 : null;
   }, [seasonEntries, user]);
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([loadLeaderboard(), loadSeasons(), loadFriendsLeaderboard()]);
+    if (activeSeason) await loadSeasonEntries(activeSeason.id);
+  }, [activeSeason]);
+
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-5xl mx-auto space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-bold font-display">Leaderboards</h1>
@@ -392,6 +399,7 @@ const Leaderboard = () => {
         </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
     </main>
   );
 };
