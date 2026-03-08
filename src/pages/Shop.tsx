@@ -146,20 +146,20 @@ const Shop = () => {
   const ownedItems = items.filter(i => purchases.has(i.id));
 
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="container max-w-4xl pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="glass-card p-6 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <ShoppingBag className="w-7 h-7 text-primary" />
+      <div className="glass-card p-4 sm:p-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ShoppingBag className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold font-display">Crown Shop</h1>
-            <p className="text-sm text-muted-foreground">Spend your Crowns on exclusive cosmetics.</p>
+            <h1 className="text-xl sm:text-3xl font-bold font-display">Crown Shop</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Spend your Crowns on exclusive cosmetics.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-2">
-          <Crown className="w-5 h-5 text-amber-500" />
-          <span className="font-bold text-lg">{Number(walletBalance).toFixed(0)}</span>
-          <span className="text-xs text-muted-foreground">Crowns</span>
+        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2">
+          <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+          <span className="font-bold text-sm sm:text-lg">{Number(walletBalance).toFixed(0)}</span>
+          <span className="text-[10px] sm:text-xs text-muted-foreground">Crowns</span>
         </div>
       </div>
 

@@ -144,7 +144,7 @@ const Lobby = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
         <AnimatePresence mode="wait">
           {!mode ? (

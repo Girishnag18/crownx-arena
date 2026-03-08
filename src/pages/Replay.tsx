@@ -209,7 +209,7 @@ const Replay = () => {
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
           {/* Board Column */}
           <div className="lg:col-span-8 flex flex-col items-center">
             {/* Top player */}

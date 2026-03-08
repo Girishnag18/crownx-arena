@@ -130,11 +130,11 @@ const DailyRewards = () => {
           </div>
 
           {/* 7-Day Streak Rewards */}
-          <div className="glass-card p-6 mb-6">
-            <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
+          <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" /> 7-Day Streak Rewards
             </h2>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2">
               {STREAK_BONUSES.map((bonus, i) => {
                 const dayNum = i + 1;
                 const isReached = currentStreak >= dayNum;
