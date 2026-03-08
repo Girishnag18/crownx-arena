@@ -154,7 +154,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-20 pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -163,12 +163,12 @@ const Settings = () => {
         >
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
 
-          <h1 className="font-display text-3xl font-bold mb-8">Profile Settings</h1>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Profile Settings</h1>
 
           {/* Avatar & identity */}
           <div className="glass-card p-6 mb-6">
