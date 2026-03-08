@@ -639,6 +639,7 @@ const Play = () => {
                 brilliants={0}
                 onClose={() => setShowAICoach(false)}
               />
+            )}
           </motion.div>
         </div>
       </div>
