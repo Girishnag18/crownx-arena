@@ -23,27 +23,25 @@ import { stockfish } from "@/services/stockfishService";
 
 type AIDifficulty = "beginner" | "intermediate" | "advanced";
 
-interface AILevelConfig { depth: number; eloLabel: string; thinkMs: [number, number]; useStockfish: boolean; blunderChance: number }
+interface AILevelConfig { depth: number; thinkMs: [number, number]; useStockfish: boolean; topN: number; noiseCP: number }
 
 const AI_CONFIG: Record<AIDifficulty, AILevelConfig> = {
-  beginner:     { depth: 2,  eloLabel: "~600",  thinkMs: [200, 600],  useStockfish: false, blunderChance: 0.35 },
-  intermediate: { depth: 10, eloLabel: "~1200", thinkMs: [400, 1200], useStockfish: true,  blunderChance: 0.12 },
-  advanced:     { depth: 16, eloLabel: "~2000", thinkMs: [600, 1800], useStockfish: true,  blunderChance: 0.02 },
+  beginner:     { depth: 2,  thinkMs: [300, 800],  useStockfish: false, topN: 5, noiseCP: 200 },
+  intermediate: { depth: 12, thinkMs: [500, 1400], useStockfish: true,  topN: 3, noiseCP: 60 },
+  advanced:     { depth: 18, thinkMs: [700, 2000], useStockfish: true,  topN: 2, noiseCP: 15 },
 };
 
 const STREAK_KEY = "chess_ai_streak"; // positive = player winning streak, negative = losing streak
 
 function getAdaptiveConfig(base: AILevelConfig, streak: number): AILevelConfig {
-  // Player on a win streak → AI gets harder (less blunders, more depth)
-  // Player on a lose streak → AI gets easier (more blunders, less depth)
   const clampedStreak = Math.max(-5, Math.min(5, streak));
-  const blunderAdj = clampedStreak * -0.04; // win streak → fewer blunders; lose streak → more
-  const depthAdj = Math.round(clampedStreak * 1); // ±1 depth per streak game
+  const depthAdj = Math.round(clampedStreak * 1);
+  const noiseAdj = clampedStreak * -8; // win streak → less noise; lose streak → more noise
 
   return {
     ...base,
-    depth: Math.max(1, Math.min(20, base.depth + depthAdj)),
-    blunderChance: Math.max(0.01, Math.min(0.6, base.blunderChance + blunderAdj)),
+    depth: Math.max(1, Math.min(22, base.depth + depthAdj)),
+    noiseCP: Math.max(5, Math.min(300, base.noiseCP + noiseAdj)),
   };
 }
 
@@ -69,7 +67,6 @@ const Play = () => {
   const aiConfig = useMemo(() => getAdaptiveConfig(AI_CONFIG[difficulty] || AI_CONFIG.intermediate, aiStreak), [difficulty, aiStreak]);
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
-  const aiElo = isRankedAI ? playerElo + 20 : parseInt((AI_CONFIG[difficulty] || AI_CONFIG.intermediate).eloLabel.replace("~", ""));
 
   const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
   const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
@@ -255,39 +252,58 @@ const Play = () => {
 
     const thinkDelay = aiConfig.thinkMs[0] + Math.random() * (aiConfig.thinkMs[1] - aiConfig.thinkMs[0]);
 
+    const pickWeighted = (candidates: Array<{ move: any; score: number }>) => {
+      // Add controlled noise and pick weighted by score
+      const noised = candidates.map(c => ({
+        ...c,
+        noisyScore: c.score + (Math.random() - 0.5) * aiConfig.noiseCP,
+      }));
+      noised.sort((a, b) => b.noisyScore - a.noisyScore);
+      // Always pick from topN candidates to maintain realism
+      const pool = noised.slice(0, Math.min(aiConfig.topN, noised.length));
+      // Weight towards best: exponential decay
+      const weights = pool.map((_, i) => Math.exp(-i * 0.8));
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * totalWeight;
+      for (let i = 0; i < pool.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return pool[i].move;
+      }
+      return pool[0].move;
+    };
+
     const makeAIMove = async () => {
       const moves = game.moves({ verbose: true });
       if (moves.length === 0) return;
 
-      // Random blunder: pick a random move instead of best
-      if (Math.random() < aiConfig.blunderChance) {
-        await new Promise(r => setTimeout(r, thinkDelay));
-        if (cancelled) return;
-        const pick = moves[Math.floor(Math.random() * moves.length)];
-        handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
-        setAiThinking(false);
-        return;
-      }
-
       if (aiConfig.useStockfish) {
-        // Use real Stockfish engine
         try {
-          const result = await stockfish.evaluate(game.fen(), aiConfig.depth);
-          const elapsed = performance.now();
+          // Evaluate top N moves by trying each and getting Stockfish eval
+          const startTime = performance.now();
+          const evaluations = await Promise.all(
+            moves.map(async (candidate) => {
+              const sim = new Chess(game.fen());
+              sim.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+              const ev = await stockfish.evaluate(sim.fen(), Math.max(6, aiConfig.depth - 4));
+              // Negate because eval is from opponent's perspective after our move
+              return { move: candidate, score: -ev.score };
+            })
+          );
+
+          const elapsed = performance.now() - startTime;
           const remaining = Math.max(0, thinkDelay - elapsed);
           await new Promise(r => setTimeout(r, remaining));
           if (cancelled) return;
-          
-          const bestMove = result.bestMove;
-          if (bestMove && bestMove.length >= 4) {
-            const from = bestMove.slice(0, 2) as Square;
-            const to = bestMove.slice(2, 4) as Square;
-            const promotion = bestMove.length > 4 ? bestMove[4] : undefined;
-            handleLocalMove(from, to, promotion);
-          }
+
+          evaluations.sort((a, b) => b.score - a.score);
+          const pick = pickWeighted(evaluations);
+          handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
         } catch {
-          // Fallback to random legal move
-          const pick = moves[Math.floor(Math.random() * moves.length)];
+          // Fallback: pick a reasonable move
+          await new Promise(r => setTimeout(r, thinkDelay));
+          if (cancelled) return;
+          const captures = moves.filter(m => m.captured);
+          const pick = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
           handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
         }
       } else {
@@ -304,9 +320,7 @@ const Play = () => {
           };
         }).sort((a, b) => b.score - a.score);
 
-        // Pick from top 3 for more variety in beginner
-        const window = Math.min(3, evaluated.length);
-        const pick = evaluated[Math.floor(Math.random() * window)].move;
+        const pick = pickWeighted(evaluated);
         handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
       }
 
@@ -577,13 +591,13 @@ const Play = () => {
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "b" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "b" ? `${diffLabel} AI` : `You (${playerElo})`}`
       : localTopName;
 
   const bottomPlayerName = isOnline
     ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "w" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "w" ? `${diffLabel} AI` : `You (${playerElo})`}`
       : localBottomName;
 
   const topAvatar = isOnline
