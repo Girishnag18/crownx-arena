@@ -346,25 +346,49 @@ const Lobby = () => {
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-8 text-center space-y-4">
           <Loader2 className="w-10 h-10 text-primary mx-auto animate-spin" />
           <h3 className="font-display font-bold text-lg">Searching…</h3>
-          <p className="text-sm text-muted-foreground">Looking for players near your rating</p>
-          {selectedTimeControl && (
-            <span className="inline-flex items-center gap-1.5 text-xs bg-secondary/60 border border-border/40 rounded-lg px-3 py-1.5 font-display font-bold">
-              <Timer className="w-3 h-3 text-primary" />
-              {selectedTimeControl.label} · {selectedTimeControl.category}
-            </span>
+          <p className="text-sm text-muted-foreground">
+            {matchmaking.searchElapsed >= 15
+              ? "Widening search range for faster match"
+              : "Looking for players near your rating"}
+          </p>
+          <span className="inline-flex items-center gap-1.5 text-xs bg-secondary/60 border border-border/40 rounded-lg px-3 py-1.5 font-display font-bold tabular-nums">
+            <Timer className="w-3 h-3 text-primary" />
+            {matchmaking.searchElapsed}s
+            {selectedTimeControl && ` · ${selectedTimeControl.label}`}
+          </span>
+          {matchmaking.searchElapsed >= 15 && (
+            <p className="text-[10px] text-amber-400 font-display font-bold uppercase tracking-wider animate-pulse">
+              Expanded rating range
+            </p>
           )}
           <div className="space-y-3 pt-2">
             <button onClick={() => matchmaking.cancelSearch()} className="text-sm text-muted-foreground hover:text-destructive transition-colors">Cancel Search</button>
-            <div className="border-t border-border/30 pt-4">
-              <p className="text-xs text-muted-foreground mb-2">No opponents?</p>
-              <button
-                onClick={() => { matchmaking.cancelSearch(); navigate(`/play?mode=computer&ranked=true${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`); }}
-                className="inline-flex items-center gap-2 border border-primary/30 text-primary px-4 py-2 rounded-lg text-sm font-display font-bold hover:bg-primary/10 transition-colors"
-              >
-                <Bot className="w-4 h-4" /> Play vs AI
-              </button>
-            </div>
           </div>
+        </div>
+      )}
+
+      {matchmaking.state === "timeout" && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-8 text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-1">
+            <X className="w-7 h-7 text-amber-400" />
+          </div>
+          <h3 className="font-display font-bold text-lg">No Match Found</h3>
+          <p className="text-sm text-muted-foreground">We couldn't find an opponent in time. Try again or play vs AI.</p>
+          <div className="flex gap-3 justify-center pt-2">
+            <button
+              onClick={() => matchmaking.retrySearch()}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" /> Search Again
+            </button>
+            <button
+              onClick={() => { matchmaking.cancelSearch(); navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`); }}
+              className="inline-flex items-center gap-2 border border-primary/30 text-primary font-display font-bold text-xs px-6 py-3 rounded-xl hover:bg-primary/10 transition-colors"
+            >
+              <Bot className="w-4 h-4" /> vs AI
+            </button>
+          </div>
+          <button onClick={handleBack} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Back to lobby</button>
         </div>
       )}
 
