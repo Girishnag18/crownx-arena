@@ -233,19 +233,19 @@ const Lobby = () => {
   // --------------- QUICK PLAY ---------------
   const renderQuickPlay = () => (
     <motion.div key="quick_play" {...cardMotion} className="space-y-4">
-      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back
+      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 mb-3">
-          <Swords className="w-6 h-6 text-primary" />
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-3 gold-glow">
+          <Swords className="w-7 h-7 text-primary" />
         </div>
         <h2 className="font-display text-xl font-bold">Quick Play</h2>
         <p className="text-xs text-muted-foreground mt-1">Choose time control and find a match</p>
       </div>
 
       {/* Time control integrated here */}
-      <div className="rounded-xl border border-border/40 bg-card/60 p-4">
+      <div className="glass-card p-4">
         <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
       </div>
 
