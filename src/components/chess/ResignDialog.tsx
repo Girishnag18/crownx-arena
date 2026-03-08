@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flag, Crown, Swords, BarChart3, Bot, ArrowLeft, RotateCcw, X } from "lucide-react";
+import { Flag, Crown, Swords, BarChart3, Bot, ArrowLeft, RotateCcw, X, Loader2, Check, XCircle } from "lucide-react";
 
 interface ResignDialogProps {
   open: boolean;
@@ -70,14 +70,19 @@ export const ResignConfirmDialog = ({ open, onConfirmResign, onCancel }: ResignD
   );
 };
 
+export type RematchState = "idle" | "offered" | "waiting" | "declined";
+
 interface GameOverPopupProps {
   open: boolean;
   result: string;
   moveCount: number;
   timeControlLabel?: string;
   isOnline: boolean;
+  rematchState?: RematchState;
   onNewGame: () => void;
   onRematch: () => void;
+  onAcceptRematch?: () => void;
+  onDeclineRematch?: () => void;
   onAnalyze: () => void;
   onAICoach: () => void;
   onBackToLobby: () => void;
@@ -89,14 +94,82 @@ export const GameOverPopup = ({
   moveCount,
   timeControlLabel,
   isOnline,
+  rematchState = "idle",
   onNewGame,
   onRematch,
+  onAcceptRematch,
+  onDeclineRematch,
   onAnalyze,
   onAICoach,
   onBackToLobby,
 }: GameOverPopupProps) => {
   const isWin = result.toLowerCase().includes("win") || result.toLowerCase().includes("checkmate!");
   const isDraw = result.toLowerCase().includes("draw") || result.toLowerCase().includes("stalemate");
+
+  const renderRematchButton = () => {
+    if (!isOnline) {
+      return (
+        <button
+          onClick={onRematch}
+          className="flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 font-display font-bold text-xs tracking-wider hover:opacity-90 transition-opacity"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Rematch
+        </button>
+      );
+    }
+
+    switch (rematchState) {
+      case "waiting":
+        return (
+          <button
+            disabled
+            className="flex items-center justify-center gap-2 rounded-xl bg-primary/20 border border-primary/30 text-primary py-3 font-display font-bold text-xs tracking-wider"
+          >
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            Waiting…
+          </button>
+        );
+      case "offered":
+        return (
+          <div className="col-span-2 flex gap-2">
+            <button
+              onClick={onAcceptRematch}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 font-display font-bold text-xs tracking-wider hover:opacity-90 transition-opacity"
+            >
+              <Check className="w-3.5 h-3.5" />
+              Accept Rematch
+            </button>
+            <button
+              onClick={onDeclineRematch}
+              className="flex items-center justify-center gap-2 rounded-xl border border-destructive/30 text-destructive py-3 px-4 font-display font-bold text-xs tracking-wider hover:bg-destructive/10 transition-colors"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      case "declined":
+        return (
+          <button
+            disabled
+            className="flex items-center justify-center gap-2 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive/60 py-3 font-display font-bold text-xs tracking-wider"
+          >
+            <XCircle className="w-3.5 h-3.5" />
+            Declined
+          </button>
+        );
+      default:
+        return (
+          <button
+            onClick={onRematch}
+            className="flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 font-display font-bold text-xs tracking-wider hover:opacity-90 transition-opacity"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Rematch
+          </button>
+        );
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -177,21 +250,30 @@ export const GameOverPopup = ({
               className="space-y-2"
             >
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={onRematch}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground py-3 font-display font-bold text-xs tracking-wider hover:opacity-90 transition-opacity"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Rematch
-                </button>
+                {rematchState === "offered" ? (
+                  renderRematchButton()
+                ) : (
+                  <>
+                    {renderRematchButton()}
+                    <button
+                      onClick={onNewGame}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-primary/30 text-primary py-3 font-display font-bold text-xs tracking-wider hover:bg-primary/10 transition-colors"
+                    >
+                      <Swords className="w-3.5 h-3.5" />
+                      New Game
+                    </button>
+                  </>
+                )}
+              </div>
+              {rematchState === "offered" && (
                 <button
                   onClick={onNewGame}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-primary/30 text-primary py-3 font-display font-bold text-xs tracking-wider hover:bg-primary/10 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-primary/30 text-primary py-3 font-display font-bold text-xs tracking-wider hover:bg-primary/10 transition-colors"
                 >
                   <Swords className="w-3.5 h-3.5" />
                   New Game
                 </button>
-              </div>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={onAnalyze}
