@@ -32,6 +32,7 @@ const Lobby = () => {
   const [worldChatInput, setWorldChatInput] = useState("");
   const [worldChatMessages, setWorldChatMessages] = useState<WorldChatMessage[]>([]);
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
+  const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
