@@ -95,6 +95,7 @@ export const useMatchmaking = () => {
   const startSearch = useCallback(async (gameMode = "quick_play", durationSeconds: number | null = null) => {
     if (!user) return;
 
+    searchStartedAt.current = new Date().toISOString();
     setState("searching");
     setError(null);
     setGameId(null);
