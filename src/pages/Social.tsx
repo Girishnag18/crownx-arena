@@ -127,7 +127,7 @@ const Social = () => {
 
   if (loading) {
     return (
-      <main className="container max-w-4xl py-24 px-4 flex items-center justify-center min-h-[60vh]">
+      <main className="container max-w-4xl pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4 flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </main>
     );
