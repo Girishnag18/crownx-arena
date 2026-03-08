@@ -335,7 +335,7 @@ const Lobby = () => {
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => matchmaking.startSearch("quick_play", durationFromTC)}
+          onClick={() => matchmaking.startSearch("quick_play", durationFromTC, incrementFromTC)}
           className="w-full rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-sm tracking-wider py-4 transition-all gold-glow hover:shadow-lg hover:shadow-primary/25"
         >
           {selectedTimeControl ? `FIND ${selectedTimeControl.label} MATCH` : "FIND MATCH"}
