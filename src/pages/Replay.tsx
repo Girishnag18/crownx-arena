@@ -200,7 +200,7 @@ const Replay = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-2 sm:px-4">
       <div className="container mx-auto max-w-[1300px]">
         <button
           onClick={() => navigate(-1)}
