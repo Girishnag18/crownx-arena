@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
           result_type: 'in_progress',
           current_fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           moves: [],
-          duration_seconds,
+          duration_seconds: null,
         })
         .select()
         .single();
