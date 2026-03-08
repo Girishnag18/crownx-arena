@@ -472,7 +472,7 @@ const Lobby = () => {
       {matchmaking.state === "error" && (
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center space-y-3">
           <p className="text-destructive text-sm">{matchmaking.error}</p>
-          <button onClick={() => matchmaking.startSearch("world_arena", durationFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs px-6 py-2.5 rounded-lg">
+          <button onClick={() => matchmaking.startSearch("world_arena", durationFromTC, incrementFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs px-6 py-2.5 rounded-lg">
             RETRY
           </button>
         </div>
