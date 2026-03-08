@@ -103,6 +103,7 @@ export const useOnlineGame = (gameId: string | null) => {
                   crown_score: profile.crown_score || 1200,
                   avatar_url: profile.avatar_url || null,
                   equippedTitle: titleMap.get(profile.id) || null,
+                  equippedFrame: frameMap.get(profile.id) || null,
                 } satisfies PlayerSummary,
               ]),
             );

@@ -210,7 +210,25 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
             return (
               <div key={loadout.id} className="flex items-center gap-3 rounded-lg border border-border/30 bg-secondary/10 p-3 hover:bg-secondary/20 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="font-display font-bold text-xs truncate">{loadout.name}</p>
+                  {editingLoadoutId === loadout.id ? (
+                    <input
+                      className="bg-secondary/50 border border-border/40 rounded px-2 py-0.5 text-xs font-display font-bold focus:outline-none focus:ring-2 focus:ring-primary/40 w-full max-w-[140px]"
+                      value={editingLoadoutName}
+                      onChange={e => setEditingLoadoutName(e.target.value)}
+                      onBlur={() => renameLoadout(loadout.id)}
+                      onKeyDown={e => { if (e.key === "Enter") renameLoadout(loadout.id); if (e.key === "Escape") setEditingLoadoutId(null); }}
+                      maxLength={20}
+                      autoFocus
+                    />
+                  ) : (
+                    <p
+                      className="font-display font-bold text-xs truncate cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => { setEditingLoadoutId(loadout.id); setEditingLoadoutName(loadout.name); }}
+                      title="Click to rename"
+                    >
+                      {loadout.name}
+                    </p>
+                  )}
                   <div className="flex gap-1 mt-1 flex-wrap">
                     {loadoutItems.map(item => (
                       <span key={item.id} className="text-sm" title={item.name}>{item.icon}</span>
