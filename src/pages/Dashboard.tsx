@@ -602,6 +602,16 @@ const Dashboard = () => {
               })}
             </div>
           </motion.div>
+
+          <motion.div variants={fadeUp} className="lg:col-span-12 glass-card p-6">
+            <AchievementsPanel
+              wins={profile?.wins || 0}
+              winStreak={profile?.win_streak || 0}
+              puzzlesSolved={profile?.puzzles_solved || 0}
+              crownScore={profile?.crown_score || 0}
+              gamesPlayed={profile?.games_played || 0}
+            />
+          </motion.div>
         </motion.div>
       </div>
     </div>
