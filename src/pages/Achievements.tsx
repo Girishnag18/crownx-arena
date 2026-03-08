@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Sparkles, Star, Shield, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
