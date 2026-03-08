@@ -25,6 +25,7 @@ import Profile from "./pages/Profile";
 import Spectate from "./pages/Spectate";
 import TournamentDetail from "./pages/TournamentDetail";
 import Puzzles from "./pages/Puzzles";
+import Studies from "./pages/Studies";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
