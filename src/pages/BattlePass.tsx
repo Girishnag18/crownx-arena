@@ -165,16 +165,17 @@ const BattlePass = () => {
     : 0;
 
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="page-container">
+      <div className="container max-w-4xl mx-auto space-y-6">
       <BackButton label="Back" to="/dashboard" />
       {/* Header */}
-      <div className="glass-card p-6 space-y-4">
+      <div className="glass-card p-4 sm:p-6 space-y-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <Zap className="w-7 h-7 text-primary" />
+            <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold font-display">Battle Pass</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-bold font-display">Battle Pass</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {season?.name || "Loading..."}
               </p>
             </div>
