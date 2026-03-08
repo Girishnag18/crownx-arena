@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Crown, ArrowLeft, Loader2, Users, Search, Send, MessageSquare, Filter, BarChart3 } from "lucide-react";
+import EmojiReactions from "@/components/spectate/EmojiReactions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
