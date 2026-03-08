@@ -65,7 +65,7 @@ const AchievementsPanel = ({ wins = 0, winStreak = 0, puzzlesSolved = 0, crownSc
       .select("achievement_id") as any)
       .eq("user_id", user.id);
 
-    const unlockedIds = new Set((playerAchievements || []).map((pa: PlayerAchievement) => pa.achievement_id));
+    const unlockedIds = new Set<string>((playerAchievements || []).map((pa: PlayerAchievement) => pa.achievement_id));
     setUnlocked(unlockedIds);
   }, [user]);
 
