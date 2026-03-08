@@ -89,7 +89,7 @@ const Achievements = () => {
       .from("profiles")
       .select("wins, win_streak, puzzles_solved, crown_score, games_played, rank_tier, level, xp, username")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
     if (data) setProfile(data as unknown as ProfileData);
   }, [user]);
 

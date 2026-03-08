@@ -84,7 +84,7 @@ const Shop = () => {
           .from("shop_purchases")
           .select("item_id, is_equipped")
           .eq("user_id", user.id),
-        supabase.from("profiles").select("wallet_crowns").eq("id", user.id).single(),
+        supabase.from("profiles").select("wallet_crowns").eq("id", user.id).maybeSingle(),
       ]);
 
       const map = new Map<string, Purchase>();
