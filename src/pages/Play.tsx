@@ -223,6 +223,7 @@ const Play = () => {
     setShowPostGameReview(false);
     setLocalBottomColor("w");
     setClockGameOver(false);
+    streakUpdatedRef.current = false;
   };
 
   const handleTimeUp = useCallback((side: "w" | "b") => {
