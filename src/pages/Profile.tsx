@@ -445,7 +445,7 @@ const Profile = () => {
                             </div>
                             <button className="text-[10px] font-display font-bold border border-border/40 rounded-lg px-2.5 py-1 hover:bg-secondary/30 transition-colors" onClick={() => deleteFriendship(item.id, "Request cancelled.")}>Cancel</button>
                           </div>
-                        )))}
+                        ))}
                       </div>
                     </div>
 
