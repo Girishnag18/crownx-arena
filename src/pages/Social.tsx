@@ -165,7 +165,8 @@ const Social = () => {
   }
 
   return (
-    <main className="container max-w-4xl pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4 space-y-4 sm:space-y-6">
+    <main className="page-container">
+      <div className="container max-w-4xl mx-auto space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-xl sm:text-3xl font-bold font-display flex items-center gap-2">
           <Users className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Social Hub
