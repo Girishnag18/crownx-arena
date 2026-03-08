@@ -53,7 +53,7 @@ const Ratings = () => {
   }, [snapshot?.crown_score]);
 
   return (
-    <main className="container max-w-5xl py-24 px-4">
+    <main className="page-container">
       <div className="flex items-center gap-3 mb-6">
         <BarChart3 className="w-7 h-7 text-primary" />
         <h1 className="text-3xl md:text-5xl font-black">Rating Overview</h1>

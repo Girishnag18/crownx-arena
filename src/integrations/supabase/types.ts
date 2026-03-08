@@ -613,28 +613,34 @@ export type Database = {
       game_rooms: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           game_id: string | null
           guest_id: string | null
           host_id: string
           id: string
+          increment_seconds: number | null
           room_code: string
           status: string
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id: string
           id?: string
+          increment_seconds?: number | null
           room_code: string
           status?: string
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           game_id?: string | null
           guest_id?: string | null
           host_id?: string
           id?: string
+          increment_seconds?: number | null
           room_code?: string
           status?: string
         }
@@ -664,12 +670,15 @@ export type Database = {
       }
       games: {
         Row: {
+          black_time_ms: number | null
           created_at: string
           current_fen: string | null
           duration_seconds: number | null
           ended_at: string | null
           game_mode: string
           id: string
+          increment_seconds: number | null
+          last_move_at: string | null
           moves: Json | null
           pgn: string | null
           player_black: string | null
@@ -677,15 +686,19 @@ export type Database = {
           player1_id: string
           player2_id: string | null
           result_type: string
+          white_time_ms: number | null
           winner_id: string | null
         }
         Insert: {
+          black_time_ms?: number | null
           created_at?: string
           current_fen?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
+          last_move_at?: string | null
           moves?: Json | null
           pgn?: string | null
           player_black?: string | null
@@ -693,15 +706,19 @@ export type Database = {
           player1_id: string
           player2_id?: string | null
           result_type?: string
+          white_time_ms?: number | null
           winner_id?: string | null
         }
         Update: {
+          black_time_ms?: number | null
           created_at?: string
           current_fen?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
+          last_move_at?: string | null
           moves?: Json | null
           pgn?: string | null
           player_black?: string | null
@@ -709,6 +726,7 @@ export type Database = {
           player1_id?: string
           player2_id?: string | null
           result_type?: string
+          white_time_ms?: number | null
           winner_id?: string | null
         }
         Relationships: [
@@ -791,24 +809,30 @@ export type Database = {
       matchmaking_queue: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           game_mode: string
           id: string
+          increment_seconds: number | null
           player_id: string
           rating: number
           region: string | null
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
           player_id: string
           rating?: number
           region?: string | null
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
           player_id?: string
           rating?: number
           region?: string | null
@@ -982,6 +1006,7 @@ export type Database = {
           puzzle_streak: number
           puzzles_solved: number
           rank_tier: string
+          referral_code: string | null
           updated_at: string
           username: string | null
           wallet_crowns: number
@@ -1005,6 +1030,7 @@ export type Database = {
           puzzle_streak?: number
           puzzles_solved?: number
           rank_tier?: string
+          referral_code?: string | null
           updated_at?: string
           username?: string | null
           wallet_crowns?: number
@@ -1028,12 +1054,37 @@ export type Database = {
           puzzle_streak?: number
           puzzles_solved?: number
           rank_tier?: string
+          referral_code?: string | null
           updated_at?: string
           username?: string | null
           wallet_crowns?: number
           win_streak?: number
           wins?: number
           xp?: number
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          keys: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          keys?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          keys?: Json
+          user_id?: string
         }
         Relationships: []
       }
@@ -1102,6 +1153,75 @@ export type Database = {
           solution?: string[]
           source?: string | null
           themes?: string[]
+        }
+        Relationships: []
+      }
+      recent_tournaments: {
+        Row: {
+          created_by: string
+          ended_at: string | null
+          id: string
+          max_players: number
+          name: string
+          original_id: string
+          player_count: number
+          prize_pool: number
+          starts_at: string | null
+          status: string
+          tournament_type: string
+        }
+        Insert: {
+          created_by: string
+          ended_at?: string | null
+          id?: string
+          max_players?: number
+          name: string
+          original_id: string
+          player_count?: number
+          prize_pool?: number
+          starts_at?: string | null
+          status?: string
+          tournament_type?: string
+        }
+        Update: {
+          created_by?: string
+          ended_at?: string | null
+          id?: string
+          max_players?: number
+          name?: string
+          original_id?: string
+          player_count?: number
+          prize_pool?: number
+          starts_at?: string | null
+          status?: string
+          tournament_type?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_claimed: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_claimed?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_claimed?: boolean
         }
         Relationships: []
       }
@@ -1284,6 +1404,105 @@ export type Database = {
             columns: ["study_id"]
             isOneToOne: false
             referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_battle_boards: {
+        Row: {
+          battle_id: string
+          board_number: number
+          challenger_player_id: string
+          created_at: string
+          game_id: string | null
+          id: string
+          opponent_player_id: string | null
+          result: string
+        }
+        Insert: {
+          battle_id: string
+          board_number?: number
+          challenger_player_id: string
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          opponent_player_id?: string | null
+          result?: string
+        }
+        Update: {
+          battle_id?: string
+          board_number?: number
+          challenger_player_id?: string
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          opponent_player_id?: string | null
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_battle_boards_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "team_battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battle_boards_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_battles: {
+        Row: {
+          board_count: number
+          challenger_club_id: string
+          challenger_score: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          opponent_club_id: string
+          opponent_score: number
+          status: string
+        }
+        Insert: {
+          board_count?: number
+          challenger_club_id: string
+          challenger_score?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          opponent_club_id: string
+          opponent_score?: number
+          status?: string
+        }
+        Update: {
+          board_count?: number
+          challenger_club_id?: string
+          challenger_score?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          opponent_club_id?: string
+          opponent_score?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_battles_challenger_club_id_fkey"
+            columns: ["challenger_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_battles_opponent_club_id_fkey"
+            columns: ["opponent_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
         ]

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings,
   LogOut, Menu, X, Wallet, Swords, Puzzle, Users, BookOpen, Trophy,
-  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye,
+  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
@@ -40,6 +40,7 @@ const navSections = [
       { to: "/dashboard", label: "Arena Hub", icon: Trophy },
       { to: "/challenges", label: "Challenges", icon: Sparkles },
       { to: "/battle-pass", label: "Battle Pass", icon: Gamepad2 },
+      { to: "/achievements", label: "Achievements", icon: Trophy },
       { to: "/ratings", label: "Ratings", icon: BarChart3 },
     ],
   },
@@ -73,10 +74,13 @@ const flatNavLinks = navSections.flatMap((s) => s.items);
 const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: User, label: "Profile", to: "/profile" },
-  { icon: History, label: "Match History", to: "/dashboard?section=history" },
+  { icon: Trophy, label: "Achievements", to: "/achievements" },
+  { icon: History, label: "Match History", to: "/match-history" },
   { icon: BarChart3, label: "Ratings", to: "/ratings" },
-  { icon: Settings, label: "Settings", to: "/settings" },
   { icon: Wallet, label: "Wallet", to: "/crown-topup" },
+  { icon: Gift, label: "Daily Spin", to: "/daily-spin" },
+  { icon: Puzzle, label: "Daily Puzzle", to: "/puzzles" },
+  { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 interface NavbarProfile {
@@ -89,6 +93,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<NavbarProfile | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -138,10 +143,14 @@ const Navbar = () => {
   }, [user]);
 
   const handleSignOut = async () => {
-    await signOut();
+    setLoggingOut(true);
     setProfileOpen(false);
     setMobileOpen(false);
-    navigate("/");
+    await signOut();
+    setTimeout(() => {
+      setLoggingOut(false);
+      navigate("/");
+    }, 1200);
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
@@ -152,17 +161,39 @@ const Navbar = () => {
     { to: "/lobby", label: "Play" },
     { to: "/puzzles", label: "Puzzles" },
     { to: "/dashboard", label: "Arena" },
+    { to: "/shop", label: "Store" },
     { to: "/social", label: "Social" },
   ];
   const visibleDesktopLinks = user ? desktopLinks : [{ to: "/", label: "Home" }];
 
   return (
     <>
+      {/* Logging out overlay */}
+      <AnimatePresence>
+        {loggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="font-display font-bold text-lg text-foreground">Logging out…</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <motion.nav
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl"
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-2.5 md:px-6">
           <Link to="/" className="flex items-center gap-2 group shrink-0">

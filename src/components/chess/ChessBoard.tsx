@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBoardSettings } from "@/contexts/BoardSettingsContext";
 import BoardSquare from "./BoardSquare";
 <<<<<<< HEAD
 import {
@@ -77,6 +78,19 @@ const ChessBoard = ({
   } | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const prevTurnRef = useRef(game.turn());
+  const moveCountRef = useRef(0);
+  const [slideAnimKey, setSlideAnimKey] = useState(0);
+  const { moveAnimation } = useBoardSettings();
+
+  // Increment animation key when lastMove changes so slide plays once per move
+  const prevLastMoveRef = useRef(lastMove);
+  useEffect(() => {
+    if (lastMove && lastMove !== prevLastMoveRef.current) {
+      moveCountRef.current += 1;
+      setSlideAnimKey(moveCountRef.current);
+    }
+    prevLastMoveRef.current = lastMove;
+  }, [lastMove]);
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
@@ -313,12 +327,16 @@ const ChessBoard = ({
 
   const boardClasses = streamerMode
     ? "relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-none overflow-hidden border-0"
+<<<<<<< HEAD
     : "chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl";
 >>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
+=======
+    : "chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-lg overflow-hidden shadow-board";
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
   return (
     <div
-      className={`relative w-full aspect-square ${sizeClassName || "max-w-[min(80vw,560px)]"}`}
+      className={`relative w-full aspect-square ${sizeClassName || "max-w-[min(92vw,640px)]"}`}
       style={maxBoardSizePx ? { maxWidth: `${maxBoardSizePx}px` } : undefined}
     >
       <AnimatePresence>
@@ -370,11 +388,15 @@ const ChessBoard = ({
         </div>
       )}
 
-      <div
+      <motion.div
         ref={boardRef}
         className={boardClasses}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        animate={isInCheck ? {
+          x: [0, -3, 3, -2, 2, -1, 1, 0],
+        } : { x: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <BoardArrows arrows={arrows} flipped={flipped} />
 >>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
@@ -391,6 +413,21 @@ const ChessBoard = ({
             const isPremoveSquare = premove?.from === square || premove?.to === square;
             const isDragSource = dragState?.from === square;
 >>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
+
+            // Calculate slide offset for the piece that just landed here
+            let slideFrom: { dx: number; dy: number } | undefined;
+            if (moveAnimation && lastMove && square === lastMove.to && !dragState) {
+              const fromFi = files.indexOf(lastMove.from[0]);
+              const fromRi = ranks.indexOf(lastMove.from[1]);
+              const toFi = fi;
+              const toRi = ri;
+              if (fromFi >= 0 && fromRi >= 0) {
+                slideFrom = {
+                  dx: (fromFi - toFi),
+                  dy: (fromRi - toRi),
+                };
+              }
+            }
 
             return (
               <BoardSquare
@@ -417,11 +454,13 @@ const ChessBoard = ({
                 showFile={!streamerMode && ri === 7 ? file : undefined}
                 onClick={() => handleSquareClick(square)}
                 onTouchStart={(e) => handleTouchStart(e, square)}
+                slideFrom={slideFrom}
+                slideAnimKey={slideAnimKey}
               />
             );
           }),
         )}
-      </div>
+      </motion.div>
 
       {/* Drag ghost piece */}
       {dragState && (

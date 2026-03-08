@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, Crown, Trophy, Clock, Medal, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface LeaderboardPlayer {
   id: string;
@@ -165,14 +166,21 @@ const Leaderboard = () => {
     return idx >= 0 ? idx + 1 : null;
   }, [seasonEntries, user]);
 
-  return (
-    <main className="container max-w-5xl py-24 px-4 space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold font-display">Leaderboards</h1>
-        <p className="text-muted-foreground text-sm">Compete for the top spot and earn Crown rewards each season.</p>
-      </div>
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([loadLeaderboard(), loadSeasons(), loadFriendsLeaderboard()]);
+    if (activeSeason) await loadSeasonEntries(activeSeason.id);
+  }, [activeSeason]);
 
-      <Tabs defaultValue="season" className="w-full">
+  return (
+    <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
+      <div className="container max-w-5xl mx-auto space-y-6">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold font-display">Leaderboards</h1>
+          <p className="text-muted-foreground text-sm">Compete for the top spot and earn Crown rewards each season.</p>
+        </div>
+
+        <Tabs defaultValue="season" className="w-full">
         <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
           <TabsTrigger value="season">🏆 Seasonal</TabsTrigger>
           <TabsTrigger value="friends">👥 Friends</TabsTrigger>
@@ -389,7 +397,9 @@ const Leaderboard = () => {
             ))}
           </div>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
+      </PullToRefresh>
     </main>
   );
 };

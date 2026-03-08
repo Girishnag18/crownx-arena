@@ -3,7 +3,7 @@
  * Generates synthetic chess sounds using Web Audio API — no external files needed.
  */
 
-type SoundType = "move" | "capture" | "check" | "castle" | "promote" | "gameStart" | "gameEnd" | "illegal";
+type SoundType = "move" | "capture" | "check" | "castle" | "promote" | "gameStart" | "gameEnd" | "illegal" | "playerJoined" | "matchFound" | "searchTimeout" | "rangeExpand";
 
 class SoundManager {
   private ctx: AudioContext | null = null;
@@ -63,6 +63,28 @@ class SoundManager {
           break;
         case "illegal":
           this.playTone(ctx, 200, 0.1, "sawtooth", 0.15);
+          break;
+        case "playerJoined":
+          this.playTone(ctx, 523, 0.1, "sine", 0.3);
+          setTimeout(() => this.playTone(ctx, 784, 0.1, "sine", 0.3), 120);
+          setTimeout(() => this.playTone(ctx, 1047, 0.15, "sine", 0.35), 240);
+          break;
+        case "matchFound":
+          // Triumphant ascending arpeggio
+          this.playTone(ctx, 523, 0.12, "sine", 0.35);
+          setTimeout(() => this.playTone(ctx, 659, 0.12, "sine", 0.35), 100);
+          setTimeout(() => this.playTone(ctx, 784, 0.12, "sine", 0.35), 200);
+          setTimeout(() => this.playTone(ctx, 1047, 0.2, "sine", 0.4), 300);
+          break;
+        case "searchTimeout":
+          // Low descending two-tone
+          this.playTone(ctx, 440, 0.15, "triangle", 0.25);
+          setTimeout(() => this.playTone(ctx, 330, 0.2, "triangle", 0.2), 180);
+          break;
+        case "rangeExpand":
+          // Subtle whoosh-like rising tone
+          this.playTone(ctx, 400, 0.12, "sine", 0.15);
+          setTimeout(() => this.playTone(ctx, 550, 0.1, "sine", 0.2), 100);
           break;
       }
     } catch {

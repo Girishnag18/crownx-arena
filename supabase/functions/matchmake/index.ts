@@ -34,7 +34,11 @@ Deno.serve(async (req) => {
     const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+<<<<<<< HEAD
     const userClient = createClient(supabaseUrl, publishableKey, {
+=======
+    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
       global: { headers: { Authorization: authHeader } },
     });
 
@@ -50,6 +54,7 @@ Deno.serve(async (req) => {
       });
     }
 
+<<<<<<< HEAD
     const body = await req.json().catch(() => ({}));
     const gameMode = body?.game_mode ?? "quick_play";
     const durationSeconds = body?.duration_seconds ?? null;
@@ -137,6 +142,11 @@ Deno.serve(async (req) => {
     }
 
     await supabase.rpc("cleanup_matchmaking_artifacts");
+=======
+    const { game_mode = 'quick_play', duration_seconds = null, increment_seconds = null, rating_range = 200 } = await req.json().catch(() => ({}));
+
+    const ratingWindow = Math.min(Math.max(Number(rating_range) || 200, 50), 1000);
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -147,6 +157,7 @@ Deno.serve(async (req) => {
     const playerRating = profile?.crown_score || 1200;
     const playerRegion = profile?.country || null;
 
+<<<<<<< HEAD
     const { data: existingQueue } = await supabase
       .from("matchmaking_queue")
       .select("search_started_at, matching_scope")
@@ -158,6 +169,32 @@ Deno.serve(async (req) => {
       : Date.now();
     const elapsedSeconds = Math.max(0, Math.floor((Date.now() - searchStartedAt) / 1000));
     const myScope: "local" | "global" = elapsedSeconds >= 40 ? "global" : "local";
+=======
+    // Look for a match in the queue (within rating window, same game mode, same time control)
+    let candidatesQuery = supabase
+      .from('matchmaking_queue')
+      .select('*')
+      .eq('game_mode', game_mode)
+      .neq('player_id', user.id)
+      .gte('rating', playerRating - ratingWindow)
+      .lte('rating', playerRating + ratingWindow)
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    // Filter by duration_seconds
+    if (duration_seconds === null) {
+      candidatesQuery = candidatesQuery.is('duration_seconds', null);
+    } else {
+      candidatesQuery = candidatesQuery.eq('duration_seconds', duration_seconds);
+    }
+
+    // Filter by increment_seconds
+    if (increment_seconds === null) {
+      candidatesQuery = candidatesQuery.is('increment_seconds', null);
+    } else {
+      candidatesQuery = candidatesQuery.eq('increment_seconds', increment_seconds);
+    }
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
     const nowIso = new Date().toISOString();
 
@@ -259,6 +296,13 @@ Deno.serve(async (req) => {
       const whiteId = isWhite ? user.id : selectedOpponent.player_id;
       const blackId = isWhite ? selectedOpponent.player_id : user.id;
 
+<<<<<<< HEAD
+=======
+      // Determine increment from the time control
+      const gameDuration = duration_seconds ?? null;
+
+      // Create the game
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
       const { data: game, error: gameError } = await supabase
         .from("games")
         .insert({
@@ -270,6 +314,7 @@ Deno.serve(async (req) => {
           result_type: "in_progress",
           current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
           moves: [],
+<<<<<<< HEAD
           duration_seconds: durationSeconds,
           clock_white_ms: durationSeconds ? durationSeconds * 1000 : null,
           clock_black_ms: durationSeconds ? durationSeconds * 1000 : null,
@@ -277,6 +322,12 @@ Deno.serve(async (req) => {
           delay_ms: delayMs,
           time_control_mode: timeControlMode,
           clock_last_move_at: new Date().toISOString(),
+=======
+          duration_seconds: gameDuration,
+          increment_seconds: increment_seconds ?? null,
+          white_time_ms: gameDuration ? gameDuration * 1000 : null,
+          black_time_ms: gameDuration ? gameDuration * 1000 : null,
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
         })
         .select()
         .single();
@@ -317,6 +368,7 @@ Deno.serve(async (req) => {
     const challengeExpiresAt = targetPlayerId ? new Date(Date.now() + 2 * 60 * 1000).toISOString() : null;
 
     const { error: queueError } = await supabase
+<<<<<<< HEAD
       .from("matchmaking_queue")
       .upsert(
         {
@@ -336,6 +388,16 @@ Deno.serve(async (req) => {
         },
         { onConflict: "player_id" },
       );
+=======
+      .from('matchmaking_queue')
+      .upsert({
+        player_id: user.id,
+        game_mode,
+        rating: playerRating,
+        duration_seconds: duration_seconds ?? null,
+        increment_seconds: increment_seconds ?? null,
+      }, { onConflict: 'player_id' });
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
     if (queueError) {
       return new Response(JSON.stringify({ error: queueError.message }), {

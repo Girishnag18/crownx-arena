@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Plus, Search, Trophy, ArrowLeft, Crown, Loader2, LogOut, UserPlus } from "lucide-react";
+import { Shield, Users, Plus, Search, Trophy, ArrowLeft, Crown, Loader2, LogOut, UserPlus, Swords } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import TeamBattlePanel from "@/components/social/TeamBattlePanel";
 
 interface Club {
   id: string;
@@ -135,14 +136,14 @@ const Clubs = () => {
 
   if (loading) {
     return (
-      <main className="container max-w-4xl py-24 px-4 flex items-center justify-center min-h-[60vh]">
+      <main className="page-container flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </main>
     );
   }
 
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="page-container">
       <AnimatePresence mode="wait">
         {view === "list" && (
           <motion.div key="list" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-6">
@@ -263,6 +264,17 @@ const Clubs = () => {
                 ))}
               </div>
             </div>
+
+            {/* Team Battles */}
+            {myClubIds.has(selectedClub.id) && (
+              <div className="glass-card p-5 border border-primary/20">
+                <TeamBattlePanel
+                  clubId={selectedClub.id}
+                  clubName={selectedClub.name}
+                  allClubs={clubs.map(c => ({ id: c.id, name: c.name, member_count: c.member_count }))}
+                />
+              </div>
+            )}
 
             {/* Members List */}
             <div className="space-y-2">

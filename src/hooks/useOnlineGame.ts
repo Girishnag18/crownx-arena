@@ -15,6 +15,7 @@ interface GameData {
   moves: Json[];
   result_type: string;
   winner_id: string | null;
+<<<<<<< HEAD
   clock_white_ms: number | null;
   clock_black_ms: number | null;
   increment_ms: number;
@@ -22,6 +23,13 @@ interface GameData {
   time_control_mode: "none" | "fischer" | "delay" | "bronstein";
   clock_last_move_at: string | null;
   flag_fall_winner_id: string | null;
+=======
+  duration_seconds: number | null;
+  increment_seconds: number | null;
+  white_time_ms: number | null;
+  black_time_ms: number | null;
+  last_move_at: string | null;
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 }
 
 interface PlayerSummary {
@@ -110,7 +118,7 @@ export const useOnlineGame = (gameId: string | null) => {
         .from("games")
         .select("*")
         .eq("id", gameId)
-        .single();
+        .maybeSingle();
 
       if (data) {
         const gd = data as unknown as GameData;
@@ -322,13 +330,38 @@ export const useOnlineGame = (gameId: string | null) => {
         if (!move) return false;
 
         setPendingMove(true);
+
+        // Calculate clock update
+        const now = new Date();
+        const nowISO = now.toISOString();
+        let updatedWhiteMs = gameData.white_time_ms;
+        let updatedBlackMs = gameData.black_time_ms;
+
+        if (gameData.duration_seconds && gameData.last_move_at && updatedWhiteMs != null && updatedBlackMs != null) {
+          const elapsed = now.getTime() - new Date(gameData.last_move_at).getTime();
+          const incrementMs = (gameData.increment_seconds ?? 0) * 1000;
+
+          if (playerColor === "w") {
+            updatedWhiteMs = Math.max(0, updatedWhiteMs - elapsed) + incrementMs;
+          } else {
+            updatedBlackMs = Math.max(0, updatedBlackMs - elapsed) + incrementMs;
+          }
+        }
+
         setGame(gameCopy);
         setGameData((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
             current_fen: gameCopy.fen(),
+<<<<<<< HEAD
             moves: [...(prev.moves || []), { from, to, san: move.san, promotion: promotion ?? null }],
+=======
+            moves: [...(prev.moves || []), { from, to, san: move.san, promotion }],
+            white_time_ms: updatedWhiteMs,
+            black_time_ms: updatedBlackMs,
+            last_move_at: nowISO,
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
           };
         });
 
@@ -340,17 +373,29 @@ export const useOnlineGame = (gameId: string | null) => {
         if (gameCopy.isCheckmate()) {
           resultType = "checkmate";
           winnerId = user.id;
-          endedAt = new Date().toISOString();
+          endedAt = nowISO;
         } else if (gameCopy.isStalemate()) {
           resultType = "stalemate";
-          endedAt = new Date().toISOString();
+          endedAt = nowISO;
         } else if (gameCopy.isDraw()) {
           resultType = "draw";
-          endedAt = new Date().toISOString();
+          endedAt = nowISO;
+        }
+
+        // Check if player ran out of time
+        if (updatedWhiteMs != null && updatedWhiteMs <= 0 && playerColor === "w") {
+          resultType = "timeout";
+          winnerId = gameData.player_black;
+          endedAt = nowISO;
+        } else if (updatedBlackMs != null && updatedBlackMs <= 0 && playerColor === "b") {
+          resultType = "timeout";
+          winnerId = gameData.player_white;
+          endedAt = nowISO;
         }
 
         const newMoves = [...previousMoves, { from, to, san: move.san, promotion: promotion ?? null }];
 
+<<<<<<< HEAD
         const { data, error } = await (supabase as unknown as {
           rpc: (
             fn: string,
@@ -378,6 +423,22 @@ export const useOnlineGame = (gameId: string | null) => {
           p_winner_id: winnerId,
           p_pgn: gameCopy.pgn(),
         });
+=======
+        const { error } = await supabase
+          .from("games")
+          .update({
+            current_fen: gameCopy.fen(),
+            moves: newMoves as any,
+            result_type: resultType,
+            winner_id: winnerId,
+            ended_at: endedAt,
+            pgn: gameCopy.pgn(),
+            white_time_ms: updatedWhiteMs,
+            black_time_ms: updatedBlackMs,
+            last_move_at: nowISO,
+          } as any)
+          .eq("id", gameData.id);
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
         if (error) throw error;
         if (data && data.length > 0) {
@@ -402,7 +463,7 @@ export const useOnlineGame = (gameId: string | null) => {
               .from("profiles")
               .select("crown_score")
               .eq("id", user.id)
-              .single();
+              .maybeSingle();
             
             if (currentProfile) {
               const eloBefore = currentProfile.crown_score;
@@ -463,6 +524,89 @@ export const useOnlineGame = (gameId: string | null) => {
       .eq("id", gameData.id);
   }, [gameData, user]);
 
+  const claimTimeout = useCallback(async () => {
+    if (!gameData || !user) return;
+    // Only claim if game is still in progress
+    if (gameData.result_type !== "in_progress") return;
+    
+    const now = new Date();
+    const gd = gameData as any;
+    if (gd.white_time_ms == null || gd.black_time_ms == null || !gd.last_move_at) return;
+
+    const elapsed = now.getTime() - new Date(gd.last_move_at).getTime();
+    const game = new Chess(gameData.current_fen);
+    const activeTurn = game.turn();
+    
+    const activeTimeMs = activeTurn === "w" ? gd.white_time_ms : gd.black_time_ms;
+    const remaining = activeTimeMs - elapsed;
+
+    // Only allow claiming if opponent's clock is at 0
+    const opponentColor = gameData.player_white === user.id ? "b" : "w";
+    if (activeTurn !== opponentColor || remaining > 0) return;
+
+    await supabase
+      .from("games")
+      .update({
+        result_type: "timeout",
+        winner_id: user.id,
+        ended_at: now.toISOString(),
+        white_time_ms: activeTurn === "w" ? 0 : gd.white_time_ms,
+        black_time_ms: activeTurn === "b" ? 0 : gd.black_time_ms,
+      } as any)
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
+  const acceptDraw = useCallback(async () => {
+    if (!gameData || !user) return;
+    if (gameData.result_type !== "in_progress") return;
+    await supabase
+      .from("games")
+      .update({
+        result_type: "draw",
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
+  const abortGame = useCallback(async () => {
+    if (!gameData || !user) return;
+    if (gameData.result_type !== "in_progress") return;
+    const moveCount = Array.isArray(gameData.moves) ? gameData.moves.length : 0;
+    if (moveCount >= 2) return;
+    await supabase
+      .from("games")
+      .update({
+        result_type: "aborted",
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
+  const performTakeback = useCallback(async () => {
+    if (!gameData || !user) return;
+    if (gameData.result_type !== "in_progress") return;
+    const moves = Array.isArray(gameData.moves) ? [...gameData.moves] : [];
+    if (moves.length === 0) return;
+
+    // Undo last move by replaying all moves except the last
+    const startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const replay = new Chess(startingFen);
+    const newMoves = moves.slice(0, -1);
+    for (const m of newMoves) {
+      replay.move({ from: (m as any).from, to: (m as any).to, promotion: (m as any).promotion });
+    }
+
+    await supabase
+      .from("games")
+      .update({
+        current_fen: replay.fen(),
+        moves: newMoves as any,
+        pgn: replay.pgn(),
+        last_move_at: new Date().toISOString(),
+      } as any)
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
   return {
     game,
     gameData,
@@ -475,7 +619,14 @@ export const useOnlineGame = (gameId: string | null) => {
     lastSyncedAt,
     makeMove,
     resign,
+<<<<<<< HEAD
     isSpectator: !!user && !!gameData && gameData.player_white !== user.id && gameData.player_black !== user.id,
+=======
+    claimTimeout,
+    acceptDraw,
+    abortGame,
+    performTakeback,
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",

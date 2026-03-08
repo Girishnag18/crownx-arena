@@ -1,0 +1,1 @@
+ALTER TABLE public.matchmaking_queue ADD COLUMN IF NOT EXISTS increment_seconds integer DEFAULT NULL;

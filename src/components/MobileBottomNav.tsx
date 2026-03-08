@@ -17,27 +17,25 @@ const MobileBottomNav = () => {
   if (!user) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur-xl lg:hidden safe-bottom">
-      <div className="flex items-stretch justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-card/95 backdrop-blur-xl lg:hidden safe-bottom">
+      <div className="flex items-stretch justify-around px-1">
         {tabs.map((tab) => {
           const active = location.pathname === tab.to;
           return (
             <Link
               key={tab.to}
               to={tab.to}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors ${
-                active
-                  ? "text-primary"
-                  : "text-muted-foreground"
+              className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 transition-colors ${
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <tab.icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
-              <span className={`text-[10px] font-semibold ${active ? "font-bold" : ""}`}>
+              {active && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-primary" />
+              )}
+              <tab.icon className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 1.8} />
+              <span className={`text-[10px] leading-tight ${active ? "font-bold" : "font-medium"}`}>
                 {tab.label}
               </span>
-              {active && (
-                <div className="absolute top-0 w-8 h-0.5 rounded-full bg-primary" />
-              )}
             </Link>
           );
         })}

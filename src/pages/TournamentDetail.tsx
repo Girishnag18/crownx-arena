@@ -191,14 +191,14 @@ const TournamentDetail = () => {
 
   if (!tournament) {
     return (
-      <div className="min-h-screen bg-background pt-24 px-4 text-center">
+      <div className="page-container text-center">
         <p className="text-muted-foreground">Tournament not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="page-container">
       <div className="container mx-auto max-w-5xl">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 border-glow mb-6">

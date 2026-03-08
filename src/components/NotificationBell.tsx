@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ interface Notification {
   created_at: string;
 }
 
-const NotificationBell = () => {
+const NotificationBell = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -115,6 +115,8 @@ const NotificationBell = () => {
       </AnimatePresence>
     </div>
   );
-};
+});
+
+NotificationBell.displayName = "NotificationBell";
 
 export default NotificationBell;

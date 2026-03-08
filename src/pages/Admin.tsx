@@ -372,7 +372,7 @@ const Admin = () => {
 
   if (loading) {
     return (
-      <main className="container max-w-6xl py-24 px-4 flex items-center justify-center min-h-[60vh]">
+      <main className="page-container flex items-center justify-center min-h-[60vh]">
         <LoaderCircle className="w-8 h-8 animate-spin text-primary" />
       </main>
     );
@@ -380,7 +380,7 @@ const Admin = () => {
 >>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
   return (
-    <main className="container max-w-6xl py-24 px-4 space-y-6">
+    <main className="page-container">
       <div>
 <<<<<<< HEAD
         <h1 className="text-4xl font-bold mb-2">Admin Command Center</h1>

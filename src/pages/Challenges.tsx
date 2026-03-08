@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Crown, CheckCircle, Clock, Gift } from "lucide-react";
+import BackButton from "@/components/common/BackButton";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Challenge {
   id: string;
@@ -106,13 +108,16 @@ const Challenges = () => {
       .eq("id", p.id);
 
     // Credit wallet
-    await supabase
-      .from("profiles")
-      .update({ 
-        wallet_crowns: (await supabase.from("profiles").select("wallet_crowns").eq("id", user.id).single()).data?.wallet_crowns as number + challenge.crown_reward,
-        xp: (await supabase.from("profiles").select("xp").eq("id", user.id).single()).data?.xp as number + challenge.xp_reward,
-      })
-      .eq("id", user.id);
+    const { data: currentProfile } = await supabase.from("profiles").select("wallet_crowns, xp").eq("id", user.id).maybeSingle();
+    if (currentProfile) {
+      await supabase
+        .from("profiles")
+        .update({ 
+          wallet_crowns: (currentProfile.wallet_crowns ?? 0) + challenge.crown_reward,
+          xp: (currentProfile.xp ?? 0) + challenge.xp_reward,
+        })
+        .eq("id", user.id);
+    }
 
     setClaiming(null);
     toast.success(`Claimed ${challenge.crown_reward} Crowns + ${challenge.xp_reward} XP!`);
@@ -212,10 +217,18 @@ const Challenges = () => {
     );
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadChallenges();
+    await loadProgress();
+  }, [challenges]);
+
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
+      <div className="container max-w-4xl mx-auto space-y-6">
+      <BackButton label="Back" to="/dashboard" />
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold font-display">Challenges</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold font-display">Challenges</h1>
         <p className="text-muted-foreground text-sm">Complete daily & weekly challenges to earn Crowns and XP.</p>
       </div>
 
@@ -241,6 +254,8 @@ const Challenges = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
+      </PullToRefresh>
     </main>
   );
 };

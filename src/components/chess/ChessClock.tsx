@@ -29,7 +29,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   classical: "text-primary",
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
+export const CATEGORY_ICONS: Record<string, string> = {
   bullet: "⚡",
   blitz: "🔥",
   rapid: "⏱️",
@@ -133,18 +133,19 @@ export const ClockFace = ({
 
   return (
     <div
-      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-sm font-bold transition-colors ${
+      className={`flex items-center justify-center rounded-md min-w-[72px] sm:min-w-[84px] px-2.5 sm:px-3 py-1.5 sm:py-2 font-mono text-sm sm:text-base font-bold tabular-nums tracking-tight transition-all duration-200 ${
         isDead
-          ? "bg-destructive/20 text-destructive"
+          ? "bg-destructive/25 text-destructive border border-destructive/30"
           : isActive
           ? isLow
-            ? "bg-destructive/15 text-destructive animate-pulse"
-            : "bg-primary/15 text-primary"
-          : "bg-secondary/50 text-muted-foreground"
+            ? "bg-destructive/15 text-destructive border border-destructive/25 animate-pulse"
+            : side === "w"
+            ? "bg-white text-gray-900 border border-gray-200 shadow-sm"
+            : "bg-gray-900 text-white border border-gray-700 shadow-sm"
+          : "bg-secondary/60 text-muted-foreground border border-border/30"
       }`}
     >
-      <Timer className="w-3 h-3" />
-      <span className="tabular-nums tracking-tight">{formatTime(ms)}</span>
+      <span>{formatTime(ms)}</span>
     </div>
   );
 };

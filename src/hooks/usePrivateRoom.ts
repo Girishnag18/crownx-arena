@@ -1,6 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { soundManager } from "@/services/soundManager";
 import { useAuth } from "@/contexts/AuthContext";
+import { generateChess960Fen } from "@/utils/chess960";
+import { toast } from "sonner";
 
 export const usePrivateRoom = () => {
   const { user } = useAuth();
@@ -9,6 +12,13 @@ export const usePrivateRoom = () => {
   const [gameId, setGameId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "waiting" | "joined" | "ready">("idle");
   const [error, setError] = useState<string | null>(null);
+  const lastDurationRef = useRef<number | null>(null);
+  const lastIncrementRef = useRef<number | null>(null);
+  const [expirySeconds, setExpirySeconds] = useState<number>(0);
+  const expiryTimerRef = useRef<number | null>(null);
+  const countdownRef = useRef<number | null>(null);
+
+  const ROOM_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -17,18 +27,25 @@ export const usePrivateRoom = () => {
     return code;
   };
 
+<<<<<<< HEAD
   const createRoom = useCallback(async (
     durationSeconds: number | null = null,
     timeControl: { mode?: "none" | "fischer" | "delay" | "bronstein"; incrementMs?: number; delayMs?: number } = {},
   ) => {
+=======
+  const createRoom = useCallback(async (durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     if (!user) return;
     setError(null);
+    lastDurationRef.current = durationSeconds;
+    lastIncrementRef.current = incrementSeconds;
     let createdRoom: { room_code: string; id: string } | null = null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
+<<<<<<< HEAD
         .insert({
           room_code: code,
           host_id: user.id,
@@ -37,6 +54,9 @@ export const usePrivateRoom = () => {
           increment_ms: timeControl.incrementMs ?? 0,
           delay_ms: timeControl.delayMs ?? 0,
         })
+=======
+        .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds, increment_seconds: incrementSeconds } as any)
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
         .select()
         .single();
 
@@ -56,11 +76,58 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
+<<<<<<< HEAD
   const joinRoom = useCallback(async (
     code: string,
     selectedDurationSeconds: number | null = null,
     timeControl: { mode?: "none" | "fischer" | "delay" | "bronstein"; incrementMs?: number; delayMs?: number } = {},
   ) => {
+=======
+  const regenerateRoom = useCallback(async () => {
+    if (!user || !roomId) return;
+    setError(null);
+
+    // Delete old room
+    await supabase.from("game_rooms").delete().eq("id", roomId).eq("host_id", user.id);
+
+    // Create new one with same settings
+    let createdRoom: { room_code: string; id: string } | null = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateCode();
+      const { data, error: err } = await supabase
+        .from("game_rooms")
+        .insert({ room_code: code, host_id: user.id, duration_seconds: lastDurationRef.current, increment_seconds: lastIncrementRef.current } as any)
+        .select()
+        .single();
+
+      if (!err && data) {
+        createdRoom = data;
+        break;
+      }
+    }
+
+    if (!createdRoom) {
+      setError("Unable to generate new code. Please retry.");
+      return;
+    }
+
+    setRoomCode(createdRoom.room_code);
+    setRoomId(createdRoom.id);
+    setStatus("waiting");
+  }, [user, roomId]);
+
+  const cancelRoom = useCallback(async () => {
+    if (!user || !roomId) return;
+    await supabase.from("game_rooms").delete().eq("id", roomId).eq("host_id", user.id);
+    setRoomCode(null);
+    setRoomId(null);
+    setGameId(null);
+    setStatus("idle");
+    setError(null);
+  }, [user, roomId]);
+
+  const joinRoom = useCallback(async (code: string, _selectedDurationSeconds: number | null = null, variant: string | null = null) => {
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     if (!user) return;
     setError(null);
 
@@ -72,15 +139,18 @@ export const usePrivateRoom = () => {
       return;
     }
 
-    const { data: room, error: fetchErr } = await supabase
+    // Fetch all matching waiting rooms (not just single)
+    const { data: rooms, error: fetchErr } = await supabase
       .from("game_rooms")
       .select("*")
       .eq("room_code", sanitizedCode)
       .eq("status", "waiting")
-      .single();
+      .is("guest_id", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    if (fetchErr || !room) {
-      setError("Room not found or already full");
+    if (fetchErr || !rooms || rooms.length === 0) {
+      setError("Room not found, already full, or expired");
       return;
     }
     const roomMeta = room as typeof room & {
@@ -90,12 +160,14 @@ export const usePrivateRoom = () => {
       delay_ms?: number;
     };
 
+    const room = rooms[0];
+
     if (room.host_id === user.id) {
       setError("You can't join your own room");
       return;
     }
 
-    // Claim the room first so host can see guest connected in realtime.
+    // Claim the room
     const { data: claimedRoom, error: claimErr } = await supabase
       .from("game_rooms")
       .update({ guest_id: user.id, status: "joined" })
@@ -103,33 +175,46 @@ export const usePrivateRoom = () => {
       .eq("status", "waiting")
       .is("guest_id", null)
       .select("*")
-      .single();
+      .maybeSingle();
 
     if (claimErr || !claimedRoom) {
-      setError("Room was claimed by another player. Please try a different code.");
+      setError("This room is no longer available. Ask the host for a new code.");
       return;
     }
 
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
+<<<<<<< HEAD
     const durationSeconds = selectedDurationSeconds ?? roomMeta.duration_seconds ?? null;
     const timeControlMode = timeControl.mode ?? roomMeta.time_control_mode ?? (durationSeconds ? "fischer" : "none");
     const incrementMs = timeControl.incrementMs ?? roomMeta.increment_ms ?? 0;
     const delayMs = timeControl.delayMs ?? roomMeta.delay_ms ?? 0;
+=======
+    const durationSeconds = (claimedRoom as any).duration_seconds ?? null;
+    const incrementSeconds = (claimedRoom as any).increment_seconds ?? null;
+    const initialTimeMs = durationSeconds ? durationSeconds * 1000 : null;
+    const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
+    // player1_id must be auth.uid() due to RLS policy
     const { data: game, error: gameErr } = await supabase
       .from("games")
       .insert({
-        player1_id: whiteId,
-        player2_id: blackId,
+        player1_id: user.id,
+        player2_id: claimedRoom.host_id,
         player_white: whiteId,
         player_black: blackId,
         game_mode: "private",
         duration_seconds: durationSeconds,
+        increment_seconds: incrementSeconds,
+        white_time_ms: initialTimeMs,
+        black_time_ms: initialTimeMs,
+        last_move_at: new Date().toISOString(),
         result_type: "in_progress",
-        current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        current_fen: startingFen,
         moves: [],
+<<<<<<< HEAD
         clock_white_ms: durationSeconds ? durationSeconds * 1000 : null,
         clock_black_ms: durationSeconds ? durationSeconds * 1000 : null,
         increment_ms: incrementMs,
@@ -137,6 +222,9 @@ export const usePrivateRoom = () => {
         time_control_mode: timeControlMode,
         clock_last_move_at: new Date().toISOString(),
       })
+=======
+      } as any)
+>>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
       .select()
       .single();
 
@@ -167,7 +255,7 @@ export const usePrivateRoom = () => {
 
   // Listen for room updates (host waiting for guest)
   useEffect(() => {
-    if (!roomId || status !== "waiting") return;
+    if (!roomId || (status !== "waiting" && status !== "joined")) return;
 
     const channel = supabase
       .channel(`room-${roomId}`)
@@ -184,6 +272,18 @@ export const usePrivateRoom = () => {
 
           if (updated.status === "joined" && updated.guest_id) {
             setStatus("joined");
+            soundManager.play("playerJoined");
+
+            // Fetch guest username and show toast
+            supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", updated.guest_id)
+              .maybeSingle()
+              .then(({ data }) => {
+                const name = data?.username || "An opponent";
+                toast(`👋 ${name} joined your room!`, { duration: 4000 });
+              });
           }
 
           if (updated.status === "playing" && updated.game_id) {
@@ -199,6 +299,39 @@ export const usePrivateRoom = () => {
     };
   }, [roomId, status]);
 
+  // Auto-expire room after 5 minutes
+  useEffect(() => {
+    if (status !== "waiting" || !roomId) {
+      if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setExpirySeconds(0);
+      return;
+    }
+
+    const startTime = Date.now();
+    setExpirySeconds(Math.ceil(ROOM_EXPIRY_MS / 1000));
+
+    countdownRef.current = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((ROOM_EXPIRY_MS - (Date.now() - startTime)) / 1000));
+      setExpirySeconds(remaining);
+      if (remaining <= 0 && countdownRef.current) clearInterval(countdownRef.current);
+    }, 1000);
+
+    expiryTimerRef.current = window.setTimeout(async () => {
+      // Auto-cancel the room
+      await supabase.from("game_rooms").delete().eq("id", roomId).eq("host_id", user?.id ?? "");
+      setRoomCode(null);
+      setRoomId(null);
+      setStatus("idle");
+      setError("Room expired after 5 minutes. Create a new one.");
+    }, ROOM_EXPIRY_MS);
+
+    return () => {
+      if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [status, roomId, user?.id]);
+
   const reset = useCallback(() => {
     setRoomCode(null);
     setRoomId(null);
@@ -207,5 +340,5 @@ export const usePrivateRoom = () => {
     setError(null);
   }, []);
 
-  return { roomCode, gameId, status, error, createRoom, joinRoom, reset };
+  return { roomCode, gameId, status, error, expirySeconds, createRoom, joinRoom, regenerateRoom, cancelRoom, reset };
 };
