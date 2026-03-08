@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star } from "lucide-react";
 import BackButton from "@/components/common/BackButton";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface ShopItem {
   id: string;
