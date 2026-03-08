@@ -41,6 +41,7 @@ const Play = () => {
   const [resignPending, setResignPending] = useState(false);
   const [showResignDialog, setShowResignDialog] = useState(false);
   const [showGameOverPopup, setShowGameOverPopup] = useState(false);
+  const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
   const [aiAccuracy, setAiAccuracy] = useState(92);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
