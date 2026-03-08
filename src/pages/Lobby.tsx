@@ -397,9 +397,10 @@ const Lobby = () => {
       {/* Match action */}
       {matchmaking.state === "idle" && (
         <motion.button
+          whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => matchmaking.startSearch("world_arena", durationFromTC)}
-          className="w-full rounded-xl bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider py-4 hover:opacity-90 transition-all shadow-[0_0_24px_-6px_hsl(var(--primary)/0.4)] flex items-center justify-center gap-2"
+          className="w-full rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-sm tracking-wider py-4 transition-all gold-glow hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2"
         >
           <Globe className="w-4 h-4" />
           {selectedTimeControl ? `ENTER ARENA · ${selectedTimeControl.label}` : "ENTER ARENA"}
