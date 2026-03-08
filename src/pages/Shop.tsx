@@ -317,11 +317,23 @@ const Shop = () => {
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
   };
 
-  const filteredItems = items.filter(i => {
-    if (category !== "all" && i.category !== category) return false;
-    if (rarity !== "all" && i.rarity !== rarity) return false;
-    return true;
-  });
+  const RARITY_ORDER: Record<string, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
+
+  const filteredItems = items
+    .filter(i => {
+      if (category !== "all" && i.category !== category) return false;
+      if (rarity !== "all" && i.rarity !== rarity) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "price_asc": return a.price_crowns - b.price_crowns;
+        case "price_desc": return b.price_crowns - a.price_crowns;
+        case "rarity": return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        case "newest": return b.id.localeCompare(a.id);
+        default: return 0;
+      }
+    });
   const ownedItems = items.filter(i => purchases.has(i.id));
 
   const ItemCard = ({ item, idx }: { item: ShopItem; idx: number }) => {
