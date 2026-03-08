@@ -534,8 +534,15 @@ const Dashboard = () => {
                     </div>
 
                     {isReady && (
-                      <button
-                        onClick={async () => {
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => navigate(`/tournament/${tournament.id}`)}
+                          className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary font-semibold"
+                        >
+                          View Bracket & Standings
+                        </button>
+                        <button
+                          onClick={async () => {
                           const leaders = await getTournamentLeaderboard(tournament.id);
                           const leaderText = leaders.length > 0
                             ? leaders.map((l, i) => `#${i + 1} ${l.playerId.slice(0, 6)} (${l.wins}W/${l.matches}M)`).join(" | ")
