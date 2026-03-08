@@ -369,11 +369,12 @@ const Profile = () => {
           {/* ═══════════ TABS ═══════════ */}
           <motion.div variants={fadeUp}>
             <Tabs defaultValue="performance" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-1 h-auto">
+              <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-1 h-auto">
                 {[
                   { value: "performance", label: "Performance", icon: "📊" },
                   { value: "history", label: "History", icon: "⚔️" },
                   { value: "achievements", label: "Achievements", icon: "🏆" },
+                  { value: "cosmetics", label: "Cosmetics", icon: "🎨" },
                   { value: "social", label: "Social", icon: "👥" },
                   { value: "search", label: "Find", icon: "🔍" },
                 ].map((tab) => (
