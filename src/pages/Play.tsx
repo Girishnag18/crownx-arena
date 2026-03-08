@@ -524,9 +524,18 @@ const Play = () => {
         const won = online.gameData.winner_id === user?.id;
         return won ? "Opponent resigned — You win!" : "You resigned";
       }
+      if (rt === "timeout") {
+        const won = online.gameData.winner_id === user?.id;
+        return won ? "Opponent ran out of time — You win!" : "You ran out of time";
+      }
       if (rt === "stalemate") return "Stalemate — Draw";
       if (rt === "draw") return "Draw";
       if (rt === "in_progress") {
+        if (clockGameOver) {
+          const timedOutSide = (onlineClockWhiteMs ?? 1) <= 0 ? "w" : "b";
+          const won = (online.playerColor === "w" && timedOutSide === "b") || (online.playerColor === "b" && timedOutSide === "w");
+          return won ? "Opponent ran out of time — You win!" : "You ran out of time";
+        }
         return online.isMyTurn ? "Your turn" : "Opponent's turn";
       }
     }
