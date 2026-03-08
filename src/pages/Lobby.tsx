@@ -170,35 +170,46 @@ const Lobby = () => {
               ))}
 
               {/* Time control & variant selectors */}
-              <div className="glass-card p-5 space-y-4">
+              <div className="glass-card p-4 space-y-3">
                 <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
-                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                <div className="flex items-center justify-between pt-2 border-t border-border/30">
                   <div className="flex items-center gap-2">
-                    <Shuffle className="w-4 h-4 text-primary" />
-                    <span className="font-display text-sm font-bold">Chess960</span>
-                    <span className="text-xs text-muted-foreground">Fischer Random</span>
+                    <Shuffle className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-display text-xs font-bold">Chess960</span>
+                    <span className="text-[10px] text-muted-foreground">Fischer Random</span>
                   </div>
-                  <button onClick={() => setChess960((v) => !v)} className={`relative w-10 h-5 rounded-full transition-colors ${chess960 ? "bg-primary" : "bg-secondary border border-border"}`}>
-                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary-foreground transition-transform ${chess960 ? "translate-x-5" : ""}`} />
+                  <button onClick={() => setChess960((v) => !v)} className={`relative w-9 h-5 rounded-full transition-colors ${chess960 ? "bg-primary" : "bg-secondary border border-border"}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary-foreground transition-transform ${chess960 ? "translate-x-4" : ""}`} />
                   </button>
                 </div>
               </div>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
-                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Bot className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">vs Computer</h3><p className="text-sm text-muted-foreground">Practice with a built-in chess bot</p></div></div>
-              </motion.button>
+              {/* Secondary modes */}
+              <div className="grid grid-cols-2 gap-3">
+                <motion.button whileTap={{ scale: 0.97 }} onClick={() => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="glass-card p-4 text-left hover:border-primary/15 transition-colors">
+                  <Bot className="w-5 h-5 text-muted-foreground mb-2" />
+                  <h3 className="font-display font-bold text-xs">vs Computer</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Practice with AI</p>
+                </motion.button>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer&variant=chess960${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
-                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Shuffle className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Chess960</h3><p className="text-sm text-muted-foreground">Fischer Random — randomized starting position</p></div></div>
-              </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={() => navigate(`/play?mode=computer&variant=chess960${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="glass-card p-4 text-left hover:border-primary/15 transition-colors">
+                  <Shuffle className="w-5 h-5 text-muted-foreground mb-2" />
+                  <h3 className="font-display font-bold text-xs">Chess960 vs AI</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Randomized start</p>
+                </motion.button>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => { const params = new URLSearchParams(); if (selectedTimeControl) params.set("tc", selectedTimeControl.label); if (chess960) params.set("variant", "chess960"); navigate(`/play${params.toString() ? `?${params}` : ""}`); }} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
-                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Crown className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Local Play</h3><p className="text-sm text-muted-foreground">Play against a friend on this device</p></div></div>
-              </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={() => { const params = new URLSearchParams(); if (selectedTimeControl) params.set("tc", selectedTimeControl.label); if (chess960) params.set("variant", "chess960"); navigate(`/play${params.toString() ? `?${params}` : ""}`); }} className="glass-card p-4 text-left hover:border-primary/15 transition-colors">
+                  <Crown className="w-5 h-5 text-muted-foreground mb-2" />
+                  <h3 className="font-display font-bold text-xs">Local Play</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Same device</p>
+                </motion.button>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate("/spectate")} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
-                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Eye className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Spectate</h3><p className="text-sm text-muted-foreground">Watch live games happening now</p></div></div>
-              </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={() => navigate("/spectate")} className="glass-card p-4 text-left hover:border-primary/15 transition-colors">
+                  <Eye className="w-5 h-5 text-muted-foreground mb-2" />
+                  <h3 className="font-display font-bold text-xs">Spectate</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Watch live games</p>
+                </motion.button>
+              </div>
             </motion.div>
           ) : mode === "private" ? (
             <motion.div key="private" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
