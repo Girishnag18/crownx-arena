@@ -739,8 +739,8 @@ const Dashboard = () => {
 
           {/* ═══════════ RECENT GAMES ═══════════ */}
           {recentGames.length > 0 && (
-            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-28">
-              <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
+              <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
                 <h3 className="font-display font-bold text-sm flex items-center gap-2">
                   <Clock className="w-4 h-4 text-primary" />
                   Recent Games
