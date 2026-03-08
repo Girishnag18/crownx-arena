@@ -10,6 +10,7 @@ import ChessBoard from "@/components/chess/ChessBoard";
 import GameReview from "@/components/chess/GameReview";
 import AICoach from "@/components/chess/AICoach";
 import ReportButton from "@/components/chess/ReportButton";
+import VoiceChess from "@/components/chess/VoiceChess";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
