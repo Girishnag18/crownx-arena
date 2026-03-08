@@ -27,6 +27,7 @@ import TournamentDetail from "./pages/TournamentDetail";
 import Puzzles from "./pages/Puzzles";
 import Studies from "./pages/Studies";
 import OpeningTrainer from "./pages/OpeningTrainer";
+import PgnAnalysis from "./pages/PgnAnalysis";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
