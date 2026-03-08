@@ -2,3 +2,12 @@ project_id = "nwvvvazidezllccvxsrp"
 
 [functions.matchmake]
 verify_jwt = false
+
+[functions.chess-coach]
+verify_jwt = false
+
+[functions.anti-cheat]
+verify_jwt = false
+
+[functions.tournament-pair]
+verify_jwt = false
