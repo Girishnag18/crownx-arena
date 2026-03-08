@@ -654,7 +654,6 @@ const Play = () => {
                 <div className="flex justify-center gap-4 text-xs text-muted-foreground">
                   <span>{displayMoves.length} moves</span>
                   {timeControl && <span>Time: {timeControl.label}</span>}
-                  {isOnline && <span>{online.gameData?.game_mode?.replace("_", " ")}</span>}
                 </div>
 
                 {/* Action buttons */}
@@ -662,11 +661,7 @@ const Play = () => {
                   {isOnline ? (
                     <>
                       <button
-                        onClick={() => {
-                          const params = new URLSearchParams();
-                          if (online.gameData?.game_mode) params.set("mode", online.gameData.game_mode);
-                          navigate(`/lobby?${params.toString()}`);
-                        }}
+                        onClick={() => navigate("/lobby")}
                         className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
                       >
                         🔄 FIND NEW MATCH
