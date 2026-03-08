@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { uploadAvatarImage } from "@/lib/avatar";
 import { useBoardSettings, BOARD_THEMES, PIECE_SETS } from "@/contexts/BoardSettingsContext";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
 const Settings = () => {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
