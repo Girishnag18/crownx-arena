@@ -155,11 +155,12 @@ export const usePrivateRoom = () => {
     const durationSeconds = (claimedRoom as any).duration_seconds ?? null;
     const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+    // player1_id must be auth.uid() due to RLS policy
     const { data: game, error: gameErr } = await supabase
       .from("games")
       .insert({
-        player1_id: whiteId,
-        player2_id: blackId,
+        player1_id: user.id,
+        player2_id: claimedRoom.host_id,
         player_white: whiteId,
         player_black: blackId,
         game_mode: "private",
