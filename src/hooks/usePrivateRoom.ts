@@ -224,6 +224,17 @@ export const usePrivateRoom = () => {
           if (updated.status === "joined" && updated.guest_id) {
             setStatus("joined");
             soundManager.play("playerJoined");
+
+            // Fetch guest username and show toast
+            supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", updated.guest_id)
+              .single()
+              .then(({ data }) => {
+                const name = data?.username || "An opponent";
+                toast(`👋 ${name} joined your room!`, { duration: 4000 });
+              });
           }
 
           if (updated.status === "playing" && updated.game_id) {
