@@ -513,7 +513,7 @@ const Play = () => {
             )}
 
             {/* Bottom player bar */}
-            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-2.5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5`}>
+            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-2.5 glass-card px-3 sm:px-4 py-2 sm:py-2.5`}>
               <div className="flex items-center justify-between">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
                 <div className="flex items-center gap-2 sm:gap-3">
