@@ -145,13 +145,13 @@ const Lobby = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
-      <div className="container mx-auto max-w-2xl">
+    <div className="page-container">
+      <div className="container mx-auto max-w-xl">
         <AnimatePresence mode="wait">
           {!mode ? (
-            <motion.div key="modes" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-4">
-              <div className="text-center mb-8">
-                <h1 className="font-display text-2xl font-bold mb-2">Choose Game Mode</h1>
+            <motion.div key="modes" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="space-y-3">
+              <div className="text-center mb-6">
+                <h1 className="section-heading mb-1">Choose Game Mode</h1>
                 <p className="text-sm text-muted-foreground">Select how you want to play</p>
               </div>
 
