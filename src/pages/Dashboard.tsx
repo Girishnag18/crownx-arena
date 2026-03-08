@@ -439,19 +439,19 @@ const Dashboard = () => {
                 key={action.title}
                 whileTap={{ scale: 0.97 }}
                 onClick={action.onClick}
-                className={`rounded-xl border p-4 text-left group transition-all duration-200 ${
+                className={`rounded-lg border p-2.5 sm:p-3 text-left group transition-all duration-200 ${
                   action.accent
-                    ? "bg-primary/5 border-primary/25 hover:bg-primary/10 hover:border-primary/40 shadow-[0_0_20px_-8px_hsl(var(--primary)/0.25)]"
-                    : "bg-card/60 border-border/40 hover:bg-card/80 hover:border-border/60"
+                    ? "bg-primary/5 border-primary/25 hover:bg-primary/10"
+                    : "bg-card/60 border-border/40 hover:bg-card/80"
                 }`}
               >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 transition-colors ${
-                  action.accent ? "bg-primary/15 group-hover:bg-primary/25" : "bg-secondary/60 group-hover:bg-secondary/80"
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-1.5 transition-colors ${
+                  action.accent ? "bg-primary/15" : "bg-secondary/60"
                 }`}>
-                  <action.icon className={`w-4 h-4 ${action.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                  <action.icon className={`w-3.5 h-3.5 ${action.accent ? "text-primary" : "text-muted-foreground"}`} />
                 </div>
-                <h3 className="font-display font-bold text-xs">{action.title}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{action.desc}</p>
+                <h3 className="font-display font-bold text-[10px] sm:text-xs leading-tight">{action.title}</h3>
+                <p className="text-[8px] sm:text-[10px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
               </motion.button>
             ))}
           </motion.div>
