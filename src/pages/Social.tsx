@@ -180,6 +180,26 @@ const Social = () => {
         </button>
       </div>
 
+      {/* Friend Search & Pending Requests */}
+      <div className="space-y-3">
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          className="flex items-center gap-2 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 border border-primary/20 px-3 py-2 rounded-lg"
+        >
+          {showSearch ? <Users className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
+          {showSearch ? "Hide Search" : "Find & Add Friends"}
+        </button>
+
+        {showSearch && (
+          <FriendSearchPanel
+            existingFriendIds={friends.map(f => f.id)}
+            onRequestSent={() => {}}
+          />
+        )}
+
+        <PendingRequestsPanel onUpdate={loadData} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
         {/* Friends Panel */}
         <div className="lg:col-span-2 space-y-4">
