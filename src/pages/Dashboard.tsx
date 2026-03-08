@@ -371,7 +371,7 @@ const Dashboard = () => {
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-2.5 sm:space-y-3">
 
           {/* ═══════════ HERO SECTION ═══════════ */}
-          <motion.div variants={fadeUp} className={`rounded-2xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-5 sm:p-7 relative overflow-hidden`}>
+          <motion.div variants={fadeUp} className={`rounded-xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-3.5 sm:p-5 relative overflow-hidden`}>
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
             <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5">
               {/* Avatar */}
