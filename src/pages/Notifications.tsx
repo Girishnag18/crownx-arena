@@ -51,6 +51,7 @@ const Notifications = () => {
 
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={loadNotifications}>
       <header className="glass-card p-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6 text-primary" />
