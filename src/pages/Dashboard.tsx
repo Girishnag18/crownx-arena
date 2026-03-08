@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap } from "lucide-react";
+import XPProgressBar from "@/components/gamification/XPProgressBar";
+import AchievementsPanel from "@/components/gamification/AchievementsPanel";
+import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
