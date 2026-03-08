@@ -258,11 +258,21 @@ const MyCosmeticsSection = ({ userId, username = "Player", avatarUrl, onEquipCha
               </div>
             </div>
 
-            {/* Mini board */}
+            {/* Mini board with equipped theme */}
             <div className="grid grid-cols-4 aspect-[2/1] max-h-[80px]">
-              {miniBoard.map((cls, i) => (
-                <div key={i} className={`${cls}`} />
-              ))}
+              {Array.from({ length: 16 }, (_, i) => {
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                const isLight = (row + col) % 2 === 0;
+                const useCustom = boardLight && boardDark;
+                return (
+                  <div
+                    key={i}
+                    className={useCustom ? "" : (isLight ? "bg-amber-200 dark:bg-amber-100/70" : "bg-amber-800 dark:bg-amber-700/80")}
+                    style={useCustom ? { backgroundColor: isLight ? boardLight : boardDark } : undefined}
+                  />
+                );
+              })}
             </div>
 
             {/* Mock opponent bar */}
