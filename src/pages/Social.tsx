@@ -11,6 +11,7 @@ import CrownGiftDialog from "@/components/social/CrownGiftDialog";
 import FriendSearchPanel from "@/components/social/FriendSearchPanel";
 import PendingRequestsPanel from "@/components/social/PendingRequestsPanel";
 import { format } from "date-fns";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface FriendProfile {
   id: string;
