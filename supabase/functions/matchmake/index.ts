@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the user from auth
     const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -35,7 +34,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { game_mode = 'quick_play' } = await req.json().catch(() => ({}));
+    const { game_mode = 'quick_play', duration_seconds = null } = await req.json().catch(() => ({}));
 
     // Get player's rating
     const { data: profile } = await supabase
@@ -46,7 +45,7 @@ Deno.serve(async (req) => {
 
     const playerRating = profile?.crown_score || 1200;
 
-    // Look for a match in the queue (within 200 rating points, same game mode)
+    // Look for a match in the queue (within 200 rating points, same game mode, same time control)
     let candidatesQuery = supabase
       .from('matchmaking_queue')
       .select('*')
@@ -57,6 +56,13 @@ Deno.serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(1);
 
+    // Filter by duration_seconds
+    if (duration_seconds === null) {
+      candidatesQuery = candidatesQuery.is('duration_seconds', null);
+    } else {
+      candidatesQuery = candidatesQuery.eq('duration_seconds', duration_seconds);
+    }
+
     const { data: candidates } = await candidatesQuery;
 
     if (candidates && candidates.length > 0) {
@@ -66,6 +72,9 @@ Deno.serve(async (req) => {
       const isWhite = Math.random() > 0.5;
       const whiteId = isWhite ? user.id : opponent.player_id;
       const blackId = isWhite ? opponent.player_id : user.id;
+
+      // Determine increment from the time control
+      const gameDuration = duration_seconds ?? null;
 
       // Create the game
       const { data: game, error: gameError } = await supabase
@@ -79,7 +88,9 @@ Deno.serve(async (req) => {
           result_type: 'in_progress',
           current_fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           moves: [],
-          duration_seconds: null,
+          duration_seconds: gameDuration,
+          white_time_ms: gameDuration ? gameDuration * 1000 : null,
+          black_time_ms: gameDuration ? gameDuration * 1000 : null,
         })
         .select()
         .single();
@@ -107,6 +118,7 @@ Deno.serve(async (req) => {
         player_id: user.id,
         game_mode,
         rating: playerRating,
+        duration_seconds: duration_seconds ?? null,
       }, { onConflict: 'player_id' });
 
     if (queueError) {
