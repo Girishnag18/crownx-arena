@@ -50,7 +50,7 @@ const Notifications = () => {
   };
 
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="page-container">
       <header className="glass-card p-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6 text-primary" />

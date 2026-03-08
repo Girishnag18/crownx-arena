@@ -62,7 +62,7 @@ const DailySpin = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background pt-24 pb-16 px-3 sm:px-4 relative overflow-hidden">
+    <main className="page-container relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-20 left-1/3 w-[400px] h-[400px] bg-primary/8 rounded-full blur-[120px]" />
         <div className="absolute bottom-20 right-1/4 w-[300px] h-[300px] bg-accent/6 rounded-full blur-[100px]" />

@@ -270,7 +270,7 @@ const Admin = () => {
   }
 
   return (
-    <main className="container max-w-6xl py-24 px-4 space-y-6">
+    <main className="page-container">
       <div>
         <h1 className="text-3xl font-bold font-display">Admin Command Center</h1>
         <p className="text-sm text-muted-foreground">Moderation, user management, tournaments, and platform analytics.</p>
