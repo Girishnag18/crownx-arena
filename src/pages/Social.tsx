@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import DirectMessagePanel from "@/components/social/DirectMessagePanel";
 import CrownGiftDialog from "@/components/social/CrownGiftDialog";
+import FriendSearchPanel from "@/components/social/FriendSearchPanel";
+import PendingRequestsPanel from "@/components/social/PendingRequestsPanel";
 import { format } from "date-fns";
 
 interface FriendProfile {
