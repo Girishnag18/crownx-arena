@@ -554,6 +554,14 @@ const Play = () => {
 
             <OpeningExplorer moves={displayMoves} />
 
+            {!isGameOver && (
+              <VoiceChess
+                game={game}
+                onMove={isOnline ? handleOnlineMove : handleLocalMove}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver : (isComputerGame ? game.turn() === computerColor : false)}
+              />
+            )}
+
             <div className="glass-card p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
               <div className="max-h-64 overflow-y-auto space-y-1 text-sm font-mono">
