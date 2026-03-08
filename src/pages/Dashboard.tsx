@@ -4,7 +4,7 @@ import { Crown, Loader2 } from "lucide-react";
 import RankPromotionOverlay from "@/components/gamification/RankPromotionOverlay";
 import PlacementBadge from "@/components/gamification/PlacementBadge";
 import TrainingInsights from "@/components/gamification/TrainingInsights";
-import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
+
 import ProfileHero from "@/components/dashboard/ProfileHero";
 import QuickPlayCard from "@/components/dashboard/QuickPlayCard";
 import StatsGrid from "@/components/dashboard/StatsGrid";
@@ -318,7 +318,7 @@ const Dashboard = () => {
                     loading: createTournamentLoading, onCreate: createTournament,
                   }}
                 />
-                <DailyPuzzleCard />
+                
               </motion.div>
             </div>
 
