@@ -46,6 +46,7 @@ const Profile = () => {
   const [searchUid, setSearchUid] = useState("");
   const [searchResult, setSearchResult] = useState<FullProfile | null>(null);
   const [dmFriend, setDmFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
+  const [equippedItems, setEquippedItems] = useState<EquippedItem[]>([]);
   const [friends, setFriends] = useState<FullProfile[]>([]);
   const [incoming, setIncoming] = useState<(Friendship & { requester?: FullProfile })[]>([]);
   const [outgoing, setOutgoing] = useState<(Friendship & { addressee?: FullProfile })[]>([]);
