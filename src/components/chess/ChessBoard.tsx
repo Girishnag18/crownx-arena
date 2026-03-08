@@ -20,6 +20,7 @@ interface ChessBoardProps {
   lastMove?: { from: Square; to: Square } | null;
   sizeClassName?: string;
   maxBoardSizePx?: number;
+  arrows?: Array<{ from: string; to: string; color?: string }>;
 }
 
 const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName, maxBoardSizePx }: ChessBoardProps) => {
