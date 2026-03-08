@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { generateChess960Fen } from "@/utils/chess960";
 
 export const usePrivateRoom = () => {
   const { user } = useAuth();
