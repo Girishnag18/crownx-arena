@@ -34,6 +34,7 @@ import BattlePass from "./pages/BattlePass";
 import Tutorial from "./pages/Tutorial";
 import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
+import Shop from "./pages/Shop";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
 import StreakBanner from "./components/gamification/StreakBanner";
