@@ -19,6 +19,7 @@ const navLinks = [
   { to: "/challenges", label: "Challenges" },
   { to: "/battle-pass", label: "Battle Pass" },
   { to: "/shop", label: "Shop" },
+  { to: "/daily-rewards", label: "Daily Rewards" },
   { to: "/analysis", label: "Analysis" },
   { to: "/ratings", label: "Ratings" },
   { to: "/profile", label: "Player Profile" },
