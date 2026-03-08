@@ -26,6 +26,7 @@ interface PlayerSummary {
   crown_score: number;
   avatar_url: string | null;
   equippedTitle?: { name: string; icon: string } | null;
+  equippedFrame?: { name: string; icon: string; rarity: string; metadata?: Record<string, any> } | null;
 }
 
 export const useOnlineGame = (gameId: string | null) => {
