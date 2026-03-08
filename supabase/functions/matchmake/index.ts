@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { game_mode = 'quick_play', duration_seconds = null } = await req.json().catch(() => ({}));
+    const { game_mode = 'quick_play' } = await req.json().catch(() => ({}));
 
     // Get player's rating
     const { data: profile } = await supabase
@@ -56,10 +56,6 @@ Deno.serve(async (req) => {
       .lte('rating', playerRating + 200)
       .order('created_at', { ascending: true })
       .limit(1);
-
-    candidatesQuery = duration_seconds === null
-      ? candidatesQuery.is('duration_seconds', null)
-      : candidatesQuery.eq('duration_seconds', duration_seconds);
 
     const { data: candidates } = await candidatesQuery;
 
@@ -83,7 +79,7 @@ Deno.serve(async (req) => {
           result_type: 'in_progress',
           current_fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           moves: [],
-          duration_seconds,
+          duration_seconds: null,
         })
         .select()
         .single();
@@ -111,7 +107,6 @@ Deno.serve(async (req) => {
         player_id: user.id,
         game_mode,
         rating: playerRating,
-        duration_seconds,
       }, { onConflict: 'player_id' });
 
     if (queueError) {
