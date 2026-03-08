@@ -13,6 +13,7 @@ const navLinks = [
   { to: "/lobby", label: "Play Online" },
   { to: "/puzzles", label: "Puzzles" },
   { to: "/studies", label: "Studies" },
+  { to: "/openings", label: "Openings" },
   { to: "/ratings", label: "Ratings" },
   { to: "/profile", label: "Player Profile" },
   { to: "/dashboard", label: "Arena Hub" },

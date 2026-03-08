@@ -397,6 +397,89 @@ export type Database = {
           },
         ]
       }
+      opening_lines: {
+        Row: {
+          category: string
+          color: string
+          created_at: string
+          description: string | null
+          difficulty: string
+          eco: string
+          id: string
+          moves: string[]
+          name: string
+        }
+        Insert: {
+          category?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          eco?: string
+          id?: string
+          moves: string[]
+          name: string
+        }
+        Update: {
+          category?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          eco?: string
+          id?: string
+          moves?: string[]
+          name?: string
+        }
+        Relationships: []
+      }
+      opening_progress: {
+        Row: {
+          correct_streak: number
+          created_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          last_reviewed_at: string | null
+          line_id: string
+          next_review_at: string
+          repetitions: number
+          user_id: string
+        }
+        Insert: {
+          correct_streak?: number
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          line_id: string
+          next_review_at?: string
+          repetitions?: number
+          user_id: string
+        }
+        Update: {
+          correct_streak?: number
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          line_id?: string
+          next_review_at?: string
+          repetitions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opening_progress_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "opening_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_achievements: {
         Row: {
           achievement_id: string
