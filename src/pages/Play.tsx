@@ -1090,14 +1090,14 @@ const Play = () => {
             transition={{ delay: 0.25 }}
             className="hidden lg:block lg:w-[320px] xl:w-[360px] lg:flex-shrink-0 space-y-3 mt-0"
           >
-            {/* Game info card */}
-            <div className="glass-card p-4 sm:p-5 space-y-3">
-              <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Crown className="w-3.5 h-3.5 text-primary" />
-                </div>
-                {isOnline ? "Live Match" : isComputerGame ? "vs Computer" : "Local Game"}
-              </h3>
+            {/* Game Info */}
+            <div className="rounded-lg bg-card/60 border border-border/30 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-primary" />
+                <h3 className="font-display font-bold text-sm">
+                  {isOnline ? "Live Match" : isComputerGame ? "vs Computer" : "Local Game"}
+                </h3>
+              </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {isOnline
                   ? `Playing as ${online.playerColor === "w" ? "White" : "Black"} · ${online.playerName} vs ${online.opponentName}`
@@ -1106,43 +1106,26 @@ const Play = () => {
                     : `Pass-and-play · ${localBottomColor === "w" ? "White" : "Black"} at bottom`}
               </p>
               {(effectiveTimeControl || timeControl) && (
-                <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 text-xs flex items-center justify-between">
+                <div className="rounded-md bg-secondary/40 border border-border/20 px-3 py-2 text-xs flex items-center justify-between">
                   <span className="text-muted-foreground">Time control</span>
                   <span className="font-display font-bold text-primary">{(effectiveTimeControl || timeControl)!.label}</span>
                 </div>
               )}
               {isOnline && (
-                <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Status</span>
-                    <span className={`flex items-center gap-1.5 font-medium ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
-                      {online.syncState === "live" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                      {online.syncState === "live" ? "Live" : "Reconnecting"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Last sync</span>
-                    <span className="text-foreground/80">{syncAgo}</span>
-                  </div>
+                <div className="flex items-center justify-between text-xs rounded-md bg-secondary/30 px-3 py-1.5">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`flex items-center gap-1.5 font-medium ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
+                    {online.syncState === "live" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                    {online.syncState === "live" ? "Live" : "Reconnecting"}
+                  </span>
                 </div>
               )}
-            </div>
-
-            {/* Latest move / board info */}
-            <div className="glass-card p-4 sm:p-5">
-              <h3 className="font-display font-bold text-sm mb-1.5 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Swords className="w-3.5 h-3.5 text-primary" />
-                </div>
-                Board Info
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">Last move is highlighted on the board.</p>
               {!isOnline && !isComputerGame && (
                 <button
                   onClick={() => setLocalBottomColor((prev) => (prev === "w" ? "b" : "w"))}
-                  className="mt-3 w-full rounded-lg border border-border/40 bg-secondary/40 px-3 py-2 text-xs font-display font-bold hover:bg-secondary/60 transition-colors"
+                  className="w-full rounded-md border border-border/30 bg-secondary/40 px-3 py-2 text-xs font-display font-bold hover:bg-secondary/60 transition-colors"
                 >
-                  Switch Seat ({localBottomColor === "w" ? "Black" : "White"} at bottom)
+                  Flip Board
                 </button>
               )}
             </div>
@@ -1161,20 +1144,26 @@ const Play = () => {
               <GameChat gameId={onlineGameId} />
             )}
 
-            {/* Move History */}
-            <div className="glass-card p-4 sm:p-5">
-              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2">Move History</h3>
-              <div className="max-h-64 overflow-y-auto space-y-0.5 text-sm font-mono">
-                {movePairs.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">No moves yet</p>
-                )}
-                {movePairs.map((pair) => (
-                  <div key={pair.num} className="flex items-center gap-2 py-1 px-1.5 rounded-md hover:bg-secondary/30 transition-colors">
-                    <span className="text-muted-foreground/60 w-6 text-right text-xs tabular-nums">{pair.num}.</span>
-                    <span className="w-16 text-foreground">{pair.white}</span>
-                    <span className="w-16 text-foreground/80">{pair.black || ""}</span>
+            {/* Move History (desktop) */}
+            <div className="rounded-lg bg-card/60 border border-border/30 p-4">
+              <h3 className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Move History</h3>
+              <div className="max-h-72 overflow-y-auto">
+                {movePairs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/60 italic">No moves yet</p>
+                ) : (
+                  <div className="space-y-0">
+                    {movePairs.map((pair) => (
+                      <div
+                        key={pair.num}
+                        className={`flex items-center text-sm font-mono py-1 px-2 rounded-sm ${pair.num % 2 === 0 ? 'bg-secondary/20' : ''}`}
+                      >
+                        <span className="text-muted-foreground/50 w-7 text-right text-xs tabular-nums shrink-0">{pair.num}.</span>
+                        <span className="w-16 ml-2 text-foreground font-medium">{pair.white}</span>
+                        <span className="w-16 text-foreground/70">{pair.black || ""}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
