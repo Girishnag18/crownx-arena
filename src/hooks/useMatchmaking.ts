@@ -74,6 +74,11 @@ export const useMatchmaking = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
+      // Only match games created after search started to avoid reconnecting to resigned games
+      if (searchStartedAt.current) {
+        gamesQuery = gamesQuery.gte("created_at", searchStartedAt.current);
+      }
+
       gamesQuery = durationSeconds === null
         ? gamesQuery.is("duration_seconds", null)
         : gamesQuery.eq("duration_seconds", durationSeconds);
