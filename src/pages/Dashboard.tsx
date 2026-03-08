@@ -164,6 +164,11 @@ const Dashboard = () => {
     if (data) setTournaments(data as Tournament[]);
   };
 
+  const loadRecentTournaments = async () => {
+    const { data } = await (supabase as any).from("recent_tournaments").select("*").order("ended_at", { ascending: false }).limit(5);
+    if (data) setRecentTournamentsList(data as RecentTournamentRow[]);
+  };
+
   const loadMyRegistrations = async (userId: string) => {
     const { data } = await (supabase as any).from("tournament_registrations").select("tournament_id").eq("player_id", userId);
     if (data) setRegisteredTournamentIds((data as any[]).map((e: any) => e.tournament_id));
