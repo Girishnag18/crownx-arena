@@ -160,7 +160,13 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
           </div>
         );
       })}
-    </div>
+      <LegendaryEquipEffect
+        show={!!legendaryEffect}
+        icon={legendaryEffect?.icon || ""}
+        name={legendaryEffect?.name || ""}
+        onComplete={() => setLegendaryEffect(null)}
+      />
+    </>
   );
 };
 
