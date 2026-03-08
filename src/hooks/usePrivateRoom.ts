@@ -215,6 +215,7 @@ export const usePrivateRoom = () => {
 
           if (updated.status === "joined" && updated.guest_id) {
             setStatus("joined");
+            soundManager.play("playerJoined");
           }
 
           if (updated.status === "playing" && updated.game_id) {
