@@ -580,7 +580,7 @@ const Play = () => {
                 lastMove={derivedLastMove}
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
-                arrows={showArrows ? engineArrows : []}
+                arrows={engineArrows}
                 premovesEnabled={isOnline}
                 playerColor={isOnline ? online.playerColor : null}
                 streamerMode={streamerMode}
