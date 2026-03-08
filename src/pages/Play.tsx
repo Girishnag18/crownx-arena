@@ -336,11 +336,19 @@ const Play = () => {
         handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
       }
 
-      setAiThinking(false);
+      if (aiThinkTimerRef.current) clearInterval(aiThinkTimerRef.current);
+      setAiThinkProgress(100);
+      setTimeout(() => {
+        setAiThinking(false);
+        setAiThinkProgress(0);
+      }, 150);
     };
 
     makeAIMove();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (aiThinkTimerRef.current) clearInterval(aiThinkTimerRef.current);
+    };
   }, [computerColor, game, handleLocalMove, isComputerGame, isGameOver, searchBestMove, aiConfig]);
 
   // Sound effects for moves
