@@ -24,6 +24,7 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Spectate from "./pages/Spectate";
 import TournamentDetail from "./pages/TournamentDetail";
+import Puzzles from "./pages/Puzzles";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
