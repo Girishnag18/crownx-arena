@@ -32,6 +32,7 @@ import PgnAnalysis from "./pages/PgnAnalysis";
 import Challenges from "./pages/Challenges";
 import Tutorial from "./pages/Tutorial";
 import Clubs from "./pages/Clubs";
+import Social from "./pages/Social";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
