@@ -20,6 +20,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
 import { stockfish } from "@/services/stockfishService";
 
+type AIDifficulty = "beginner" | "intermediate" | "advanced";
+
+const AI_CONFIG: Record<AIDifficulty, { depth: number; eloLabel: string; thinkMs: [number, number]; useStockfish: boolean; blunderChance: number }> = {
+  beginner:     { depth: 2,  eloLabel: "~600",  thinkMs: [200, 600],  useStockfish: false, blunderChance: 0.35 },
+  intermediate: { depth: 10, eloLabel: "~1200", thinkMs: [400, 1200], useStockfish: true,  blunderChance: 0.12 },
+  advanced:     { depth: 16, eloLabel: "~2000", thinkMs: [600, 1800], useStockfish: true,  blunderChance: 0.02 },
+};
+
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -29,9 +37,11 @@ const Play = () => {
   const isRankedAI = searchParams.get("ranked") === "true";
   const variant = searchParams.get("variant");
   const isChess960 = variant === "chess960";
+  const difficulty = (searchParams.get("difficulty") as AIDifficulty) || "intermediate";
+  const aiConfig = AI_CONFIG[difficulty] || AI_CONFIG.intermediate;
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
-  const aiElo = playerElo + 20;
+  const aiElo = isRankedAI ? playerElo + 20 : parseInt(aiConfig.eloLabel.replace("~", ""));
 
   const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
   const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
@@ -43,7 +53,7 @@ const Play = () => {
   const [showGameOverPopup, setShowGameOverPopup] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
-  const [aiAccuracy, setAiAccuracy] = useState(92);
+  const [aiThinking, setAiThinking] = useState(false);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
@@ -205,35 +215,77 @@ const Play = () => {
     }
   }, [isOnline, online.isGameOver]);
 
+  // AI move logic — uses Stockfish for intermediate/advanced, minimax fallback for beginner
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
     if (game.turn() !== computerColor) return;
 
-    const timer = window.setTimeout(() => {
+    let cancelled = false;
+    setAiThinking(true);
+
+    const thinkDelay = aiConfig.thinkMs[0] + Math.random() * (aiConfig.thinkMs[1] - aiConfig.thinkMs[0]);
+
+    const makeAIMove = async () => {
       const moves = game.moves({ verbose: true });
       if (moves.length === 0) return;
-      const searchDepth = aiAccuracy >= 95 ? 3 : 2;
-      const evaluated = moves.map((candidate) => {
-        const simulated = new Chess(game.fen());
-        simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
-        return {
-          move: candidate,
-          score: searchBestMove(simulated, searchDepth, -Infinity, Infinity, false),
-        };
-      }).sort((a, b) => b.score - a.score);
 
-      const bestWindow = Math.max(1, Math.ceil(((100 - aiAccuracy) / 140) * Math.min(3, evaluated.length)));
-      const pick = evaluated[Math.floor(Math.random() * bestWindow)].move;
-      handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
-    }, 350);
+      // Random blunder: pick a random move instead of best
+      if (Math.random() < aiConfig.blunderChance) {
+        await new Promise(r => setTimeout(r, thinkDelay));
+        if (cancelled) return;
+        const pick = moves[Math.floor(Math.random() * moves.length)];
+        handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+        setAiThinking(false);
+        return;
+      }
 
-    return () => window.clearTimeout(timer);
-  }, [aiAccuracy, computerColor, game, handleLocalMove, isComputerGame, isGameOver, searchBestMove]);
+      if (aiConfig.useStockfish) {
+        // Use real Stockfish engine
+        try {
+          const result = await stockfish.evaluate(game.fen(), aiConfig.depth);
+          const elapsed = performance.now();
+          const remaining = Math.max(0, thinkDelay - elapsed);
+          await new Promise(r => setTimeout(r, remaining));
+          if (cancelled) return;
+          
+          const bestMove = result.bestMove;
+          if (bestMove && bestMove.length >= 4) {
+            const from = bestMove.slice(0, 2) as Square;
+            const to = bestMove.slice(2, 4) as Square;
+            const promotion = bestMove.length > 4 ? bestMove[4] : undefined;
+            handleLocalMove(from, to, promotion);
+          }
+        } catch {
+          // Fallback to random legal move
+          const pick = moves[Math.floor(Math.random() * moves.length)];
+          handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+        }
+      } else {
+        // Beginner: use minimax with low depth
+        await new Promise(r => setTimeout(r, thinkDelay));
+        if (cancelled) return;
 
-  useEffect(() => {
-    if (!isComputerGame || isGameOver) return;
-    setAiAccuracy(Math.floor(Math.random() * 11) + 88);
-  }, [game, isComputerGame, isGameOver]);
+        const evaluated = moves.map((candidate) => {
+          const simulated = new Chess(game.fen());
+          simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+          return {
+            move: candidate,
+            score: searchBestMove(simulated, aiConfig.depth, -Infinity, Infinity, false),
+          };
+        }).sort((a, b) => b.score - a.score);
+
+        // Pick from top 3 for more variety in beginner
+        const window = Math.min(3, evaluated.length);
+        const pick = evaluated[Math.floor(Math.random() * window)].move;
+        handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+      }
+
+      setAiThinking(false);
+    };
+
+    makeAIMove();
+    return () => { cancelled = true; };
+  }, [computerColor, game, handleLocalMove, isComputerGame, isGameOver, searchBestMove, aiConfig]);
 
   // Sound effects for moves
   useEffect(() => {
@@ -321,6 +373,7 @@ const Play = () => {
     if (game.isStalemate()) return "Stalemate — Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
+    if (isComputerGame && aiThinking) return "AI is thinking…";
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
   }, [game, isInCheck, isOnline, online, user, clockGameOver]);
 
@@ -394,16 +447,17 @@ const Play = () => {
   const localTopName = localBottomColor === "w" ? "Black Player" : "White Player";
   const localBottomName = localBottomColor === "w" ? "White Player" : "Black Player";
 
+  const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   const topPlayerName = isOnline
     ? `${online.opponentName} (${(online.playerColor === "w" ? online.blackPlayer?.crown_score : online.whitePlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "b" ? `AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "b" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
       : localTopName;
 
   const bottomPlayerName = isOnline
     ? `${online.playerName} (${(online.playerColor === "w" ? online.whitePlayer?.crown_score : online.blackPlayer?.crown_score) ?? 400})`
     : isComputerGame
-      ? `${computerColor === "w" ? `AI (${aiElo})` : `You (${playerElo})`}`
+      ? `${computerColor === "w" ? `${diffLabel} AI (${aiElo})` : `You (${playerElo})`}`
       : localBottomName;
 
   const topAvatar = isOnline
@@ -623,7 +677,7 @@ const Play = () => {
                 {isOnline
                   ? `Playing as ${online.playerColor === "w" ? "White" : "Black"} · ${online.playerName} vs ${online.opponentName}`
                   : isComputerGame
-                    ? `You are ${computerColor === "w" ? "Black" : "White"} · AI accuracy: ${aiAccuracy}%`
+                    ? `You are ${computerColor === "w" ? "Black" : "White"} · ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} difficulty`
                     : `Pass-and-play · ${localBottomColor === "w" ? "White" : "Black"} at bottom`}
               </p>
               {timeControl && (

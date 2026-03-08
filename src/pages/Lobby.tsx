@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Eye, Timer, Shuffle, ChevronRight, Zap, Flame, Clock, Trophy, MessageSquare, Send, UserCheck } from "lucide-react";
+import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Eye, Timer, Shuffle, ChevronRight, Zap, Flame, Clock, Trophy, MessageSquare, Send, UserCheck, BrainCircuit, GraduationCap, Rocket } from "lucide-react";
 import { TimeControlSelector, TIME_CONTROLS, type TimeControl } from "@/components/chess/ChessClock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,8 @@ import { usePrivateRoom } from "@/hooks/usePrivateRoom";
 import { supabase } from "@/integrations/supabase/client";
 import WorldChatMessageItem, { type ChatMessage } from "@/components/chat/WorldChatMessage";
 
-type Mode = null | "quick_play" | "world_arena" | "private";
+type Mode = null | "quick_play" | "world_arena" | "private" | "vs_computer";
+type AIDifficulty = "beginner" | "intermediate" | "advanced";
 type WorldChatMessage = ChatMessage;
 
 const cardMotion = {
@@ -147,7 +148,7 @@ const Lobby = () => {
   ];
 
   const secondaryModes = [
-    { icon: Bot, title: "vs Computer", desc: "Practice against AI", onClick: () => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`) },
+    { icon: Bot, title: "vs Computer", desc: "Practice against AI", onClick: () => setMode("vs_computer") },
     { icon: Shuffle, title: "Chess960", desc: "Fischer Random", onClick: () => navigate(`/play?mode=computer&variant=chess960${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`) },
     { icon: Crown, title: "Local Play", desc: "Same device", onClick: () => { const p = new URLSearchParams(); if (selectedTimeControl) p.set("tc", selectedTimeControl.label); if (chess960) p.set("variant", "chess960"); navigate(`/play${p.toString() ? `?${p}` : ""}`); } },
     { icon: Eye, title: "Spectate", desc: "Watch live games", onClick: () => navigate("/spectate") },
@@ -573,6 +574,62 @@ const Lobby = () => {
     </motion.div>
   );
 
+  // --------------- VS COMPUTER ---------------
+  const AI_DIFFICULTIES: { id: AIDifficulty; icon: typeof GraduationCap; title: string; desc: string; elo: string; color: string }[] = [
+    { id: "beginner", icon: GraduationCap, title: "Beginner", desc: "Plays casually with frequent mistakes", elo: "~400-800", color: "text-emerald-400" },
+    { id: "intermediate", icon: BrainCircuit, title: "Intermediate", desc: "Solid play with occasional inaccuracies", elo: "~1000-1400", color: "text-amber-400" },
+    { id: "advanced", icon: Rocket, title: "Advanced", desc: "Strong engine play — very challenging", elo: "~1800-2200", color: "text-destructive" },
+  ];
+
+  const renderVsComputer = () => (
+    <motion.div key="vs_computer" {...cardMotion} className="space-y-5">
+      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back
+      </button>
+
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-3 gold-glow">
+          <Bot className="w-7 h-7 text-primary" />
+        </div>
+        <h2 className="font-display text-xl font-bold">Play vs Computer</h2>
+        <p className="text-xs text-muted-foreground mt-1">Choose AI difficulty level</p>
+      </div>
+
+      <div className="space-y-3">
+        {AI_DIFFICULTIES.map((diff, i) => (
+          <motion.button
+            key={diff.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(`/play?mode=computer&difficulty=${diff.id}${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)}
+            className="w-full rounded-xl border glass-card p-4 text-left group hover:border-primary/20 transition-all duration-300 flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-secondary/60 group-hover:bg-primary/10 flex items-center justify-center shrink-0 transition-colors duration-300 border border-border/30 group-hover:border-primary/15">
+              <diff.icon className={`w-5 h-5 ${diff.color} transition-colors`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display font-bold text-sm">{diff.title}</h3>
+                <span className={`text-[10px] font-bold ${diff.color}`}>{diff.elo}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{diff.desc}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground/30 group-hover:translate-x-1 group-hover:text-primary/50 transition-all duration-300" />
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Time control */}
+      <div className="glass-card p-4">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Time Control (optional)</p>
+        <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
+      </div>
+    </motion.div>
+  );
+
   return (
     <div className="page-container">
       <div className="container mx-auto max-w-xl">
@@ -581,10 +638,12 @@ const Lobby = () => {
           {mode === "quick_play" && renderQuickPlay()}
           {mode === "world_arena" && renderWorldArena()}
           {mode === "private" && renderPrivateRoom()}
+          {mode === "vs_computer" && renderVsComputer()}
         </AnimatePresence>
       </div>
     </div>
   );
 };
+
 
 export default Lobby;
