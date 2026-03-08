@@ -3,22 +3,12 @@ import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBoardSettings } from "@/contexts/BoardSettingsContext";
 import BoardSquare from "./BoardSquare";
-<<<<<<< HEAD
-import {
-  BOARD_THEME_STYLES,
-  PIECE_THEME_SPRITES,
-  PIECE_UNICODE,
-  type BoardTheme,
-  type PieceTheme,
-} from "@/utils/chessThemes";
-=======
 import BoardArrows from "./BoardArrows";
 
 const PIECE_UNICODE: Record<string, string> = {
   wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
   bp: "♟", bn: "♞", bb: "♝", br: "♜", bq: "♛", bk: "♚",
 };
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -37,15 +27,10 @@ interface ChessBoardProps {
   lastMove?: { from: Square; to: Square } | null;
   sizeClassName?: string;
   maxBoardSizePx?: number;
-<<<<<<< HEAD
-  boardTheme?: BoardTheme;
-  pieceTheme?: PieceTheme;
-=======
   arrows?: Array<{ from: string; to: string; color?: string }>;
   premovesEnabled?: boolean;
   playerColor?: "w" | "b" | null;
   streamerMode?: boolean;
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 }
 
 const ChessBoard = ({
@@ -56,15 +41,10 @@ const ChessBoard = ({
   lastMove,
   sizeClassName,
   maxBoardSizePx,
-<<<<<<< HEAD
-  boardTheme = "wood",
-  pieceTheme = "neo",
-=======
   arrows = [],
   premovesEnabled = false,
   playerColor = null,
   streamerMode = false,
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 }: ChessBoardProps) => {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
@@ -94,14 +74,13 @@ const ChessBoard = ({
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
-  const boardStyles = BOARD_THEME_STYLES[boardTheme];
-  const pieceSprites = PIECE_THEME_SPRITES[pieceTheme];
+
   const isInCheck = game.isCheck();
 
   const kingSquare = useMemo(() => {
     if (!isInCheck) return null;
-    for (let r = 0; r < 8; r += 1) {
-      for (let f = 0; f < 8; f += 1) {
+    for (let r = 0; r < 8; r++) {
+      for (let f = 0; f < 8; f++) {
         const sq = (FILES[f] + RANKS[r]) as Square;
         const p = game.get(sq);
         if (p && p.type === "k" && p.color === game.turn()) return sq;
@@ -110,19 +89,9 @@ const ChessBoard = ({
     return null;
   }, [game, isInCheck]);
 
-<<<<<<< HEAD
-  const clearSelection = () => {
-    setSelectedSquare(null);
-    setLegalMoves([]);
-  };
-
-  const handleSquareClick = useCallback((square: Square) => {
-    if (disabled || promotionPending) return;
-=======
   // Execute premove when it becomes our turn
   useEffect(() => {
     if (!premovesEnabled || !premove || !playerColor) return;
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
     const currentTurn = game.turn();
     if (prevTurnRef.current !== currentTurn && currentTurn === playerColor) {
@@ -190,23 +159,6 @@ const ChessBoard = ({
         return;
       }
 
-<<<<<<< HEAD
-      const result = onMove(selectedSquare, square);
-      if (result instanceof Promise) {
-        result.finally(clearSelection);
-      } else {
-        clearSelection();
-      }
-    }
-  }, [disabled, game, onMove, promotionPending, selectedSquare]);
-
-  const handlePromotion = useCallback((piece: string) => {
-    if (!promotionPending) return;
-    void onMove(promotionPending.from, promotionPending.to, piece);
-    setPromotionPending(null);
-    clearSelection();
-  }, [onMove, promotionPending]);
-=======
       if (disabled) return;
 
       if (piece && piece.color === game.turn()) {
@@ -327,12 +279,7 @@ const ChessBoard = ({
 
   const boardClasses = streamerMode
     ? "relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-none overflow-hidden border-0"
-<<<<<<< HEAD
-    : "chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl";
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-=======
     : "chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-lg overflow-hidden shadow-board";
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
   return (
     <div
@@ -345,19 +292,18 @@ const ChessBoard = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 z-20 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-xl"
           >
-            <div className="glass-card border-glow p-6">
-              <p className="mb-4 text-center font-display text-sm font-bold">Promote to:</p>
+            <div className="glass-card p-6 border-glow">
+              <p className="font-display text-sm font-bold mb-4 text-center">Promote to:</p>
               <div className="flex gap-3">
-                {["q", "r", "b", "n"].map((piece) => (
+                {["q", "r", "b", "n"].map((p) => (
                   <button
-                    key={piece}
-                    type="button"
-                    onClick={() => handlePromotion(piece)}
-                    className="flex h-14 w-14 items-center justify-center rounded-lg border border-border bg-secondary text-3xl transition-colors hover:border-primary/40 hover:bg-primary/20"
+                    key={p}
+                    onClick={() => handlePromotion(p)}
+                    className="w-14 h-14 rounded-lg bg-secondary hover:bg-primary/20 hover:border-primary/40 border border-border flex items-center justify-center text-3xl transition-colors"
                   >
-                    {PIECE_UNICODE[`${game.turn()}${piece}`]}
+                    {PIECE_UNICODE[(game.turn() + p)]}
                   </button>
                 ))}
               </div>
@@ -366,16 +312,6 @@ const ChessBoard = ({
         )}
       </AnimatePresence>
 
-<<<<<<< HEAD
-      <div
-        className="chess-board-shell grid h-full w-full grid-cols-8 grid-rows-8 overflow-hidden rounded-xl border shadow-2xl"
-        style={{
-          background: boardStyles.shellBackground,
-          boxShadow: boardStyles.shellShadow,
-          borderColor: boardStyles.borderColor,
-        }}
-      >
-=======
       {/* Premove indicator */}
       {premove && (
         <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-center">
@@ -399,7 +335,6 @@ const ChessBoard = ({
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <BoardArrows arrows={arrows} flipped={flipped} />
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
             const square = (file + rank) as Square;
@@ -407,12 +342,8 @@ const ChessBoard = ({
             const origRi = RANKS.indexOf(rank);
             const origFi = FILES.indexOf(file);
             const isLight = (origRi + origFi) % 2 === 0;
-<<<<<<< HEAD
-            const spriteKey = piece ? `${piece.color}${piece.type}` : "";
-=======
             const isPremoveSquare = premove?.from === square || premove?.to === square;
             const isDragSource = dragState?.from === square;
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
             // Calculate slide offset for the piece that just landed here
             let slideFrom: { dx: number; dy: number } | undefined;
@@ -433,17 +364,9 @@ const ChessBoard = ({
               <BoardSquare
                 key={square}
                 square={square}
-<<<<<<< HEAD
-                pieceColor={piece?.color}
-                pieceType={piece?.type}
-                squareColor={isLight ? boardStyles.lightSquare : boardStyles.darkSquare}
-                coordinateColor={isLight ? boardStyles.coordinateLight : boardStyles.coordinateDark}
-                pieceSprite={spriteKey ? pieceSprites[spriteKey] : undefined}
-=======
                 pieceColor={isDragSource ? undefined : piece?.color}
                 pieceType={isDragSource ? undefined : piece?.type}
                 isLight={isLight}
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
                 isSelected={selectedSquare === square}
                 isLegal={legalMoves.includes(square)}
                 isLastMove={lastMove?.from === square || lastMove?.to === square}
@@ -458,7 +381,7 @@ const ChessBoard = ({
                 slideAnimKey={slideAnimKey}
               />
             );
-          }),
+          })
         )}
       </motion.div>
 

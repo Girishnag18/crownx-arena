@@ -16,9 +16,6 @@ CREATE TABLE IF NOT EXISTS public.tournaments (
 
 ALTER TABLE public.tournaments ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Tournaments viewable by everyone" ON public.tournaments;
-DROP POLICY IF EXISTS "Authenticated users can create tournaments" ON public.tournaments;
-DROP POLICY IF EXISTS "Creator can update tournament" ON public.tournaments;
 CREATE POLICY "Tournaments viewable by everyone" ON public.tournaments FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can create tournaments" ON public.tournaments FOR INSERT WITH CHECK (auth.uid() = created_by);
 CREATE POLICY "Creator can update tournament" ON public.tournaments FOR UPDATE USING (auth.uid() = created_by);
@@ -34,9 +31,6 @@ CREATE TABLE IF NOT EXISTS public.tournament_registrations (
 
 ALTER TABLE public.tournament_registrations ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Registrations viewable by everyone" ON public.tournament_registrations;
-DROP POLICY IF EXISTS "Players can register" ON public.tournament_registrations;
-DROP POLICY IF EXISTS "Players can unregister" ON public.tournament_registrations;
 CREATE POLICY "Registrations viewable by everyone" ON public.tournament_registrations FOR SELECT USING (true);
 CREATE POLICY "Players can register" ON public.tournament_registrations FOR INSERT WITH CHECK (auth.uid() = player_id);
 CREATE POLICY "Players can unregister" ON public.tournament_registrations FOR DELETE USING (auth.uid() = player_id);
@@ -54,44 +48,15 @@ CREATE TABLE IF NOT EXISTS public.wallet_transactions (
 
 ALTER TABLE public.wallet_transactions ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Players can view own transactions" ON public.wallet_transactions;
-DROP POLICY IF EXISTS "Players can insert own transactions" ON public.wallet_transactions;
 CREATE POLICY "Players can view own transactions" ON public.wallet_transactions FOR SELECT USING (auth.uid() = player_id);
 CREATE POLICY "Players can insert own transactions" ON public.wallet_transactions FOR INSERT WITH CHECK (auth.uid() = player_id);
 
 -- Enable realtime
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables
-    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'tournaments'
-  ) THEN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.tournaments;
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables
-    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'tournament_registrations'
-  ) THEN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.tournament_registrations;
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables
-    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'wallet_transactions'
-  ) THEN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.wallet_transactions;
-  END IF;
-END $$;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.tournaments;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.tournament_registrations;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.wallet_transactions;
 
 -- RPC: topup_wallet_via_upi
-DROP FUNCTION IF EXISTS public.topup_wallet_via_upi(numeric, text, text);
 CREATE OR REPLACE FUNCTION public.topup_wallet_via_upi(topup_rupees numeric, upi_ref text, upi_provider text)
 RETURNS TABLE(wallet_balance numeric) LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
@@ -112,7 +77,6 @@ END;
 $$;
 
 -- RPC: register_tournament_with_wallet
-DROP FUNCTION IF EXISTS public.register_tournament_with_wallet(uuid);
 CREATE OR REPLACE FUNCTION public.register_tournament_with_wallet(target_tournament uuid)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE

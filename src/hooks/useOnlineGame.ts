@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Chess, Square } from "chess.js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Json } from "@/integrations/supabase/types";
 
 interface GameData {
   id: string;
@@ -11,25 +10,14 @@ interface GameData {
   player1_id: string;
   player2_id: string;
   current_fen: string;
-  duration_seconds: number | null;
-  moves: Json[];
+  moves: any[];
   result_type: string;
   winner_id: string | null;
-<<<<<<< HEAD
-  clock_white_ms: number | null;
-  clock_black_ms: number | null;
-  increment_ms: number;
-  delay_ms: number;
-  time_control_mode: "none" | "fischer" | "delay" | "bronstein";
-  clock_last_move_at: string | null;
-  flag_fall_winner_id: string | null;
-=======
   duration_seconds: number | null;
   increment_seconds: number | null;
   white_time_ms: number | null;
   black_time_ms: number | null;
   last_move_at: string | null;
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 }
 
 interface PlayerSummary {
@@ -51,67 +39,11 @@ export const useOnlineGame = (gameId: string | null) => {
   const [syncState, setSyncState] = useState<"connecting" | "live" | "offline">("connecting");
   const [pendingMove, setPendingMove] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
-  const [clockTick, setClockTick] = useState(0);
-
-  const hydratePlayers = useCallback(async (data: GameData) => {
-    const playerIds = [data.player_white, data.player_black].filter(Boolean) as string[];
-    if (playerIds.length === 0) return;
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, crown_score, avatar_url")
-      .in("id", playerIds);
-
-    if (!profiles) return;
-
-    const profileMap = new Map(
-      profiles.map((profile) => [
-        profile.id,
-        {
-          id: profile.id,
-          username: profile.username || "Player",
-          crown_score: profile.crown_score || 1200,
-          avatar_url: profile.avatar_url || null,
-        } satisfies PlayerSummary,
-      ]),
-    );
-
-    setWhitePlayer(data.player_white ? profileMap.get(data.player_white) || null : null);
-    setBlackPlayer(data.player_black ? profileMap.get(data.player_black) || null : null);
-  }, []);
-
-  const applyGameSnapshot = useCallback(async (data: GameData) => {
-    setGameData(data);
-    setGame(new Chess(data.current_fen));
-    setPlayerColor(data.player_white === user?.id ? "w" : data.player_black === user?.id ? "b" : null);
-    setLastSyncedAt(new Date());
-    await hydratePlayers(data);
-  }, [hydratePlayers, user?.id]);
-
-  const fetchGameSnapshot = useCallback(async (initialLoad = false) => {
-    if (!gameId) return;
-    if (initialLoad) setLoading(true);
-
-    const { data } = await supabase
-      .from("games")
-      .select("*")
-      .eq("id", gameId)
-      .single();
-
-    if (data) {
-      await applyGameSnapshot(data as unknown as GameData);
-    }
-
-    if (initialLoad) setLoading(false);
-  }, [applyGameSnapshot, gameId]);
 
   // Load game data
   useEffect(() => {
     if (!gameId || !user) return;
     setSyncState("connecting");
-<<<<<<< HEAD
-    void fetchGameSnapshot(true);
-=======
 
     const loadGame = async () => {
       const { data } = await supabase
@@ -182,7 +114,6 @@ export const useOnlineGame = (gameId: string | null) => {
     };
 
     loadGame();
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
     // Subscribe to realtime updates
     const channel = supabase
@@ -196,7 +127,11 @@ export const useOnlineGame = (gameId: string | null) => {
           filter: `id=eq.${gameId}`,
         },
         (payload) => {
-          void applyGameSnapshot(payload.new as unknown as GameData);
+          const updated = payload.new as unknown as GameData;
+          setGameData(updated);
+          const chess = new Chess(updated.current_fen);
+          setGame(chess);
+          setLastSyncedAt(new Date());
         }
       )
       .subscribe((status) => {
@@ -215,19 +150,7 @@ export const useOnlineGame = (gameId: string | null) => {
       setSyncState("offline");
       supabase.removeChannel(channel);
     };
-  }, [applyGameSnapshot, fetchGameSnapshot, gameId, user]);
-
-  useEffect(() => {
-    if (!gameId || !user) return;
-
-    const poller = window.setInterval(() => {
-      if (syncState !== "live" || pendingMove) {
-        void fetchGameSnapshot(false);
-      }
-    }, 4000);
-
-    return () => window.clearInterval(poller);
-  }, [fetchGameSnapshot, gameId, pendingMove, syncState, user]);
+  }, [gameId, user]);
 
   useEffect(() => {
     if (!gameData) return;
@@ -274,47 +197,6 @@ export const useOnlineGame = (gameId: string | null) => {
     };
   }, [gameData]);
 
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setClockTick((prev) => (prev + 1) % 10000);
-    }, 250);
-    return () => {
-      window.clearInterval(id);
-    };
-  }, []);
-
-  const deriveClocks = useCallback((data: GameData | null) => {
-    if (!data) return { white: null as number | null, black: null as number | null };
-    if (data.clock_white_ms === null || data.clock_black_ms === null || !data.clock_last_move_at || data.result_type !== "in_progress") {
-      return { white: data.clock_white_ms, black: data.clock_black_ms };
-    }
-
-    const elapsedMs = Math.max(0, Date.now() - new Date(data.clock_last_move_at).getTime());
-    const isWhiteTurn = data.current_fen?.includes(" w ");
-
-    let white = data.clock_white_ms;
-    let black = data.clock_black_ms;
-
-    if (isWhiteTurn) {
-      if (data.time_control_mode === "delay") {
-        white = Math.max(0, white - Math.max(0, elapsedMs - data.delay_ms));
-      } else if (data.time_control_mode === "bronstein") {
-        white = Math.max(0, white - elapsedMs + Math.min(elapsedMs, data.delay_ms));
-      } else {
-        white = Math.max(0, white - elapsedMs);
-      }
-    } else {
-      if (data.time_control_mode === "delay") {
-        black = Math.max(0, black - Math.max(0, elapsedMs - data.delay_ms));
-      } else if (data.time_control_mode === "bronstein") {
-        black = Math.max(0, black - elapsedMs + Math.min(elapsedMs, data.delay_ms));
-      } else {
-        black = Math.max(0, black - elapsedMs);
-      }
-    }
-    return { white, black };
-  }, []);
-
   const makeMove = useCallback(
     async (from: Square, to: Square, promotion?: string) => {
       if (!game || !gameData || !user || !playerColor) return false;
@@ -354,14 +236,10 @@ export const useOnlineGame = (gameId: string | null) => {
           return {
             ...prev,
             current_fen: gameCopy.fen(),
-<<<<<<< HEAD
-            moves: [...(prev.moves || []), { from, to, san: move.san, promotion: promotion ?? null }],
-=======
             moves: [...(prev.moves || []), { from, to, san: move.san, promotion }],
             white_time_ms: updatedWhiteMs,
             black_time_ms: updatedBlackMs,
             last_move_at: nowISO,
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
           };
         });
 
@@ -393,37 +271,8 @@ export const useOnlineGame = (gameId: string | null) => {
           endedAt = nowISO;
         }
 
-        const newMoves = [...previousMoves, { from, to, san: move.san, promotion: promotion ?? null }];
+        const newMoves = [...previousMoves, { from, to, san: move.san, promotion }];
 
-<<<<<<< HEAD
-        const { data, error } = await (supabase as unknown as {
-          rpc: (
-            fn: string,
-            args: Record<string, unknown>,
-          ) => Promise<{
-            data: Array<{
-              ok: boolean;
-              result_type: string;
-              winner_id: string | null;
-              clock_white_ms: number | null;
-              clock_black_ms: number | null;
-              current_fen: string;
-              moves: Json;
-            }> | null;
-            error: { message: string } | null;
-          }>;
-        }).rpc("submit_online_move", {
-          p_game_id: gameData.id,
-          p_from: from,
-          p_to: to,
-          p_san: move.san,
-          p_promotion: promotion ?? null,
-          p_new_fen: gameCopy.fen(),
-          p_result_type: resultType,
-          p_winner_id: winnerId,
-          p_pgn: gameCopy.pgn(),
-        });
-=======
         const { error } = await supabase
           .from("games")
           .update({
@@ -438,23 +287,8 @@ export const useOnlineGame = (gameId: string | null) => {
             last_move_at: nowISO,
           } as any)
           .eq("id", gameData.id);
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
         if (error) throw error;
-        if (data && data.length > 0) {
-          const row = data[0];
-          setGameData((prev) => prev ? {
-            ...prev,
-            current_fen: row.current_fen,
-            moves: (row.moves as Json[]) || newMoves,
-            result_type: row.result_type,
-            winner_id: row.winner_id,
-            clock_white_ms: row.clock_white_ms,
-            clock_black_ms: row.clock_black_ms,
-            clock_last_move_at: new Date().toISOString(),
-          } : prev);
-          setGame(new Chess(row.current_fen));
-        }
 
         // Record elo_history snapshot if game ended
         if (resultType !== "in_progress") {
@@ -512,7 +346,6 @@ export const useOnlineGame = (gameId: string | null) => {
 
   const resign = useCallback(async () => {
     if (!gameData || !user) return;
-    if (gameData.player_white !== user.id && gameData.player_black !== user.id) return;
     const winnerId = gameData.player_white === user.id ? gameData.player_black : gameData.player_white;
     await supabase
       .from("games")
@@ -619,23 +452,15 @@ export const useOnlineGame = (gameId: string | null) => {
     lastSyncedAt,
     makeMove,
     resign,
-<<<<<<< HEAD
-    isSpectator: !!user && !!gameData && gameData.player_white !== user.id && gameData.player_black !== user.id,
-=======
     claimTimeout,
     acceptDraw,
     abortGame,
     performTakeback,
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",
     opponentName: playerColor === "w" ? blackPlayer?.username || "Opponent" : whitePlayer?.username || "Opponent",
     isMyTurn: game ? game.turn() === playerColor : false,
-    isGameOver: !!gameData && gameData.result_type !== "in_progress" && gameData.result_type !== "pending",
-    clock: (() => {
-      void clockTick;
-      return deriveClocks(gameData);
-    })(),
+    isGameOver: gameData?.result_type !== "in_progress" && gameData?.result_type !== "pending",
   };
 };

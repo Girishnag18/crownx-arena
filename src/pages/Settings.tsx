@@ -6,15 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { uploadAvatarImage } from "@/lib/avatar";
-<<<<<<< HEAD
-import { BOARD_THEME_OPTIONS, BoardTheme, PIECE_THEME_OPTIONS, PieceTheme } from "@/utils/chessThemes";
-=======
 import ProfileSection from "@/components/settings/ProfileSection";
 import EmailChangeSection from "@/components/settings/EmailChangeSection";
 import PasswordSection from "@/components/settings/PasswordSection";
 import { BoardCustomizationSection } from "@/components/settings/BoardCustomizationSection";
 import { NotificationPrefsSection } from "@/components/settings/NotificationPrefsSection";
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -35,8 +31,6 @@ const Settings = () => {
   const [emailOtp, setEmailOtp] = useState("");
   const [saving, setSaving] = useState(false);
   const [uid, setUid] = useState("");
-  const [boardTheme, setBoardTheme] = useState<BoardTheme>("wood");
-  const [pieceTheme, setPieceTheme] = useState<PieceTheme>("neo");
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -50,15 +44,13 @@ const Settings = () => {
     setDateOfBirth((user.user_metadata?.date_of_birth as string) || "");
     setEmail(user.email || "");
     setUid(profile.player_uid || "");
-    setBoardTheme((localStorage.getItem("chess-board-theme") as BoardTheme) || "wood");
-    setPieceTheme((localStorage.getItem("chess-piece-theme") as PieceTheme) || "neo");
   }, [profile, user]);
 
   const saveSettings = async () => {
     if (!user) return;
     setSaving(true);
     const [{ data: profileData, error: profileError }, { error: metadataError }] = await Promise.all([
-      supabase.from("profiles").update({
+      (supabase as any).from("profiles").update({
         avatar_url: avatarUrl || null,
         username: username || null,
         bio: bio || null,
@@ -72,8 +64,6 @@ const Settings = () => {
     }
     if (profileData?.player_uid) setUid(profileData.player_uid);
     toast.success("Profile updated successfully");
-    localStorage.setItem("chess-board-theme", boardTheme);
-    localStorage.setItem("chess-piece-theme", pieceTheme);
     refreshProfile();
   };
 
@@ -90,9 +80,8 @@ const Settings = () => {
       const publicUrl = await uploadAvatarImage(user.id, file);
       setAvatarUrl(publicUrl);
       toast.success("Avatar uploaded. Save profile to apply it.");
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Avatar upload failed.";
-      toast.error(msg);
+    } catch (error: any) {
+      toast.error(error?.message || "Avatar upload failed.");
     } finally {
       setAvatarUploading(false);
       event.target.value = "";
@@ -180,66 +169,6 @@ const Settings = () => {
             <PasswordSection onSendReset={sendPasswordOtp} />
           </motion.div>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-          <div className="glass-card p-6 mb-6">
-            <h3 className="font-display text-lg font-bold mb-1">Chessboard Themes</h3>
-            <p className="text-xs text-muted-foreground mb-4">Customize board colors and piece style.</p>
-            <div className="space-y-4">
-              <div>
-                <Label className="mb-2 block">Board Style</Label>
-                <div className="flex flex-wrap gap-2">
-                  {BOARD_THEME_OPTIONS.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setBoardTheme(option.id)}
-                      className={`rounded-md border px-3 py-2 text-xs font-display font-bold ${
-                        boardTheme === option.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary/40"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label className="mb-2 block">Piece Set</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PIECE_THEME_OPTIONS.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setPieceTheme(option.id)}
-                      className={`rounded-md border px-3 py-2 text-xs font-display font-bold ${
-                        pieceTheme === option.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary/40"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="glass-card p-6">
-            <h3 className="font-display text-lg font-bold mb-1">Password Security</h3>
-            <p className="text-xs text-muted-foreground mb-4">Send a reset link to your email to change your password.</p>
-            <button
-              onClick={sendPasswordOtp}
-              className="w-full bg-primary/15 text-primary px-4 py-2.5 rounded-lg text-sm font-display font-bold tracking-wide inline-flex items-center justify-center gap-2"
-            >
-              <KeyRound className="w-4 h-4" /> Send Password Reset Link
-            </button>
-          </div>
-=======
-          <BoardCustomizationSection />
-
-          <NotificationPrefsSection />
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-=======
           <motion.div variants={fadeUp}>
             <BoardCustomizationSection />
           </motion.div>
@@ -247,7 +176,6 @@ const Settings = () => {
           <motion.div variants={fadeUp}>
             <NotificationPrefsSection />
           </motion.div>
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
           <motion.div variants={fadeUp} className="flex items-center gap-2 text-[10px] text-muted-foreground pb-4">
             <Zap className="w-3 h-3 text-primary" />

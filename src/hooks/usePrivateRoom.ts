@@ -27,14 +27,7 @@ export const usePrivateRoom = () => {
     return code;
   };
 
-<<<<<<< HEAD
-  const createRoom = useCallback(async (
-    durationSeconds: number | null = null,
-    timeControl: { mode?: "none" | "fischer" | "delay" | "bronstein"; incrementMs?: number; delayMs?: number } = {},
-  ) => {
-=======
   const createRoom = useCallback(async (durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     if (!user) return;
     setError(null);
     lastDurationRef.current = durationSeconds;
@@ -45,18 +38,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-<<<<<<< HEAD
-        .insert({
-          room_code: code,
-          host_id: user.id,
-          duration_seconds: durationSeconds,
-          time_control_mode: timeControl.mode ?? (durationSeconds ? "fischer" : "none"),
-          increment_ms: timeControl.incrementMs ?? 0,
-          delay_ms: timeControl.delayMs ?? 0,
-        })
-=======
         .insert({ room_code: code, host_id: user.id, duration_seconds: durationSeconds, increment_seconds: incrementSeconds } as any)
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
         .select()
         .single();
 
@@ -76,13 +58,6 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
-<<<<<<< HEAD
-  const joinRoom = useCallback(async (
-    code: string,
-    selectedDurationSeconds: number | null = null,
-    timeControl: { mode?: "none" | "fischer" | "delay" | "bronstein"; incrementMs?: number; delayMs?: number } = {},
-  ) => {
-=======
   const regenerateRoom = useCallback(async () => {
     if (!user || !roomId) return;
     setError(null);
@@ -127,7 +102,6 @@ export const usePrivateRoom = () => {
   }, [user, roomId]);
 
   const joinRoom = useCallback(async (code: string, _selectedDurationSeconds: number | null = null, variant: string | null = null) => {
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     if (!user) return;
     setError(null);
 
@@ -153,12 +127,6 @@ export const usePrivateRoom = () => {
       setError("Room not found, already full, or expired");
       return;
     }
-    const roomMeta = room as typeof room & {
-      duration_seconds?: number | null;
-      time_control_mode?: "none" | "fischer" | "delay" | "bronstein";
-      increment_ms?: number;
-      delay_ms?: number;
-    };
 
     const room = rooms[0];
 
@@ -185,17 +153,10 @@ export const usePrivateRoom = () => {
     const isWhite = Math.random() > 0.5;
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
-<<<<<<< HEAD
-    const durationSeconds = selectedDurationSeconds ?? roomMeta.duration_seconds ?? null;
-    const timeControlMode = timeControl.mode ?? roomMeta.time_control_mode ?? (durationSeconds ? "fischer" : "none");
-    const incrementMs = timeControl.incrementMs ?? roomMeta.increment_ms ?? 0;
-    const delayMs = timeControl.delayMs ?? roomMeta.delay_ms ?? 0;
-=======
     const durationSeconds = (claimedRoom as any).duration_seconds ?? null;
     const incrementSeconds = (claimedRoom as any).increment_seconds ?? null;
     const initialTimeMs = durationSeconds ? durationSeconds * 1000 : null;
     const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 
     // player1_id must be auth.uid() due to RLS policy
     const { data: game, error: gameErr } = await supabase
@@ -214,17 +175,7 @@ export const usePrivateRoom = () => {
         result_type: "in_progress",
         current_fen: startingFen,
         moves: [],
-<<<<<<< HEAD
-        clock_white_ms: durationSeconds ? durationSeconds * 1000 : null,
-        clock_black_ms: durationSeconds ? durationSeconds * 1000 : null,
-        increment_ms: incrementMs,
-        delay_ms: delayMs,
-        time_control_mode: timeControlMode,
-        clock_last_move_at: new Date().toISOString(),
-      })
-=======
       } as any)
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
       .select()
       .single();
 

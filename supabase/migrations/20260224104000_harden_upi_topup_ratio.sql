@@ -1,5 +1,4 @@
 -- Enforce 1 rupee = 1 crown conversion in wallet top ups
-DROP FUNCTION IF EXISTS public.topup_wallet_via_upi(numeric, text, text);
 CREATE OR REPLACE FUNCTION public.topup_wallet_via_upi(
   topup_rupees NUMERIC,
   upi_ref TEXT,

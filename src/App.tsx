@@ -24,10 +24,6 @@ import Settings from "./pages/Settings";
 import Ratings from "./pages/Ratings";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
-<<<<<<< HEAD
-import Tactics from "./pages/Tactics";
-import TournamentBracketPage from "./pages/TournamentBracketPage";
-=======
 import Spectate from "./pages/Spectate";
 import TournamentDetail from "./pages/TournamentDetail";
 import Puzzles from "./pages/Puzzles";
@@ -44,12 +40,8 @@ import Shop from "./pages/Shop";
 import DailyRewards from "./pages/DailyRewards";
 import DailySpin from "./pages/DailySpin";
 import Replay from "./pages/Replay";
-<<<<<<< HEAD
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-=======
 import Achievements from "./pages/Achievements";
 import MatchHistoryPage from "./pages/MatchHistoryPage";
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
 import StreakBanner from "./components/gamification/StreakBanner";
@@ -96,8 +88,6 @@ const RouteAnimator = () => {
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
           <Route path="/ratings" element={<ProtectedRoute><Ratings /></ProtectedRoute>} />
           <Route path="/play" element={<ProtectedRoute><Play /></ProtectedRoute>} />
-          <Route path="/tactics" element={<ProtectedRoute><Tactics /></ProtectedRoute>} />
-          <Route path="/tournaments/:id/bracket" element={<ProtectedRoute><TournamentBracketPage /></ProtectedRoute>} />
           <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
           <Route path="/spectate" element={<ProtectedRoute><Spectate /></ProtectedRoute>} />
           <Route path="/puzzles" element={<ProtectedRoute><Puzzles /></ProtectedRoute>} />

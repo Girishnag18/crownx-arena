@@ -13,16 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-<<<<<<< HEAD
-const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/lobby", label: "Play Online" },
-  { to: "/tactics", label: "Tactics" },
-  { to: "/ratings", label: "Ratings" },
-  { to: "/profile", label: "Player Profile" },
-  { to: "/dashboard", label: "Arena Hub" },
-  { to: "/rules", label: "How to Play" },
-=======
 const navSections = [
   {
     title: "Play",
@@ -66,7 +56,6 @@ const navSections = [
       { to: "/profile", label: "Profile", icon: User },
     ],
   },
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 ];
 
 const flatNavLinks = navSections.flatMap((s) => s.items);

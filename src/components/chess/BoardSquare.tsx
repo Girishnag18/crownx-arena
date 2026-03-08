@@ -1,19 +1,13 @@
 import React from "react";
 import { Square } from "chess.js";
 import { motion } from "framer-motion";
-<<<<<<< HEAD
-import { PIECE_UNICODE } from "@/utils/chessThemes";
-=======
 import { useBoardSettings } from "@/contexts/BoardSettingsContext";
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
 interface BoardSquareProps {
   square: Square;
   pieceColor?: string;
   pieceType?: string;
-  squareColor: string;
-  coordinateColor: string;
-  pieceSprite?: string;
+  isLight: boolean;
   isSelected: boolean;
   isLegal: boolean;
   isLastMove: boolean;
@@ -34,9 +28,7 @@ const BoardSquare = React.memo(({
   square,
   pieceColor,
   pieceType,
-  squareColor,
-  coordinateColor,
-  pieceSprite,
+  isLight,
   isSelected,
   isLegal,
   isLastMove,
@@ -53,9 +45,6 @@ const BoardSquare = React.memo(({
   const { theme, pieceSet, moveAnimation } = useBoardSettings();
   const hasPiece = !!pieceColor && !!pieceType;
   const spriteKey = hasPiece ? pieceColor + pieceType : "";
-<<<<<<< HEAD
-  const pieceGlyph = hasPiece ? PIECE_UNICODE[spriteKey] : "";
-=======
   const spriteUrl = hasPiece ? `${pieceSet.baseUrl}/${spriteKey}.png` : "";
 
   // Professional square coloring with state overlays
@@ -73,25 +62,11 @@ const BoardSquare = React.memo(({
   }
 
   const coordColor = isLight ? theme.darkSquare : theme.lightSquare;
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
 
   return (
     <button
       onClick={onClick}
-<<<<<<< HEAD
-      type="button"
-      aria-label={hasPiece ? `${pieceColor === "w" ? "white" : "black"} ${pieceType} on ${square}` : square}
-      className={`board-square relative flex items-center justify-center transition-all duration-300 ${isSelected ? "!bg-primary/35" : ""} ${
-        isLastMove ? "!bg-yellow-300/60" : ""
-      } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
-      style={{ backgroundColor: squareColor }}
-=======
       onTouchStart={onTouchStart}
-<<<<<<< HEAD
-      className="board-square relative flex items-center justify-center touch-none"
-      style={{ backgroundColor: bgColor, transition: "background-color 0.15s" }}
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-=======
       className="board-square relative flex items-center justify-center touch-none select-none"
       style={{
         backgroundColor: baseColor,
@@ -103,7 +78,6 @@ const BoardSquare = React.memo(({
           ? {}
           : { backgroundColor: baseColor }),
       }}
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
     >
       {/* Selected/last-move overlay */}
       {(isSelected || isLastMove || isPremove) && !isKingInCheck && (
@@ -157,25 +131,8 @@ const BoardSquare = React.memo(({
           style={{ borderColor: "rgba(0,0,0,0.18)" }}
         />
       )}
-<<<<<<< HEAD
-<<<<<<< HEAD
-      {hasPiece && pieceSprite && (
-        <motion.img
-          layout
-          initial={{ scale: 0.9, opacity: 0.85 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 16, mass: 0.7 }}
-          src={pieceSprite}
-          alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
-          draggable={false}
-          className="w-[82%] h-[82%] object-contain select-none"
-          style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
-        />
-=======
-=======
 
       {/* Chess piece */}
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
       {hasPiece && (
         moveAnimation && slideFrom ? (
           <motion.img
@@ -202,47 +159,22 @@ const BoardSquare = React.memo(({
             style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))" }}
           />
         )
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-      )}
-      {hasPiece && !pieceSprite && (
-        <span
-          className={`select-none text-[2.3rem] leading-none ${pieceColor === "w" ? "text-white" : "text-slate-900"}`}
-          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}
-        >
-          {pieceGlyph}
-        </span>
       )}
 
       {/* Coordinates */}
       {showRank && (
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <span className="absolute top-0.5 left-1 text-[0.55rem] font-bold" style={{ color: coordinateColor }}>
-=======
-        <span className="absolute top-0.5 left-1 text-[0.55rem] font-bold" style={{ color: coordColor, opacity: 0.7 }}>
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-=======
         <span
           className="absolute top-[2px] left-[3px] text-[0.6rem] font-bold leading-none pointer-events-none z-[2]"
           style={{ color: coordColor, opacity: 0.75 }}
         >
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
           {showRank}
         </span>
       )}
       {showFile && (
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <span className="absolute bottom-0.5 right-1 text-[0.55rem] font-bold" style={{ color: coordinateColor }}>
-=======
-        <span className="absolute bottom-0.5 right-1 text-[0.55rem] font-bold" style={{ color: coordColor, opacity: 0.7 }}>
->>>>>>> d3c51e24423dfa38cc6a6faefc281915d357437d
-=======
         <span
           className="absolute bottom-[2px] right-[3px] text-[0.6rem] font-bold leading-none pointer-events-none z-[2]"
           style={{ color: coordColor, opacity: 0.75 }}
         >
->>>>>>> 6124c122ca56d8d3ef82a2f3bf8390aac2ea3aad
           {showFile}
         </span>
       )}
