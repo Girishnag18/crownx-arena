@@ -37,6 +37,7 @@ const Play = () => {
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
+  const [showAICoach, setShowAICoach] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
   const [showArrows, setShowArrows] = useState(true);
