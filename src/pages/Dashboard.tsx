@@ -559,7 +559,7 @@ const Dashboard = () => {
             <motion.div variants={fadeUp} className="lg:col-span-8">
               <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
                      <Trophy className="w-4 h-4 text-primary" />
                      Tournaments
