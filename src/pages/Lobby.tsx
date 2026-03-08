@@ -34,6 +34,7 @@ const Lobby = () => {
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [chess960, setChess960] = useState(false);
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const matchmaking = useMatchmaking();
