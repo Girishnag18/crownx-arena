@@ -370,9 +370,12 @@ const Profile = () => {
               {friends.length === 0 ? <p className="text-sm text-muted-foreground">No friends yet.</p> : friends.map((friend) => (
                 <div key={friend.id} className="space-y-2">
                   <ProfileCard {...friend} username={friend.username || "Player"} compact />
-                  <div className="flex gap-2">
+                   <div className="flex gap-2">
                     <button className="flex-1 inline-flex items-center justify-center gap-1 bg-primary/10 text-primary border border-primary/30 rounded px-3 py-1 text-xs hover:bg-primary/20" onClick={() => challengeFriend(friend.id)}>
                       <Swords className="w-3 h-3" /> Challenge
+                    </button>
+                    <button className="flex-1 inline-flex items-center justify-center gap-1 border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => setDmFriend({ id: friend.id, username: friend.username, avatar_url: friend.avatar_url })}>
+                      <MessageCircle className="w-3 h-3" /> Message
                     </button>
                     <button className="flex-1 border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => unfriendPlayer(friend.id)}>Remove</button>
                   </div>
