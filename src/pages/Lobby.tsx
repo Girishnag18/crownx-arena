@@ -379,7 +379,7 @@ const Lobby = () => {
       </div>
 
       {/* Time Control - integrated */}
-      <div className="rounded-xl border border-border/40 bg-card/60 p-4">
+      <div className="glass-card p-4">
         <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
       </div>
 
