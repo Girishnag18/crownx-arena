@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ChessBoard from "@/components/chess/ChessBoard";
 import { soundManager } from "@/services/soundManager";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Puzzle {
   id: string;
@@ -233,8 +234,14 @@ const Puzzles = () => {
     "positional": "Positional",
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await Promise.all([loadStats(), loadLeaderboard(), loadSolvedIds()]);
+    await loadRandomPuzzle();
+  }, [loadStats, loadLeaderboard, loadSolvedIds, loadRandomPuzzle]);
+
   return (
     <div className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
           {/* Board */}
@@ -385,6 +392,7 @@ const Puzzles = () => {
           </div>
         </div>
       </div>
+      </PullToRefresh>
     </div>
   );
 };

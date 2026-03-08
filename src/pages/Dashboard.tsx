@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Target, Flame, BarChart3, Settings, Gamepad2, Gift, Shield, Sparkles } from "lucide-react";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { publishInGameNotification } from "@/components/InGameNotificationBar";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Profile {
   username: string | null;
@@ -269,6 +270,18 @@ const Dashboard = () => {
     { label: "Streak", value: profile?.win_streak || 0, icon: Flame },
   ];
 
+  const handlePullRefresh = useCallback(async () => {
+    if (!user) return;
+    await Promise.all([
+      loadProfile(user.id),
+      loadTournaments(),
+      loadRecentTournaments(),
+      loadMyRegistrations(user.id),
+      loadRecentGames(user.id),
+      loadRatingOverview(user.id),
+    ]);
+  }, [user]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pt-20">
@@ -283,6 +296,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pt-16 pb-24 lg:pb-6">
       {promotion && <RankPromotionOverlay oldRank={promotion.oldRank} newRank={promotion.newRank} onDismiss={() => setPromotion(null)} />}
 
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
         <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-3">
 
@@ -560,6 +574,7 @@ const Dashboard = () => {
 
         </motion.div>
       </div>
+      </PullToRefresh>
     </div>
   );
 };
