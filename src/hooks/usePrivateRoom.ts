@@ -23,8 +23,8 @@ export const usePrivateRoom = () => {
   const createRoom = useCallback(async (durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
-    setLastDuration(durationSeconds);
-    setLastIncrement(incrementSeconds);
+    lastDurationRef.current = durationSeconds;
+    lastIncrementRef.current = incrementSeconds;
     let createdRoom: { room_code: string; id: string } | null = null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
