@@ -114,60 +114,62 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
   const categories = Object.keys(CATEGORY_LABELS).filter(cat => items.some(i => i.category === cat));
 
   return (
-    <div className="space-y-4">
-      {categories.map(cat => {
-        const info = CATEGORY_LABELS[cat];
-        const catItems = items.filter(i => i.category === cat);
-        return (
-          <div key={cat} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
-              <span>{info.icon}</span>
-              <h3 className="font-display font-bold text-xs">{info.label}</h3>
-              {info.exclusive && <span className="text-[9px] text-primary/60 ml-auto">(1 at a time)</span>}
-            </div>
-            <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {catItems.map(item => {
-                const equipped = purchases.get(item.id)?.is_equipped;
-                const rBadge = RARITY_BADGE[item.rarity] || RARITY_BADGE.common;
-                return (
-                  <div
-                    key={item.id}
-                    className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${equipped ? "border-primary/30 bg-primary/5" : "border-border/30 bg-secondary/10 hover:bg-secondary/20"}`}
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-secondary/50 flex items-center justify-center text-lg shrink-0">
-                      {item.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-display font-bold text-xs truncate">{item.name}</p>
-                      <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full ${rBadge.text} ${rBadge.bg}`}>
-                        {item.rarity}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => toggleEquip(item)}
-                      className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-display font-bold transition-all ${
-                        equipped
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary/60 text-muted-foreground hover:bg-secondary border border-border/40"
-                      }`}
+    <>
+      <div className="space-y-4">
+        {categories.map(cat => {
+          const info = CATEGORY_LABELS[cat];
+          const catItems = items.filter(i => i.category === cat);
+          return (
+            <div key={cat} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
+                <span>{info.icon}</span>
+                <h3 className="font-display font-bold text-xs">{info.label}</h3>
+                {info.exclusive && <span className="text-[9px] text-primary/60 ml-auto">(1 at a time)</span>}
+              </div>
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {catItems.map(item => {
+                  const equipped = purchases.get(item.id)?.is_equipped;
+                  const rBadge = RARITY_BADGE[item.rarity] || RARITY_BADGE.common;
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${equipped ? "border-primary/30 bg-primary/5" : "border-border/30 bg-secondary/10 hover:bg-secondary/20"}`}
                     >
-                      {equipped ? <><Check className="w-3 h-3" /> On</> : <><Star className="w-3 h-3" /> Equip</>}
-                    </button>
-                  </div>
-                );
-              })}
+                      <div className="w-9 h-9 rounded-lg bg-secondary/50 flex items-center justify-center text-lg shrink-0">
+                        {item.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-display font-bold text-xs truncate">{item.name}</p>
+                        <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full ${rBadge.text} ${rBadge.bg}`}>
+                          {item.rarity}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => toggleEquip(item)}
+                        className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-display font-bold transition-all ${
+                          equipped
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary/60 text-muted-foreground hover:bg-secondary border border-border/40"
+                        }`}
+                      >
+                        {equipped ? <><Check className="w-3 h-3" /> On</> : <><Star className="w-3 h-3" /> Equip</>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
-    <LegendaryEquipEffect
-      show={!!legendaryEffect}
-      icon={legendaryEffect?.icon || ""}
-      name={legendaryEffect?.name || ""}
-      onComplete={() => setLegendaryEffect(null)}
-    />
+          );
+        })}
+      </div>
+      <LegendaryEquipEffect
+        show={!!legendaryEffect}
+        icon={legendaryEffect?.icon || ""}
+        name={legendaryEffect?.name || ""}
+        onComplete={() => setLegendaryEffect(null)}
+      />
     </>
+  );
 };
 
 export default MyCosmeticsSection;
