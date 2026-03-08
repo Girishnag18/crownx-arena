@@ -84,6 +84,11 @@ const Notifications = () => {
     setNotifications((prev) => prev.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item)));
   };
 
+  const dismissNotification = async (notificationId: string) => {
+    setNotifications((prev) => prev.filter((item) => item.id !== notificationId));
+    await (supabase as any).from("player_notifications").delete().eq("id", notificationId);
+  };
+
   return (
     <main className="page-container">
       <PullToRefresh onRefresh={loadNotifications}>
