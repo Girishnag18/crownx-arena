@@ -23,6 +23,8 @@ interface Profile {
   level: number;
   win_streak: number;
   wallet_crowns: number;
+  xp: number;
+  puzzles_solved: number;
 }
 
 interface Tournament {
