@@ -253,7 +253,6 @@ const Dashboard = () => {
   const winRate = profile && profile.games_played > 0 ? ((profile.wins / profile.games_played) * 100).toFixed(1) : "0.0";
   const rank = profile?.rank_tier || "Bronze";
   const activeTournaments = useMemo(() => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled"), [tournaments]);
-  const recentTournaments = useMemo(() => tournaments.filter((t) => t.status === "completed" || t.status === "cancelled").slice(0, 5), [tournaments]);
   const finishedGames = useMemo(() => recentGames.filter((g) => g.result_type !== "in_progress"), [recentGames]);
 
   useEffect(() => {
