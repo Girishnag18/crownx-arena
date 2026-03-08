@@ -89,7 +89,7 @@ const StreakBanner = () => {
       .from("profiles")
       .select("wallet_crowns")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (prof) {
       await supabase

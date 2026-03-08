@@ -42,7 +42,7 @@ const DailyPuzzleCard = () => {
         .from("profiles")
         .select("puzzle_streak")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) setStreakDays(profile.puzzle_streak || 0);
     };

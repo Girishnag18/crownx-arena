@@ -48,7 +48,7 @@ const CrownGiftDialog = ({ friend, onClose }: CrownGiftDialogProps) => {
       .from("profiles")
       .select("wallet_crowns")
       .eq("id", friend.id)
-      .single();
+      .maybeSingle();
 
     await supabase
       .from("profiles")
