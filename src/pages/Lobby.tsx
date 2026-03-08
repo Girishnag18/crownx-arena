@@ -336,12 +336,12 @@ const Lobby = () => {
   // --------------- WORLD ARENA ---------------
   const renderWorldArena = () => (
     <motion.div key="world_arena" {...cardMotion} className="space-y-4">
-      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back
+      <button onClick={handleBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
 
       {/* Arena Header */}
-      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card/80 to-card/60 p-6 text-center relative overflow-hidden">
+      <div className="glass-card p-6 text-center relative overflow-hidden border-glow">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_70%)]" />
         <div className="relative">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 mb-3">
