@@ -13,6 +13,7 @@ import ReportButton from "@/components/chess/ReportButton";
 import VoiceChess from "@/components/chess/VoiceChess";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import GameChat from "@/components/chess/GameChat";
+import ChessClock, { TIME_CONTROLS, type TimeControl, TimeControlSelector } from "@/components/chess/ChessClock";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
 import { stockfish } from "@/services/stockfishService";
