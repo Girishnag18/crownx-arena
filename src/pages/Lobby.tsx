@@ -528,7 +528,7 @@ const Lobby = () => {
             <div className="flex-1 h-px bg-border/30" />
           </div>
 
-          <div className="rounded-xl border border-border/40 bg-card/60 p-5">
+          <div className="glass-card p-5">
             <h3 className="font-display font-bold text-sm mb-3">Join a Room</h3>
             <div className="flex gap-2">
               <input
