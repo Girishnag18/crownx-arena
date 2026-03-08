@@ -617,8 +617,11 @@ const Lobby = () => {
                   <span className="font-display font-bold text-xs">
                     {roomPreview.duration_seconds
                       ? (() => {
-                          const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds);
-                          return tc ? `${tc.label} (${tc.category})` : `${roomPreview.duration_seconds / 60} min`;
+                          const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds && t.incrementSeconds === (roomPreview.increment_seconds ?? 0));
+                          if (tc) return `${tc.label} (${tc.category})`;
+                          const mins = roomPreview.duration_seconds / 60;
+                          const inc = roomPreview.increment_seconds ?? 0;
+                          return inc > 0 ? `${mins}+${inc}` : `${mins} min`;
                         })()
                       : "No time limit"}
                   </span>
