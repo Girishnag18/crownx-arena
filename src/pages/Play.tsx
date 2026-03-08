@@ -346,6 +346,90 @@ const Play = () => {
     prevMoveCountRef.current = currentMoves;
   }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
 
+  // Rematch broadcast channel for online games
+  useEffect(() => {
+    if (!isOnline || !onlineGameId || !user) return;
+
+    const channel = supabase.channel(`rematch-${onlineGameId}`)
+      .on("broadcast", { event: "rematch_offer" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setRematchState("offered");
+        }
+      })
+      .on("broadcast", { event: "rematch_accept" }, ({ payload }) => {
+        if (payload.gameId) {
+          navigate(`/play?game=${payload.gameId}`, { replace: true });
+        }
+      })
+      .on("broadcast", { event: "rematch_decline" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setRematchState("declined");
+        }
+      })
+      .subscribe();
+
+    rematchChannelRef.current = channel;
+    return () => {
+      rematchChannelRef.current = null;
+      supabase.removeChannel(channel);
+    };
+  }, [onlineGameId, isOnline, user, navigate]);
+
+  const handleOfferRematch = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setRematchState("waiting");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "rematch_offer",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
+  const handleAcceptRematch = useCallback(async () => {
+    if (!online.gameData || !user || !rematchChannelRef.current) return;
+    // Swap colors
+    const oldWhite = online.gameData.player_white;
+    const oldBlack = online.gameData.player_black;
+    const newWhite = oldBlack;
+    const newBlack = oldWhite;
+
+    const { data: newGame, error } = await supabase
+      .from("games")
+      .insert({
+        player1_id: newWhite,
+        player2_id: newBlack,
+        player_white: newWhite,
+        player_black: newBlack,
+        game_mode: "private",
+        result_type: "in_progress",
+        current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        moves: [],
+      })
+      .select()
+      .single();
+
+    if (error || !newGame) return;
+
+    // Notify opponent of new game
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "rematch_accept",
+      payload: { gameId: newGame.id },
+    });
+
+    // Navigate self
+    navigate(`/play?game=${newGame.id}`, { replace: true });
+  }, [online.gameData, user, navigate]);
+
+  const handleDeclineRematch = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setRematchState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "rematch_decline",
+      payload: { from: user.id },
+    });
+  }, [user]);
 
   // Adaptive difficulty: track win/loss streak against AI
   const streakUpdatedRef = useRef(false);
