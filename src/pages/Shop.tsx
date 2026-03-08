@@ -323,7 +323,7 @@ const Shop = () => {
   });
   const ownedItems = items.filter(i => purchases.has(i.id));
 
-  const ItemCard = ({ item, idx, showEquip }: { item: ShopItem; idx: number; showEquip?: boolean }) => {
+  const ItemCard = ({ item, idx }: { item: ShopItem; idx: number }) => {
     const owned = purchases.has(item.id);
     const equipped = purchases.get(item.id)?.is_equipped;
     const rBadge = RARITY_BADGE[item.rarity] || RARITY_BADGE.common;
@@ -369,7 +369,7 @@ const Shop = () => {
           {item.category.replace("_", " ")}
         </div>
 
-        {showEquip && owned ? (
+        {owned ? (
           <button
             onClick={() => toggleEquip(item)}
             className={`w-full flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-display font-bold transition-all duration-300 ${
@@ -380,10 +380,6 @@ const Shop = () => {
           >
             {equipped ? <><Check className="w-3 h-3" /> Equipped</> : <><Star className="w-3 h-3" /> Equip</>}
           </button>
-        ) : owned ? (
-          <div className="text-xs text-emerald-500 font-display font-bold flex items-center gap-1">
-            <Check className="w-3 h-3" /> Owned
-          </div>
         ) : (
           <button
             onClick={() => buyItem(item)}
@@ -527,7 +523,7 @@ const Shop = () => {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {catItems.map((item, idx) => (
-                          <ItemCard key={item.id} item={item} idx={idx} showEquip />
+                          <ItemCard key={item.id} item={item} idx={idx} />
                         ))}
                       </div>
                     </div>

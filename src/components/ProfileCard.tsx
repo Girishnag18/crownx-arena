@@ -6,6 +6,7 @@ export interface EquippedItem {
   icon: string;
   category: string;
   rarity: string;
+  metadata?: Record<string, any>;
 }
 
 interface ProfileCardProps {
@@ -61,13 +62,15 @@ const ProfileCard = ({
   const equippedFrame = equippedItems.find((i) => i.category === "avatar_frame");
   const equippedBadges = equippedItems.filter((i) => i.category === "badge");
 
-  const frameClass = equippedFrame ? (rarityGlow[equippedFrame.rarity] || "") : "";
+  const frameBorderColor = equippedFrame?.metadata?.border_color;
+  const frameClass = equippedFrame && !frameBorderColor ? (rarityGlow[equippedFrame.rarity] || "") : "";
+  const frameStyle = frameBorderColor ? { borderColor: frameBorderColor, boxShadow: `0 0 20px -5px ${frameBorderColor}` } : {};
 
   if (compact) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3 hover:bg-card/80 transition-colors">
         <div className="relative">
-          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/20"}`}>
+          <Avatar className={`w-10 h-10 border-2 ${frameClass || "border-primary/20"}`} style={frameStyle}>
             <AvatarImage src={avatar_url || undefined} alt={username} />
             <AvatarFallback className="bg-secondary text-primary font-display font-bold text-xs">
               {(username || "P").slice(0, 1).toUpperCase()}
@@ -107,7 +110,7 @@ const ProfileCard = ({
         {/* Avatar */}
         <div className="absolute -bottom-10 left-6">
           <div className="relative">
-            <Avatar className={`w-20 h-20 border-[3px] border-card shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)] ${frameClass}`}>
+            <Avatar className={`w-20 h-20 border-[3px] border-card shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)] ${frameClass}`} style={frameStyle}>
               <AvatarImage src={avatar_url || undefined} alt={username} />
               <AvatarFallback className="bg-secondary text-primary text-xl font-display font-bold">
                 <User className="w-8 h-8" />
