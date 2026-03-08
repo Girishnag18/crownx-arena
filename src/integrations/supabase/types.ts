@@ -76,6 +76,44 @@ export type Database = {
         }
         Relationships: []
       }
+      game_chat: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          game_id: string
+          id: string
+          is_reaction: boolean
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          game_id: string
+          id?: string
+          is_reaction?: boolean
+          message?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          game_id?: string
+          id?: string
+          is_reaction?: boolean
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_chat_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_reports: {
         Row: {
           admin_notes: string | null
