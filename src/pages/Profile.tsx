@@ -402,7 +402,7 @@ const Profile = () => {
                 </TabsContent>
 
                 <TabsContent value="cosmetics" className="mt-0">
-                  {user && <MyCosmeticsSection userId={user.id} onEquipChange={loadEquippedItems} />}
+                  {user && <MyCosmeticsSection userId={user.id} username={profileData?.username || "Player"} avatarUrl={profileData?.avatar_url} onEquipChange={loadEquippedItems} />}
                 </TabsContent>
 
                 <TabsContent value="social" className="mt-0">

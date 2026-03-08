@@ -49,7 +49,7 @@ interface MyCosmeticsSectionProps {
   onEquipChange?: () => void;
 }
 
-const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) => {
+const MyCosmeticsSection = ({ userId, username = "Player", avatarUrl, onEquipChange }: MyCosmeticsSectionProps) => {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [purchases, setPurchases] = useState<Map<string, Purchase>>(new Map());
   const [loading, setLoading] = useState(true);
