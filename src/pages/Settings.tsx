@@ -282,7 +282,7 @@ const BoardCustomizationSection = () => {
       {/* Board Theme */}
       <div className="space-y-2">
         <Label>Board Theme</Label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {BOARD_THEMES.map((t) => (
             <button
               key={t.id}
