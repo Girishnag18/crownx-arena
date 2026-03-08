@@ -42,6 +42,20 @@ interface Tournament {
   registration_count?: { count: number }[];
 }
 
+interface RecentTournamentRow {
+  id: string;
+  original_id: string;
+  name: string;
+  prize_pool: number;
+  max_players: number;
+  created_by: string;
+  status: string;
+  tournament_type: string;
+  starts_at: string | null;
+  ended_at: string | null;
+  player_count: number;
+}
+
 interface TournamentLeaderboardRow {
   playerId: string;
   wins: number;
