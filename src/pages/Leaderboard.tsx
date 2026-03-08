@@ -399,6 +399,7 @@ const Leaderboard = () => {
         </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
     </main>
   );
 };

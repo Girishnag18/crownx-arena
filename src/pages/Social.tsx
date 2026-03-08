@@ -315,6 +315,7 @@ const Social = () => {
         )}
       </AnimatePresence>
       </div>
+      </PullToRefresh>
     </main>
   );
 };

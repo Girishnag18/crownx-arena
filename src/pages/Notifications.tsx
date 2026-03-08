@@ -76,6 +76,7 @@ const Notifications = () => {
           </button>
         ))}
       </section>
+      </PullToRefresh>
     </main>
   );
 };
