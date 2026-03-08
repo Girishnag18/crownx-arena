@@ -648,20 +648,31 @@ const Lobby = () => {
             </button>
           </div>
           {privateRoom.status === "waiting" && (
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => privateRoom.regenerateRoom()}
-                className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-muted-foreground hover:text-primary border border-border/40 hover:border-primary/30 rounded-lg px-4 py-2 transition-all"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> New Code
-              </button>
-              <button
-                onClick={() => privateRoom.cancelRoom()}
-                className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 rounded-lg px-4 py-2 transition-all"
-              >
-                <X className="w-3.5 h-3.5" /> Cancel Room
-              </button>
-            </div>
+            <>
+              {privateRoom.expirySeconds > 0 && (
+                <div className="mb-4 flex items-center justify-center gap-2">
+                  <Timer className={`w-3.5 h-3.5 ${privateRoom.expirySeconds <= 60 ? "text-destructive" : "text-muted-foreground"}`} />
+                  <span className={`font-mono text-sm font-bold ${privateRoom.expirySeconds <= 60 ? "text-destructive" : "text-muted-foreground"}`}>
+                    {Math.floor(privateRoom.expirySeconds / 60)}:{String(privateRoom.expirySeconds % 60).padStart(2, "0")}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">until expiry</span>
+                </div>
+              )}
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => privateRoom.regenerateRoom()}
+                  className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-muted-foreground hover:text-primary border border-border/40 hover:border-primary/30 rounded-lg px-4 py-2 transition-all"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> New Code
+                </button>
+                <button
+                  onClick={() => privateRoom.cancelRoom()}
+                  className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-muted-foreground hover:text-destructive border border-border/40 hover:border-destructive/30 rounded-lg px-4 py-2 transition-all"
+                >
+                  <X className="w-3.5 h-3.5" /> Cancel Room
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
