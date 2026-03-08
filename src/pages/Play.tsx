@@ -37,6 +37,8 @@ const Play = () => {
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
+  const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const prevMoveCountRef = useRef(0);
 
