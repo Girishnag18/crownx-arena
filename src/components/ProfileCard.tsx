@@ -58,7 +58,7 @@ const ProfileCard = ({
   const winRate = games_played > 0 ? Math.round((wins / games_played) * 100) : 0;
 
   const equippedTitle = equippedItems.find((i) => i.category === "title");
-  const equippedFrame = equippedItems.find((i) => i.category === "frame");
+  const equippedFrame = equippedItems.find((i) => i.category === "avatar_frame");
   const equippedBadges = equippedItems.filter((i) => i.category === "badge");
 
   const frameClass = equippedFrame ? (rarityGlow[equippedFrame.rarity] || "") : "";

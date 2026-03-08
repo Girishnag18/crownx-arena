@@ -535,11 +535,9 @@ const Profile = () => {
       </div>
 
       {/* DM Panel */}
-      <AnimatePresence>
-        {dmFriend && (
-          <DirectMessagePanel friend={dmFriend} onClose={() => setDmFriend(null)} />
-        )}
-      </AnimatePresence>
+      {dmFriend && (
+        <DirectMessagePanel friend={dmFriend} onClose={() => setDmFriend(null)} />
+      )}
     </div>
   );
 };
