@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake } from "lucide-react";
 import { ResignConfirmDialog, GameOverPopup, type RematchState } from "@/components/chess/ResignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { generateChess960Fen } from "@/utils/chess960";
@@ -99,6 +99,7 @@ const Play = () => {
   const prevMoveCountRef = useRef(0);
   const [rematchState, setRematchState] = useState<RematchState>("idle");
   const rematchChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [drawOfferState, setDrawOfferState] = useState<"idle" | "sent" | "received">("idle");
 
   const online = useOnlineGame(onlineGameId);
   const isOnline = !!onlineGameId;
@@ -402,6 +403,22 @@ const Play = () => {
           setRematchState("declined");
         }
       })
+      .on("broadcast", { event: "draw_offer" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setDrawOfferState("received");
+        }
+      })
+      .on("broadcast", { event: "draw_accept" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          // Opponent accepted — game will update via realtime subscription
+          setDrawOfferState("idle");
+        }
+      })
+      .on("broadcast", { event: "draw_decline" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setDrawOfferState("idle");
+        }
+      })
       .subscribe();
 
     rematchChannelRef.current = channel;
@@ -467,7 +484,37 @@ const Play = () => {
     });
   }, [user]);
 
-  // Adaptive difficulty: track win/loss streak against AI
+  const handleOfferDraw = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setDrawOfferState("sent");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "draw_offer",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
+  const handleAcceptDraw = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setDrawOfferState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "draw_accept",
+      payload: { from: user.id },
+    });
+    await online.acceptDraw();
+  }, [user, online]);
+
+  const handleDeclineDraw = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setDrawOfferState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "draw_decline",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
   const streakUpdatedRef = useRef(false);
   useEffect(() => {
     if (!isComputerGame || streakUpdatedRef.current) return;
@@ -841,6 +888,35 @@ const Play = () => {
               </div>
             </div>
 
+            {/* Incoming draw offer banner */}
+            {isOnline && drawOfferState === "received" && !online.isGameOver && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`w-full ${boardSizeClass} mt-2 glass-card px-3 sm:px-4 py-2.5 flex items-center justify-between`}
+              >
+                <div className="flex items-center gap-2 text-sm font-display">
+                  <Handshake className="w-4 h-4 text-primary" />
+                  <span className="font-semibold">{online.opponentName}</span>
+                  <span className="text-muted-foreground">offers a draw</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAcceptDraw}
+                    className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-display font-bold text-primary hover:bg-primary/20 transition-all"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={handleDeclineDraw}
+                    className="rounded-lg border border-border/40 bg-card/60 px-3 py-1.5 text-xs font-display font-bold text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Controls bar */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -872,6 +948,21 @@ const Play = () => {
                 )}
               </div>
               <div className="flex gap-1.5 shrink-0">
+                {/* Draw offer button - online */}
+                {isOnline && !online.isGameOver && (
+                  <button
+                    onClick={handleOfferDraw}
+                    disabled={drawOfferState !== "idle"}
+                    className={`rounded-lg border p-2 sm:px-3 sm:py-2 transition-all ${
+                      drawOfferState === "sent"
+                        ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
+                        : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
+                    }`}
+                    title={drawOfferState === "sent" ? "Draw offered…" : "Offer draw"}
+                  >
+                    <Handshake className="w-4 h-4" />
+                  </button>
+                )}
                 {/* Resign button - online */}
                 {isOnline && !online.isGameOver && (
                   <button
