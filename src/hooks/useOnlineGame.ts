@@ -414,6 +414,7 @@ export const useOnlineGame = (gameId: string | null) => {
     makeMove,
     resign,
     claimTimeout,
+    acceptDraw,
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",
