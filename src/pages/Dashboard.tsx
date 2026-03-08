@@ -376,10 +376,10 @@ const Dashboard = () => {
             <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
               {/* Avatar */}
               <div className="relative">
-                <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-primary/30 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.3)]">
+                <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-primary/30 shadow-[0_0_16px_-5px_hsl(var(--primary)/0.3)]">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-secondary text-primary text-xl font-display font-bold">
-                    <User className="w-8 h-8" />
+                  <AvatarFallback className="bg-secondary text-primary text-lg font-display font-bold">
+                    <User className="w-6 h-6" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-card bg-emerald-500" />
