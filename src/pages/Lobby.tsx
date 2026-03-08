@@ -484,12 +484,35 @@ const Lobby = () => {
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
           <Loader2 className="w-8 h-8 text-primary mx-auto animate-spin" />
           <h3 className="font-display font-bold">Searching…</h3>
-          {selectedTimeControl && (
-            <span className="inline-flex items-center gap-1.5 text-xs bg-secondary/60 border border-border/40 rounded-lg px-3 py-1.5 font-display font-bold">
-              <Timer className="w-3 h-3 text-primary" />{selectedTimeControl.label}
-            </span>
+          <span className="inline-flex items-center gap-1.5 text-xs bg-secondary/60 border border-border/40 rounded-lg px-3 py-1.5 font-display font-bold tabular-nums">
+            <Timer className="w-3 h-3 text-primary" />
+            {matchmaking.searchElapsed}s
+            {selectedTimeControl && ` · ${selectedTimeControl.label}`}
+          </span>
+          {matchmaking.searchElapsed >= 15 && (
+            <p className="text-[10px] text-amber-400 font-display font-bold uppercase tracking-wider animate-pulse">
+              Expanded rating range
+            </p>
           )}
           <button onClick={() => matchmaking.cancelSearch()} className="block mx-auto text-sm text-muted-foreground hover:text-destructive transition-colors">Cancel</button>
+        </div>
+      )}
+
+      {matchmaking.state === "timeout" && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-8 text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-1">
+            <X className="w-7 h-7 text-amber-400" />
+          </div>
+          <h3 className="font-display font-bold text-lg">No Match Found</h3>
+          <p className="text-sm text-muted-foreground">We couldn't find an opponent in time.</p>
+          <div className="flex gap-3 justify-center pt-2">
+            <button onClick={() => matchmaking.retrySearch()} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-3 rounded-xl">
+              <RefreshCw className="w-4 h-4" /> Search Again
+            </button>
+            <button onClick={handleBack} className="border border-primary/30 text-primary font-display font-bold text-xs px-6 py-3 rounded-xl hover:bg-primary/10 transition-colors">
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
