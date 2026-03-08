@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star } from "lucide-react";
+import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
 
@@ -46,7 +47,14 @@ const CATEGORIES = [
   { key: "board_theme", label: "Boards", icon: "♟️" },
 ];
 
-/* Only one item per exclusive category can be equipped at a time */
+const RARITIES = [
+  { key: "all", label: "All Rarities" },
+  { key: "common", label: "Common" },
+  { key: "uncommon", label: "Uncommon" },
+  { key: "rare", label: "Rare" },
+  { key: "legendary", label: "Legendary" },
+];
+
 const EXCLUSIVE_CATEGORIES = new Set(["title", "avatar_frame", "board_theme"]);
 
 const fadeUp = {
@@ -57,6 +65,136 @@ const fadeUp = {
   }),
 };
 
+/* ─── Board Theme Preview ─── */
+const BoardPreview = ({ light, dark }: { light: string; dark: string }) => {
+  const rows = 4;
+  const cols = 4;
+  const pieces: Record<string, string> = {
+    "0-0": "♜", "0-3": "♜", "0-1": "♞", "0-2": "♝",
+    "1-0": "♟", "1-1": "♟", "1-2": "♟", "1-3": "♟",
+    "2-0": "♙", "2-1": "♙", "2-2": "♙", "2-3": "♙",
+    "3-0": "♖", "3-3": "♖", "3-1": "♘", "3-2": "♗",
+  };
+  return (
+    <div className="rounded-lg overflow-hidden border border-border/40 shadow-lg w-full max-w-[200px] mx-auto aspect-square">
+      <div className="grid grid-cols-4 grid-rows-4 w-full h-full">
+        {Array.from({ length: rows * cols }).map((_, idx) => {
+          const r = Math.floor(idx / cols);
+          const c = idx % cols;
+          const isLight = (r + c) % 2 === 0;
+          const piece = pieces[`${r}-${c}`];
+          return (
+            <div
+              key={idx}
+              className="flex items-center justify-center text-lg"
+              style={{ backgroundColor: isLight ? light : dark }}
+            >
+              {piece && <span className="drop-shadow-sm">{piece}</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Avatar Frame Preview ─── */
+const FramePreview = ({ borderColor, name }: { borderColor: string; name: string }) => (
+  <div className="flex flex-col items-center gap-3">
+    <Avatar
+      className="w-24 h-24 border-4 shadow-[0_0_30px_-5px_var(--preview-glow)]"
+      style={{ borderColor, "--preview-glow": borderColor } as React.CSSProperties}
+    >
+      <AvatarFallback className="bg-secondary text-primary font-display font-bold text-3xl">
+        <User className="w-10 h-10" />
+      </AvatarFallback>
+    </Avatar>
+    <p className="text-xs text-muted-foreground">Your avatar with <span className="font-bold text-foreground">{name}</span></p>
+  </div>
+);
+
+/* ─── Preview Dialog ─── */
+const PreviewDialog = ({ item, onClose }: { item: ShopItem; onClose: () => void }) => {
+  const meta = item.metadata || {};
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ duration: 0.25 }}
+          className="glass-card border border-border/50 rounded-2xl p-6 w-full max-w-sm space-y-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{item.icon}</span>
+              <div>
+                <h3 className="font-display font-bold text-base">{item.name}</h3>
+                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${(RARITY_BADGE[item.rarity] || RARITY_BADGE.common).text} ${(RARITY_BADGE[item.rarity] || RARITY_BADGE.common).bg}`}>
+                  {item.rarity}
+                </span>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-lg bg-secondary/60 flex items-center justify-center hover:bg-secondary transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Preview content */}
+          <div className="py-3">
+            {item.category === "board_theme" && meta.light_square && meta.dark_square && (
+              <BoardPreview light={meta.light_square} dark={meta.dark_square} />
+            )}
+            {item.category === "avatar_frame" && meta.border_color && (
+              <FramePreview borderColor={meta.border_color} name={item.name} />
+            )}
+            {item.category === "title" && (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <div className="flex items-center gap-2 text-lg">
+                  <span className="font-display font-black">PlayerName</span>
+                  <span className="text-sm text-primary font-display font-bold bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                    {item.icon} {item.name}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">How your title appears in-game</p>
+              </div>
+            )}
+            {item.category === "badge" && (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <span className="text-5xl">{item.icon}</span>
+                <span className="text-sm bg-secondary/50 border border-border/40 px-3 py-1 rounded-full font-medium">
+                  {item.icon} {item.name}
+                </span>
+                <p className="text-xs text-muted-foreground">Displayed on your profile card</p>
+              </div>
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>
+
+          <div className="flex items-center justify-between pt-2 border-t border-border/30">
+            <div className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">
+              {item.category.replace("_", " ")}
+            </div>
+            <div className="flex items-center gap-1 text-sm font-display font-bold text-primary">
+              <Crown className="w-3.5 h-3.5" /> {item.price_crowns}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const Shop = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<ShopItem[]>([]);
@@ -64,7 +202,9 @@ const Shop = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [buying, setBuying] = useState<string | null>(null);
   const [category, setCategory] = useState("all");
+  const [rarity, setRarity] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
 
   useEffect(() => { loadShop(); }, [user?.id]);
 
@@ -139,7 +279,6 @@ const Shop = () => {
 
     const newEquipped = !current.is_equipped;
 
-    // If equipping in an exclusive category, unequip others in that category first
     if (newEquipped && EXCLUSIVE_CATEGORIES.has(item.category)) {
       const sameCategory = items.filter(i => i.category === item.category && i.id !== item.id);
       for (const other of sameCategory) {
@@ -152,7 +291,6 @@ const Shop = () => {
             .eq("item_id", other.id);
         }
       }
-      // Update local state
       setPurchases(prev => {
         const next = new Map(prev);
         sameCategory.forEach(other => {
@@ -178,13 +316,18 @@ const Shop = () => {
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
   };
 
-  const filteredItems = category === "all" ? items : items.filter(i => i.category === category);
+  const filteredItems = items.filter(i => {
+    if (category !== "all" && i.category !== category) return false;
+    if (rarity !== "all" && i.rarity !== rarity) return false;
+    return true;
+  });
   const ownedItems = items.filter(i => purchases.has(i.id));
 
   const ItemCard = ({ item, idx, showEquip }: { item: ShopItem; idx: number; showEquip?: boolean }) => {
     const owned = purchases.has(item.id);
     const equipped = purchases.get(item.id)?.is_equipped;
     const rBadge = RARITY_BADGE[item.rarity] || RARITY_BADGE.common;
+    const hasPreview = item.category === "board_theme" || item.category === "avatar_frame" || item.category === "title" || item.category === "badge";
 
     return (
       <motion.div
@@ -206,7 +349,18 @@ const Shop = () => {
               </span>
             </div>
           </div>
-          {owned && <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-1" />}
+          <div className="flex items-center gap-1 shrink-0 mt-1">
+            {hasPreview && (
+              <button
+                onClick={() => setPreviewItem(item)}
+                className="w-7 h-7 rounded-lg bg-secondary/50 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors"
+                title="Preview"
+              >
+                <Eye className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {owned && <Check className="w-4 h-4 text-emerald-500" />}
+          </div>
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>
@@ -250,7 +404,6 @@ const Shop = () => {
 
   return (
     <main className="page-container relative overflow-hidden">
-      {/* Ambient glows */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-20 left-1/4 w-[420px] h-[420px] bg-primary/8 rounded-full blur-[120px]" />
         <div className="absolute bottom-20 right-1/4 w-[320px] h-[320px] bg-accent/6 rounded-full blur-[100px]" />
@@ -259,7 +412,6 @@ const Shop = () => {
       <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl relative z-10 space-y-5">
         <BackButton label="Back" />
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -294,7 +446,6 @@ const Shop = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Shop Tab */}
           <TabsContent value="shop" className="space-y-4 mt-4">
             {/* Category filter */}
             <div className="flex gap-2 flex-wrap">
@@ -313,6 +464,26 @@ const Shop = () => {
               ))}
             </div>
 
+            {/* Rarity filter */}
+            <div className="flex gap-1.5 flex-wrap">
+              {RARITIES.map(r => {
+                const badge = RARITY_BADGE[r.key] || { text: "text-foreground", bg: "bg-secondary/60" };
+                return (
+                  <button
+                    key={r.key}
+                    onClick={() => setRarity(r.key)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-display font-bold transition-all duration-300 border ${
+                      rarity === r.key
+                        ? `${badge.bg} ${badge.text} border-current shadow-sm`
+                        : "bg-card/40 text-muted-foreground border-border/30 hover:bg-secondary/50"
+                    }`}
+                  >
+                    {r.key === "all" ? "✦" : r.key === "legendary" ? "⭐" : r.key === "rare" ? "💎" : r.key === "uncommon" ? "🟢" : "⚪"} {r.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -328,13 +499,12 @@ const Shop = () => {
             {!loading && filteredItems.length === 0 && (
               <div className="glass-card p-12 text-center">
                 <Sparkles className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="font-display font-bold text-sm">No items in this category</p>
-                <p className="text-xs text-muted-foreground mt-1">Check back later for new arrivals!</p>
+                <p className="font-display font-bold text-sm">No items match your filters</p>
+                <p className="text-xs text-muted-foreground mt-1">Try a different category or rarity.</p>
               </div>
             )}
           </TabsContent>
 
-          {/* Owned Tab */}
           <TabsContent value="owned" className="space-y-4 mt-4">
             {ownedItems.length === 0 ? (
               <div className="glass-card p-12 text-center">
@@ -344,7 +514,6 @@ const Shop = () => {
               </div>
             ) : (
               <>
-                {/* Group by category */}
                 {CATEGORIES.filter(c => c.key !== "all").map(cat => {
                   const catItems = ownedItems.filter(i => i.category === cat.key);
                   if (catItems.length === 0) return null;
@@ -370,6 +539,11 @@ const Shop = () => {
         </Tabs>
       </div>
       </PullToRefresh>
+
+      {/* Preview Dialog */}
+      {previewItem && (
+        <PreviewDialog item={previewItem} onClose={() => setPreviewItem(null)} />
+      )}
     </main>
   );
 };
