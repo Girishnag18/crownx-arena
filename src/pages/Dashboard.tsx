@@ -457,7 +457,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ═══════════ MAIN GRID ═══════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 sm:gap-2">
 
             {/* Left Column — Wallet, Rank, Daily Puzzle */}
             <div className="lg:col-span-4 space-y-2">
