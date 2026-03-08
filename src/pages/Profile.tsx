@@ -8,8 +8,9 @@ import ProfileCard from "@/components/ProfileCard";
 import PerformanceTab from "@/components/profile/PerformanceTab";
 import MatchHistory from "@/components/profile/MatchHistory";
 import AchievementShowcase from "@/components/profile/AchievementShowcase";
-import { motion } from "framer-motion";
-import { Edit3, X, Swords } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Edit3, X, Swords, MessageCircle } from "lucide-react";
+import DirectMessagePanel from "@/components/social/DirectMessagePanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 
@@ -44,6 +45,7 @@ const Profile = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [searchUid, setSearchUid] = useState("");
   const [searchResult, setSearchResult] = useState<FullProfile | null>(null);
+  const [dmFriend, setDmFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
   const [friends, setFriends] = useState<FullProfile[]>([]);
   const [incoming, setIncoming] = useState<(Friendship & { requester?: FullProfile })[]>([]);
   const [outgoing, setOutgoing] = useState<(Friendship & { addressee?: FullProfile })[]>([]);
@@ -368,9 +370,12 @@ const Profile = () => {
               {friends.length === 0 ? <p className="text-sm text-muted-foreground">No friends yet.</p> : friends.map((friend) => (
                 <div key={friend.id} className="space-y-2">
                   <ProfileCard {...friend} username={friend.username || "Player"} compact />
-                  <div className="flex gap-2">
+                   <div className="flex gap-2">
                     <button className="flex-1 inline-flex items-center justify-center gap-1 bg-primary/10 text-primary border border-primary/30 rounded px-3 py-1 text-xs hover:bg-primary/20" onClick={() => challengeFriend(friend.id)}>
                       <Swords className="w-3 h-3" /> Challenge
+                    </button>
+                    <button className="flex-1 inline-flex items-center justify-center gap-1 border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => setDmFriend({ id: friend.id, username: friend.username, avatar_url: friend.avatar_url })}>
+                      <MessageCircle className="w-3 h-3" /> Message
                     </button>
                     <button className="flex-1 border border-border rounded px-3 py-1 text-xs hover:bg-secondary/50" onClick={() => unfriendPlayer(friend.id)}>Remove</button>
                   </div>
@@ -403,6 +408,13 @@ const Profile = () => {
           </section>
         </TabsContent>
       </Tabs>
+
+      {/* DM Panel */}
+      <AnimatePresence>
+        {dmFriend && (
+          <DirectMessagePanel friend={dmFriend} onClose={() => setDmFriend(null)} />
+        )}
+      </AnimatePresence>
     </main>
   );
 };
