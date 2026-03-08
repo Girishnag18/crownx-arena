@@ -496,6 +496,13 @@ const Dashboard = () => {
                   <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Start Date & Time</label>
                   <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Format</label>
+                  <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="swiss">Swiss</option>
+                    <option value="arena">Arena</option>
+                  </select>
+                </div>
                 <button onClick={createTournament} disabled={createTournamentLoading} className="md:col-span-2 w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-60 transition-all duration-300">
                   {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating Tournament...</> : <><Plus className="w-3.5 h-3.5" /> Create Tournament</>}
                 </button>
