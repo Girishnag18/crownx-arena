@@ -12,6 +12,7 @@ import AICoach from "@/components/chess/AICoach";
 import ReportButton from "@/components/chess/ReportButton";
 import VoiceChess from "@/components/chess/VoiceChess";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
+import GameChat from "@/components/chess/GameChat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
 import { stockfish } from "@/services/stockfishService";
