@@ -9,6 +9,7 @@ import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
 import GameReview from "@/components/chess/GameReview";
 import AICoach from "@/components/chess/AICoach";
+import ReportButton from "@/components/chess/ReportButton";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
@@ -596,6 +597,16 @@ const Play = () => {
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => setShowEngineReview(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">ENGINE REVIEW</button>
                   <button onClick={() => setShowAICoach(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">AI COACH</button>
+                  {isOnline && online.gameData && (
+                    <ReportButton
+                      gameId={online.gameData.id}
+                      reportedPlayerId={
+                        online.playerColor === "w"
+                          ? online.gameData.player_black
+                          : online.gameData.player_white
+                      }
+                    />
+                  )}
                   <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
                   <button
                     onClick={() => {
