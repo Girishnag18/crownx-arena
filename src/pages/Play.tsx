@@ -403,6 +403,22 @@ const Play = () => {
           setRematchState("declined");
         }
       })
+      .on("broadcast", { event: "draw_offer" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setDrawOfferState("received");
+        }
+      })
+      .on("broadcast", { event: "draw_accept" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          // Opponent accepted — game will update via realtime subscription
+          setDrawOfferState("idle");
+        }
+      })
+      .on("broadcast", { event: "draw_decline" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setDrawOfferState("idle");
+        }
+      })
       .subscribe();
 
     rematchChannelRef.current = channel;
