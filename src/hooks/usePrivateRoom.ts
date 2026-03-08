@@ -230,7 +230,7 @@ export const usePrivateRoom = () => {
               .from("profiles")
               .select("username")
               .eq("id", updated.guest_id)
-              .single()
+              .maybeSingle()
               .then(({ data }) => {
                 const name = data?.username || "An opponent";
                 toast(`👋 ${name} joined your room!`, { duration: 4000 });

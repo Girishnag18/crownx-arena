@@ -50,7 +50,7 @@ export const useOnlineGame = (gameId: string | null) => {
         .from("games")
         .select("*")
         .eq("id", gameId)
-        .single();
+        .maybeSingle();
 
       if (data) {
         const gd = data as unknown as GameData;
