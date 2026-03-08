@@ -10,8 +10,8 @@ export const usePrivateRoom = () => {
   const [gameId, setGameId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "waiting" | "joined" | "ready">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [lastDuration, setLastDuration] = useState<number | null>(null);
-  const [lastIncrement, setLastIncrement] = useState<number | null>(null);
+  const lastDurationRef = useRef<number | null>(null);
+  const lastIncrementRef = useRef<number | null>(null);
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
