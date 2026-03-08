@@ -82,7 +82,7 @@ export const usePrivateRoom = () => {
     setRoomCode(createdRoom.room_code);
     setRoomId(createdRoom.id);
     setStatus("waiting");
-  }, [user, roomId, lastDuration, lastIncrement]);
+  }, [user, roomId]);
 
   const cancelRoom = useCallback(async () => {
     if (!user || !roomId) return;
