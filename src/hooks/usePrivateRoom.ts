@@ -47,7 +47,7 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
-  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null) => {
+  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null, variant: string | null = null) => {
     if (!user) return;
     setError(null);
 
