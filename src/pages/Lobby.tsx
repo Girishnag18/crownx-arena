@@ -148,7 +148,7 @@ const Lobby = () => {
   ];
 
   const secondaryModes = [
-    { icon: Bot, title: "vs Computer", desc: "Practice against AI", onClick: () => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`) },
+    { icon: Bot, title: "vs Computer", desc: "Practice against AI", onClick: () => setMode("vs_computer") },
     { icon: Shuffle, title: "Chess960", desc: "Fischer Random", onClick: () => navigate(`/play?mode=computer&variant=chess960${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`) },
     { icon: Crown, title: "Local Play", desc: "Same device", onClick: () => { const p = new URLSearchParams(); if (selectedTimeControl) p.set("tc", selectedTimeControl.label); if (chess960) p.set("variant", "chess960"); navigate(`/play${p.toString() ? `?${p}` : ""}`); } },
     { icon: Eye, title: "Spectate", desc: "Watch live games", onClick: () => navigate("/spectate") },
