@@ -143,29 +143,29 @@ const Index = () => {
               </Link>
             </motion.div>
           </motion.div>
+        </motion.div>
 
-          {/* Stats bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.55, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
-            className="relative flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-16"
-          >
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="flex items-center gap-3 glass-card px-5 py-3 hover:border-primary/20 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
-                  <stat.icon className="w-4 h-4 text-primary" />
-                </div>
-                <div className="text-left">
-                  <p className="font-display font-bold text-lg leading-tight">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </div>
+        {/* Stats bar — outside parallax so it stays visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.55, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] }}
+          className="relative container max-w-5xl px-4 sm:px-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-16"
+        >
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center gap-3 glass-card px-5 py-3 hover:border-primary/20 transition-colors"
+            >
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
+                <stat.icon className="w-4 h-4 text-primary" />
               </div>
-            ))}
-          </motion.div>
+              <div className="text-left">
+                <p className="font-display font-bold text-lg leading-tight">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+              </div>
+            </div>
+          ))}
         </motion.div>
       </section>
 
