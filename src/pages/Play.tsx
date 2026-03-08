@@ -928,10 +928,10 @@ const Play = () => {
                     ? `You are ${computerColor === "w" ? "Black" : "White"} · ${diffLabel}${aiStreak !== 0 ? ` · Streak: ${aiStreak > 0 ? `🔥${aiStreak}W` : `${Math.abs(aiStreak)}L`}` : ""}`
                     : `Pass-and-play · ${localBottomColor === "w" ? "White" : "Black"} at bottom`}
               </p>
-              {timeControl && (
+              {(effectiveTimeControl || timeControl) && (
                 <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 text-xs flex items-center justify-between">
                   <span className="text-muted-foreground">Time control</span>
-                  <span className="font-display font-bold text-primary">{timeControl.label}</span>
+                  <span className="font-display font-bold text-primary">{(effectiveTimeControl || timeControl)!.label}</span>
                 </div>
               )}
               {isOnline && (
