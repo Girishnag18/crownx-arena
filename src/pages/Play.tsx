@@ -852,23 +852,26 @@ const Play = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-18 pb-16 lg:pb-8 px-2 sm:px-4 relative">
-      {/* Subtle ambient */}
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 lg:pb-4 relative">
+      {/* Subtle ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[140px]" />
       </div>
-      <div className="container mx-auto max-w-[1500px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
-          <div className="lg:col-span-9 flex flex-col items-center">
-            {/* Top player bar */}
-            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-2.5 glass-card px-3 sm:px-4 py-2 sm:py-2.5`}>
-              <div className="flex items-center justify-between">
+
+      <div className="mx-auto max-w-[1400px] px-2 sm:px-4 lg:px-6">
+        <div className="flex flex-col lg:flex-row lg:gap-5 lg:items-start lg:justify-center">
+
+          {/* ── LEFT: Board Column ── */}
+          <div className="flex flex-col items-center w-full lg:w-auto lg:flex-shrink-0">
+            {/* Top Player Bar */}
+            <div className="w-full max-w-[min(92vw,640px)] mb-1 sm:mb-1.5">
+              <div className="flex items-center justify-between px-1 sm:px-2 py-1.5 sm:py-2">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} isTop />
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="flex gap-0.5 text-sm sm:text-base opacity-80" title="Captured pieces">
-                    {capturedPieces.capturedByBlack.length === 0
-                      ? <span className="text-[10px] text-muted-foreground/50">—</span>
-                      : capturedPieces.capturedByBlack.slice(0, 8).map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                  <div className="flex gap-0.5 text-sm opacity-80" title="Captured pieces">
+                    {(flipped ? capturedPieces.capturedByWhite : capturedPieces.capturedByBlack).length === 0
+                      ? <span className="text-[10px] text-muted-foreground/40">—</span>
+                      : (flipped ? capturedPieces.capturedByWhite : capturedPieces.capturedByBlack).slice(0, 8).map((piece, index) => <span key={`cap-top-${index}`}>{piece}</span>)}
                   </div>
                   {showClock && (
                     <ClockFace
@@ -881,14 +884,15 @@ const Play = () => {
               </div>
             </div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+            {/* Chess Board */}
+            <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
               <ChessBoard
                 game={game}
                 onMove={isOnline ? handleOnlineMove : handleLocalMove}
                 flipped={flipped}
                 disabled={isOnline ? !online.isMyTurn || online.isGameOver || online.pendingMove : (isComputerGame ? game.turn() === computerColor : false)}
                 lastMove={derivedLastMove}
-                sizeClassName={boardSizeClass}
+                sizeClassName="max-w-[min(92vw,640px)]"
                 maxBoardSizePx={maxBoardSizePx || undefined}
                 arrows={engineArrows}
                 premovesEnabled={isOnline}
@@ -897,11 +901,12 @@ const Play = () => {
               />
             </motion.div>
 
+            {/* Checkmate banner overlay */}
             {showCheckmateBanner && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/45 backdrop-blur-sm"
+                className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm"
               >
                 <motion.div
                   initial={{ y: 20 }}
@@ -915,15 +920,15 @@ const Play = () => {
               </motion.div>
             )}
 
-            {/* Bottom player bar */}
-            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-2.5 glass-card px-3 sm:px-4 py-2 sm:py-2.5`}>
-              <div className="flex items-center justify-between">
+            {/* Bottom Player Bar */}
+            <div className="w-full max-w-[min(92vw,640px)] mt-1 sm:mt-1.5">
+              <div className="flex items-center justify-between px-1 sm:px-2 py-1.5 sm:py-2">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="flex gap-0.5 text-sm sm:text-base opacity-80" title="Captured pieces">
-                    {capturedPieces.capturedByWhite.length === 0
-                      ? <span className="text-[10px] text-muted-foreground/50">—</span>
-                      : capturedPieces.capturedByWhite.slice(0, 8).map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                  <div className="flex gap-0.5 text-sm opacity-80" title="Captured pieces">
+                    {(flipped ? capturedPieces.capturedByBlack : capturedPieces.capturedByWhite).length === 0
+                      ? <span className="text-[10px] text-muted-foreground/40">—</span>
+                      : (flipped ? capturedPieces.capturedByBlack : capturedPieces.capturedByWhite).slice(0, 8).map((piece, index) => <span key={`cap-bot-${index}`}>{piece}</span>)}
                   </div>
                   {showClock && (
                     <ClockFace
@@ -941,7 +946,7 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`w-full ${boardSizeClass} mt-2 glass-card px-3 sm:px-4 py-2.5 flex items-center justify-between`}
+                className="w-full max-w-[min(92vw,640px)] mt-2 rounded-lg bg-card/80 border border-border/40 px-3 sm:px-4 py-2.5 flex items-center justify-between"
               >
                 <div className="flex items-center gap-2 text-sm font-display">
                   <Handshake className="w-4 h-4 text-primary" />
@@ -949,18 +954,8 @@ const Play = () => {
                   <span className="text-muted-foreground">offers a draw</span>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleAcceptDraw}
-                    className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-display font-bold text-primary hover:bg-primary/20 transition-all"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={handleDeclineDraw}
-                    className="rounded-lg border border-border/40 bg-card/60 px-3 py-1.5 text-xs font-display font-bold text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
-                  >
-                    Decline
-                  </button>
+                  <button onClick={handleAcceptDraw} className="rounded-md bg-primary/15 text-primary px-3 py-1.5 text-xs font-bold hover:bg-primary/25 transition-colors">Accept</button>
+                  <button onClick={handleDeclineDraw} className="rounded-md bg-secondary/60 text-muted-foreground px-3 py-1.5 text-xs font-bold hover:bg-destructive/10 hover:text-destructive transition-colors">Decline</button>
                 </div>
               </motion.div>
             )}
@@ -970,7 +965,7 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`w-full ${boardSizeClass} mt-2 glass-card px-3 sm:px-4 py-2.5 flex items-center justify-between`}
+                className="w-full max-w-[min(92vw,640px)] mt-2 rounded-lg bg-card/80 border border-border/40 px-3 sm:px-4 py-2.5 flex items-center justify-between"
               >
                 <div className="flex items-center gap-2 text-sm font-display">
                   <Undo2 className="w-4 h-4 text-primary" />
@@ -978,162 +973,131 @@ const Play = () => {
                   <span className="text-muted-foreground">requests a takeback</span>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleAcceptTakeback}
-                    className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-display font-bold text-primary hover:bg-primary/20 transition-all"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={handleDeclineTakeback}
-                    className="rounded-lg border border-border/40 bg-card/60 px-3 py-1.5 text-xs font-display font-bold text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
-                  >
-                    Decline
-                  </button>
+                  <button onClick={handleAcceptTakeback} className="rounded-md bg-primary/15 text-primary px-3 py-1.5 text-xs font-bold hover:bg-primary/25 transition-colors">Accept</button>
+                  <button onClick={handleDeclineTakeback} className="rounded-md bg-secondary/60 text-muted-foreground px-3 py-1.5 text-xs font-bold hover:bg-destructive/10 hover:text-destructive transition-colors">Decline</button>
                 </div>
               </motion.div>
             )}
 
-            {/* Controls bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={`mt-2 sm:mt-3 flex items-center justify-between w-full ${boardSizeClass}`}
-            >
-              <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
-                {!isOnline && !aiThinking && (
-                  <div className={`w-3 h-3 rounded-full shrink-0 border ${game.turn() === "w" ? "bg-white border-border/60" : "bg-foreground/80 border-transparent"}`} />
-                )}
-                {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
-                {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
-                {isComputerGame && aiThinking ? (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Monitor className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
-                    <span className="truncate text-muted-foreground">Analyzing…</span>
-                    <div className="w-16 sm:w-24 h-1.5 rounded-full bg-muted/50 overflow-hidden shrink-0">
-                      <motion.div
-                        className="h-full rounded-full bg-primary/70"
-                        initial={{ width: "0%" }}
-                        animate={{ width: `${aiThinkProgress}%` }}
-                        transition={{ duration: 0.1, ease: "linear" }}
-                      />
+            {/* Controls Bar */}
+            <div className="w-full max-w-[min(92vw,640px)] mt-2 sm:mt-3">
+              <div className="flex items-center justify-between">
+                {/* Status */}
+                <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-semibold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
+                  {!isOnline && !aiThinking && (
+                    <div className={`w-3 h-3 rounded-full shrink-0 border ${game.turn() === "w" ? "bg-white border-border/60" : "bg-gray-800 border-transparent"}`} />
+                  )}
+                  {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
+                  {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
+                  {isComputerGame && aiThinking ? (
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Monitor className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
+                      <span className="truncate text-muted-foreground">Analyzing…</span>
+                      <div className="w-16 sm:w-24 h-1.5 rounded-full bg-muted/50 overflow-hidden shrink-0">
+                        <motion.div className="h-full rounded-full bg-primary/70" initial={{ width: "0%" }} animate={{ width: `${aiThinkProgress}%` }} transition={{ duration: 0.1, ease: "linear" }} />
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <span className="truncate">{gameStatus}</span>
-                )}
+                  ) : (
+                    <span className="truncate">{gameStatus}</span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-1 sm:gap-1.5 shrink-0">
+                  {/* Takeback */}
+                  {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) > 0 && (
+                    <button onClick={handleRequestTakeback} disabled={takebackState !== "idle"}
+                      className={`game-action-btn ${takebackState === "sent" ? "text-primary border-primary/30 bg-primary/10 cursor-not-allowed" : ""}`}
+                      title={takebackState === "sent" ? "Takeback requested…" : "Request takeback"}>
+                      <Undo2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Draw */}
+                  {isOnline && !online.isGameOver && (
+                    <button onClick={handleOfferDraw} disabled={drawOfferState !== "idle"}
+                      className={`game-action-btn ${drawOfferState === "sent" ? "text-primary border-primary/30 bg-primary/10 cursor-not-allowed" : ""}`}
+                      title={drawOfferState === "sent" ? "Draw offered…" : "Offer draw"}>
+                      <Handshake className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Abort */}
+                  {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) < 2 && (
+                    <button onClick={() => online.abortGame()} className="game-action-btn" title="Abort game">
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Resign (online) */}
+                  {isOnline && !online.isGameOver && (
+                    <button onClick={() => setShowResignDialog(true)} className="game-action-btn hover:border-destructive/40 hover:bg-destructive/5 hover:text-destructive" title="Resign">
+                      <Flag className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Resign (local/computer) */}
+                  {!isOnline && !isGameOver && (isComputerGame || displayMoves.length > 0) && (
+                    <button onClick={() => setShowResignDialog(true)} className="game-action-btn hover:border-destructive/40 hover:bg-destructive/5 hover:text-destructive" title="Resign">
+                      <Flag className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Sound toggle */}
+                  <button onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
+                    className={`game-action-btn ${!soundEnabled ? "text-muted-foreground/50" : ""}`}
+                    title={soundEnabled ? "Mute" : "Unmute"}>
+                    {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  </button>
+                  {/* Streamer mode */}
+                  <button onClick={() => setStreamerMode(!streamerMode)}
+                    className={`game-action-btn hidden sm:flex ${streamerMode ? "text-primary border-primary/30" : ""}`}
+                    title={streamerMode ? "Exit streamer mode" : "Streamer mode"}>
+                    <Monitor className="w-4 h-4" />
+                  </button>
+                  {/* New game (local) */}
+                  {!isOnline && (
+                    <button onClick={resetLocalGame} className="game-action-btn" title="New Game">
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-1.5 shrink-0">
-                {/* Takeback button - online */}
-                {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) > 0 && (
-                  <button
-                    onClick={handleRequestTakeback}
-                    disabled={takebackState !== "idle"}
-                    className={`rounded-lg border p-2 sm:px-3 sm:py-2 transition-all ${
-                      takebackState === "sent"
-                        ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
-                        : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
-                    }`}
-                    title={takebackState === "sent" ? "Takeback requested…" : "Request takeback"}
-                  >
-                    <Undo2 className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Draw offer button - online */}
-                {isOnline && !online.isGameOver && (
-                  <button
-                    onClick={handleOfferDraw}
-                    disabled={drawOfferState !== "idle"}
-                    className={`rounded-lg border p-2 sm:px-3 sm:py-2 transition-all ${
-                      drawOfferState === "sent"
-                        ? "border-primary/40 bg-primary/10 text-primary cursor-not-allowed"
-                        : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground"
-                    }`}
-                    title={drawOfferState === "sent" ? "Draw offered…" : "Offer draw"}
-                  >
-                    <Handshake className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Abort button - online, < 2 moves */}
-                {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) < 2 && (
-                  <button
-                    onClick={() => online.abortGame()}
-                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-muted-foreground/40 hover:bg-muted/10 transition-all text-muted-foreground"
-                    title="Abort game"
-                  >
-                    <XCircle className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Resign button - online */}
-                {isOnline && !online.isGameOver && (
-                  <button
-                    onClick={() => setShowResignDialog(true)}
-                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
-                    title="Resign"
-                  >
-                    <Flag className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Resign button - local & computer */}
-                {!isOnline && !isGameOver && (isComputerGame || displayMoves.length > 0) && (
-                  <button
-                    onClick={() => setShowResignDialog(true)}
-                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive"
-                    title="Resign"
-                  >
-                    <Flag className="w-4 h-4" />
-                  </button>
-                )}
-                {[
-                  { icon: soundEnabled ? Volume2 : VolumeX, active: false, toggle: () => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }, label: soundEnabled ? "Mute" : "Unmute" },
-                ].map(({ icon: Icon, active, toggle, label }) => (
-                  <button
-                    key={label}
-                    onClick={toggle}
-                    className={`rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-primary/30 hover:bg-primary/5 transition-all ${active ? "text-primary border-primary/30" : "text-muted-foreground"}`}
-                    title={label}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </button>
-                ))}
-                <button
-                  onClick={() => setStreamerMode(!streamerMode)}
-                  className={`rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-primary/30 hover:bg-primary/5 transition-all hidden sm:flex ${streamerMode ? "text-primary border-primary/30" : "text-muted-foreground"}`}
-                  title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
-                >
-                  <Monitor className="w-4 h-4" />
-                </button>
-                {!isOnline && (
-                  <button
-                    onClick={resetLocalGame}
-                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-primary/30 hover:bg-primary/5 transition-all text-muted-foreground"
-                    title="New Game"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-                )}
+            </div>
+
+            {/* Move History (mobile: below controls) */}
+            <div className="w-full max-w-[min(92vw,640px)] mt-3 lg:hidden">
+              <div className="rounded-lg bg-card/60 border border-border/30 p-3">
+                <h3 className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider mb-2">Moves</h3>
+                <div className="max-h-28 overflow-y-auto">
+                  {movePairs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground/60 italic">No moves yet</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-x-1 gap-y-0.5 text-xs font-mono">
+                      {movePairs.map((pair) => (
+                        <span key={pair.num} className="whitespace-nowrap">
+                          <span className="text-muted-foreground/50">{pair.num}.</span>
+                          <span className="text-foreground ml-0.5">{pair.white}</span>
+                          {pair.black && <span className="text-foreground/75 ml-0.5">{pair.black}</span>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
-
-
-          {/* Side panel */}
+          {/* ── RIGHT: Side Panel (desktop) ── */}
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-3"
+            transition={{ delay: 0.25 }}
+            className="hidden lg:block lg:w-[320px] xl:w-[360px] lg:flex-shrink-0 space-y-3 mt-0"
           >
-            {/* Game info card */}
-            <div className="glass-card p-4 sm:p-5 space-y-3">
-              <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Crown className="w-3.5 h-3.5 text-primary" />
-                </div>
-                {isOnline ? "Live Match" : isComputerGame ? "vs Computer" : "Local Game"}
-              </h3>
+            {/* Game Info */}
+            <div className="rounded-lg bg-card/60 border border-border/30 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-primary" />
+                <h3 className="font-display font-bold text-sm">
+                  {isOnline ? "Live Match" : isComputerGame ? "vs Computer" : "Local Game"}
+                </h3>
+              </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {isOnline
                   ? `Playing as ${online.playerColor === "w" ? "White" : "Black"} · ${online.playerName} vs ${online.opponentName}`
@@ -1142,43 +1106,26 @@ const Play = () => {
                     : `Pass-and-play · ${localBottomColor === "w" ? "White" : "Black"} at bottom`}
               </p>
               {(effectiveTimeControl || timeControl) && (
-                <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 text-xs flex items-center justify-between">
+                <div className="rounded-md bg-secondary/40 border border-border/20 px-3 py-2 text-xs flex items-center justify-between">
                   <span className="text-muted-foreground">Time control</span>
                   <span className="font-display font-bold text-primary">{(effectiveTimeControl || timeControl)!.label}</span>
                 </div>
               )}
               {isOnline && (
-                <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Status</span>
-                    <span className={`flex items-center gap-1.5 font-medium ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
-                      {online.syncState === "live" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                      {online.syncState === "live" ? "Live" : "Reconnecting"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Last sync</span>
-                    <span className="text-foreground/80">{syncAgo}</span>
-                  </div>
+                <div className="flex items-center justify-between text-xs rounded-md bg-secondary/30 px-3 py-1.5">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`flex items-center gap-1.5 font-medium ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
+                    {online.syncState === "live" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                    {online.syncState === "live" ? "Live" : "Reconnecting"}
+                  </span>
                 </div>
               )}
-            </div>
-
-            {/* Latest move / board info */}
-            <div className="glass-card p-4 sm:p-5">
-              <h3 className="font-display font-bold text-sm mb-1.5 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Swords className="w-3.5 h-3.5 text-primary" />
-                </div>
-                Board Info
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">Last move is highlighted on the board.</p>
               {!isOnline && !isComputerGame && (
                 <button
                   onClick={() => setLocalBottomColor((prev) => (prev === "w" ? "b" : "w"))}
-                  className="mt-3 w-full rounded-lg border border-border/40 bg-secondary/40 px-3 py-2 text-xs font-display font-bold hover:bg-secondary/60 transition-colors"
+                  className="w-full rounded-md border border-border/30 bg-secondary/40 px-3 py-2 text-xs font-display font-bold hover:bg-secondary/60 transition-colors"
                 >
-                  Switch Seat ({localBottomColor === "w" ? "Black" : "White"} at bottom)
+                  Flip Board
                 </button>
               )}
             </div>
@@ -1197,20 +1144,26 @@ const Play = () => {
               <GameChat gameId={onlineGameId} />
             )}
 
-            {/* Move History */}
-            <div className="glass-card p-4 sm:p-5">
-              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2">Move History</h3>
-              <div className="max-h-64 overflow-y-auto space-y-0.5 text-sm font-mono">
-                {movePairs.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">No moves yet</p>
-                )}
-                {movePairs.map((pair) => (
-                  <div key={pair.num} className="flex items-center gap-2 py-1 px-1.5 rounded-md hover:bg-secondary/30 transition-colors">
-                    <span className="text-muted-foreground/60 w-6 text-right text-xs tabular-nums">{pair.num}.</span>
-                    <span className="w-16 text-foreground">{pair.white}</span>
-                    <span className="w-16 text-foreground/80">{pair.black || ""}</span>
+            {/* Move History (desktop) */}
+            <div className="rounded-lg bg-card/60 border border-border/30 p-4">
+              <h3 className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Move History</h3>
+              <div className="max-h-72 overflow-y-auto">
+                {movePairs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/60 italic">No moves yet</p>
+                ) : (
+                  <div className="space-y-0">
+                    {movePairs.map((pair) => (
+                      <div
+                        key={pair.num}
+                        className={`flex items-center text-sm font-mono py-1 px-2 rounded-sm ${pair.num % 2 === 0 ? 'bg-secondary/20' : ''}`}
+                      >
+                        <span className="text-muted-foreground/50 w-7 text-right text-xs tabular-nums shrink-0">{pair.num}.</span>
+                        <span className="w-16 ml-2 text-foreground font-medium">{pair.white}</span>
+                        <span className="w-16 text-foreground/70">{pair.black || ""}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
