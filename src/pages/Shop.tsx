@@ -207,7 +207,7 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "rarity" | "newest">("price_asc");
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
-  const [legendaryEffect, setLegendaryEffect] = useState<{ icon: string; name: string } | null>(null);
+  const [equipEffect, setEquipEffect] = useState<{ icon: string; name: string; rarity: "legendary" | "rare" | "uncommon" } | null>(null);
 
   useEffect(() => { loadShop(); }, [user?.id]);
 
