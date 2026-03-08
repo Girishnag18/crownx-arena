@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Swords, Crown, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Swords, Crown, Clock, TrendingUp, TrendingDown, Minus, PlayCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 
@@ -29,6 +30,7 @@ interface MatchHistoryProps {
 }
 
 const MatchHistory = ({ playerId }: MatchHistoryProps) => {
+  const navigate = useNavigate();
   const [games, setGames] = useState<GameRecord[]>([]);
   const [players, setPlayers] = useState<Map<string, PlayerInfo>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -147,12 +149,21 @@ const MatchHistory = ({ playerId }: MatchHistoryProps) => {
               </div>
             </div>
 
-            {/* Result + time */}
-            <div className="text-right flex-shrink-0">
-              <p className={`text-xs font-display font-bold ${resultColor}`}>{resultLabel}</p>
-              <p className="text-[10px] text-muted-foreground">
-                {formatDistanceToNow(new Date(game.created_at), { addSuffix: true })}
-              </p>
+            {/* Result + replay */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="text-right">
+                <p className={`text-xs font-display font-bold ${resultColor}`}>{resultLabel}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {formatDistanceToNow(new Date(game.created_at), { addSuffix: true })}
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/replay?game=${game.id}`)}
+                className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                title="Replay game"
+              >
+                <PlayCircle className="w-3.5 h-3.5 text-primary" />
+              </button>
             </div>
           </motion.div>
         );

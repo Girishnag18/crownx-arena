@@ -36,6 +36,7 @@ import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
 import Shop from "./pages/Shop";
 import DailyRewards from "./pages/DailyRewards";
+import Replay from "./pages/Replay";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
 import StreakBanner from "./components/gamification/StreakBanner";
@@ -82,6 +83,7 @@ const RouteAnimator = () => {
           <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
           <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
           <Route path="/daily-rewards" element={<ProtectedRoute><DailyRewards /></ProtectedRoute>} />
+          <Route path="/replay" element={<ProtectedRoute><Replay /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />
           <Route path="/crown-topup" element={<ProtectedRoute><CrownTopup /></ProtectedRoute>} />
