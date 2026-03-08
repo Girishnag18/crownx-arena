@@ -388,7 +388,7 @@ const Dashboard = () => {
               {/* Player Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight truncate">{displayName}</h1>
+                  <h1 className="font-display text-lg sm:text-xl font-black tracking-tight truncate">{displayName}</h1>
                   <span className="text-xs bg-primary/10 border border-primary/20 text-primary font-display font-bold px-2.5 py-0.5 rounded-full">
                     Lvl {profile?.level || 1}
                   </span>
