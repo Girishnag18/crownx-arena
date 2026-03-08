@@ -195,7 +195,15 @@ const Play = () => {
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver);
+  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver || resignPending);
+
+  // Show game over popup when online game ends
+  useEffect(() => {
+    if (isOnline && online.isGameOver) {
+      const timer = setTimeout(() => setShowGameOverPopup(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, online.isGameOver]);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
