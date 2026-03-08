@@ -407,18 +407,20 @@ const Play = () => {
     ? (online.playerColor === "w" ? online.whitePlayer?.equippedTitle : online.blackPlayer?.equippedTitle)
     : null;
 
-  const PlayerLabel = ({ name, avatarUrl, title }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null }) => (
-    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-      <Avatar className="w-6 h-6 sm:w-7 sm:h-7 border border-border/70 shrink-0">
+  const PlayerLabel = ({ name, avatarUrl, title, isTop }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null; isTop?: boolean }) => (
+    <div className="flex items-center gap-2 min-w-0">
+      <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-border/50 shrink-0">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[9px] sm:text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
+        <AvatarFallback className="text-[10px] bg-secondary font-display font-bold">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
       </Avatar>
-      <span className="font-display font-bold text-xs sm:text-sm truncate">{name}</span>
-      {title && (
-        <span className="text-[9px] sm:text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1 py-0.5 rounded-full hidden sm:inline">
-          {title.icon} {title.name}
-        </span>
-      )}
+      <div className="min-w-0">
+        <span className="font-display font-bold text-xs sm:text-sm truncate block">{name}</span>
+        {title && (
+          <span className="text-[9px] text-primary/80 font-semibold">
+            {title.icon} {title.name}
+          </span>
+        )}
+      </div>
     </div>
   );
 
