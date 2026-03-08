@@ -178,6 +178,7 @@ const Lobby = () => {
       setRoomPreview({
         host_username: profile?.username ?? "Unknown",
         duration_seconds: (room as any).duration_seconds ?? null,
+        increment_seconds: (room as any).increment_seconds ?? null,
       });
       setFetchingPreview(false);
     })();
