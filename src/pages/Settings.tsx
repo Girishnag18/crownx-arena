@@ -351,7 +351,7 @@ const NotificationPrefsSection = () => {
   const { prefs, toggle, categories } = useNotificationPrefs();
 
   return (
-    <div className="glass-card p-6 mb-6 space-y-4">
+    <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6 space-y-4">
       <div className="flex items-center gap-2">
         <Bell className="w-5 h-5 text-primary" />
         <h3 className="font-display text-lg font-bold">Notification Preferences</h3>

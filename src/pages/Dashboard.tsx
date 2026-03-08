@@ -411,7 +411,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
               {[{ label: "Played", value: String(profile?.games_played || 0) }, { label: "Wins", value: String(profile?.wins || 0) }, { label: "Win Rate", value: `${winRate}%` }].map((stat) => (
                 <div key={stat.label} className="bg-secondary/50 rounded-lg p-3 text-center">
                   <div className="font-display text-lg font-bold text-foreground">{stat.value}</div>
