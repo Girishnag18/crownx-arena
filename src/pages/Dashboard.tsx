@@ -342,7 +342,7 @@ const Dashboard = () => {
             {/* ── LEFT ── */}
             <div className="lg:col-span-4 space-y-3">
 
-              {/* Wallet */}
+              {/* Wallet + Daily Spin + Daily Puzzle */}
               <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
                 <button onClick={() => setWalletPanelOpen((v) => !v)} className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-secondary/10 transition-colors">
                   <div className="flex items-center gap-3">
@@ -362,6 +362,23 @@ const Dashboard = () => {
                     <button onClick={() => navigate("/crown-topup")} className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-display font-bold tracking-wider hover:opacity-90 transition-opacity">Top Up</button>
                   </motion.div>
                 )}
+
+                {/* Daily Spin */}
+                <button onClick={() => navigate("/daily-spin")} className="w-full px-4 py-3 flex items-center justify-between text-left border-t border-border/15 hover:bg-secondary/10 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className={sectionIcon}><Gift className="w-3.5 h-3.5 text-primary" /></div>
+                    <div>
+                      <p className="font-display font-bold text-xs">Daily Spin</p>
+                      <p className="text-[10px] text-muted-foreground">Free Crown rewards</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </button>
+
+                {/* Daily Puzzle */}
+                <div className="border-t border-border/15">
+                  <DailyPuzzleCard />
+                </div>
               </motion.div>
 
               {/* Global Rank */}
@@ -387,23 +404,6 @@ const Dashboard = () => {
 
               {/* Placement */}
               {profile && profile.games_played < 10 && <motion.div variants={fadeUp}><PlacementBadge gamesPlayed={profile.games_played} /></motion.div>}
-
-              {/* Daily Spin */}
-              <motion.div variants={fadeUp}>
-                <button onClick={() => navigate("/daily-spin")} className={`w-full ${card} border-primary/15 hover:border-primary/30 p-3.5 text-left group transition-all`}>
-                  <div className="flex items-center gap-3">
-                    <div className={sectionIcon}><Gift className="w-3.5 h-3.5 text-primary" /></div>
-                    <div className="flex-1">
-                      <p className="font-display font-bold text-xs">Daily Spin</p>
-                      <p className="text-[10px] text-muted-foreground">Free Crown rewards</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                  </div>
-                </button>
-              </motion.div>
-
-              {/* Daily Puzzle */}
-              <motion.div variants={fadeUp}><DailyPuzzleCard /></motion.div>
 
               {/* Training Insights */}
               {user && <motion.div variants={fadeUp}><TrainingInsights userId={user.id} /></motion.div>}
