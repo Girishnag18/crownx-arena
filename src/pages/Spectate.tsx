@@ -189,6 +189,8 @@ const Spectate = () => {
                   ))}
                 </div>
               </div>
+
+              <GameChat gameId={selectedGame.id} isSpectator={true} />
             </div>
           </div>
         </div>
