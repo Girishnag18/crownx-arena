@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { uploadAvatarImage } from "@/lib/avatar";
-import ProfileCard from "@/components/ProfileCard";
+import ProfileCard, { EquippedItem } from "@/components/ProfileCard";
 import PerformanceTab from "@/components/profile/PerformanceTab";
 import MatchHistory from "@/components/profile/MatchHistory";
 import AchievementShowcase from "@/components/profile/AchievementShowcase";
