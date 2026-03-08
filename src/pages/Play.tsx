@@ -484,7 +484,37 @@ const Play = () => {
     });
   }, [user]);
 
-  // Adaptive difficulty: track win/loss streak against AI
+  const handleOfferDraw = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setDrawOfferState("sent");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "draw_offer",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
+  const handleAcceptDraw = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setDrawOfferState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "draw_accept",
+      payload: { from: user.id },
+    });
+    await online.acceptDraw();
+  }, [user, online]);
+
+  const handleDeclineDraw = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setDrawOfferState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "draw_decline",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
   const streakUpdatedRef = useRef(false);
   useEffect(() => {
     if (!isComputerGame || streakUpdatedRef.current) return;
