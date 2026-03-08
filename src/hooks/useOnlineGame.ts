@@ -357,6 +357,38 @@ export const useOnlineGame = (gameId: string | null) => {
       .eq("id", gameData.id);
   }, [gameData, user]);
 
+  const claimTimeout = useCallback(async () => {
+    if (!gameData || !user) return;
+    // Only claim if game is still in progress
+    if (gameData.result_type !== "in_progress") return;
+    
+    const now = new Date();
+    const gd = gameData as any;
+    if (gd.white_time_ms == null || gd.black_time_ms == null || !gd.last_move_at) return;
+
+    const elapsed = now.getTime() - new Date(gd.last_move_at).getTime();
+    const game = new Chess(gameData.current_fen);
+    const activeTurn = game.turn();
+    
+    const activeTimeMs = activeTurn === "w" ? gd.white_time_ms : gd.black_time_ms;
+    const remaining = activeTimeMs - elapsed;
+
+    // Only allow claiming if opponent's clock is at 0
+    const opponentColor = gameData.player_white === user.id ? "b" : "w";
+    if (activeTurn !== opponentColor || remaining > 0) return;
+
+    await supabase
+      .from("games")
+      .update({
+        result_type: "timeout",
+        winner_id: user.id,
+        ended_at: now.toISOString(),
+        white_time_ms: activeTurn === "w" ? 0 : gd.white_time_ms,
+        black_time_ms: activeTurn === "b" ? 0 : gd.black_time_ms,
+      } as any)
+      .eq("id", gameData.id);
+  }, [gameData, user]);
+
   return {
     game,
     gameData,
