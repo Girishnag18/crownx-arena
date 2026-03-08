@@ -393,7 +393,7 @@ const Dashboard = () => {
       <div className="container mx-auto max-w-7xl">
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.08 } } }} className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           <motion.div variants={fadeUp} className="lg:col-span-4 glass-card p-4 sm:p-6 border-glow">
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="relative">
                 <Avatar className="w-16 h-16 border border-primary/30 gold-glow">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
