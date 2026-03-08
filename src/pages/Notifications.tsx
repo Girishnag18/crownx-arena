@@ -52,32 +52,30 @@ const Notifications = () => {
   return (
     <main className="page-container">
       <PullToRefresh onRefresh={loadNotifications}>
-      <div className="container mx-auto max-w-3xl space-y-4">
-        <header className="glass-card p-4 sm:p-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
-            <div>
-              <h1 className="text-xl sm:text-3xl font-bold font-display">Notifications</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">Stay updated with messages from CrownX Arena.</p>
-            </div>
+      <header className="glass-card p-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Bell className="w-6 h-6 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Notifications</h1>
+            <p className="text-sm text-muted-foreground">Stay updated with messages from CrownX Arena.</p>
           </div>
-          <span className="text-xs sm:text-sm text-muted-foreground shrink-0">Unread: {unreadCount}</span>
-        </header>
+        </div>
+        <span className="text-sm text-muted-foreground">Unread: {unreadCount}</span>
+      </header>
 
-        <section className="glass-card p-3 sm:p-6 space-y-2 sm:space-y-3">
-          {notifications.length === 0 ? <p className="text-sm text-muted-foreground">No notifications yet.</p> : notifications.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => markNotificationRead(item.id)}
-              className={`w-full text-left rounded-lg border p-3 sm:p-4 transition-colors hover:bg-secondary/40 ${item.is_read ? "opacity-70" : "border-primary/40"}`}
-            >
-              <p className="font-semibold text-sm sm:text-base">{item.title}</p>
-              <p className="text-xs sm:text-sm mt-0.5">{item.message}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-2">{new Date(item.created_at).toLocaleString()}</p>
-            </button>
-          ))}
-        </section>
-      </div>
+      <section className="glass-card p-6 space-y-3">
+        {notifications.length === 0 ? <p className="text-sm text-muted-foreground">No notifications yet.</p> : notifications.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => markNotificationRead(item.id)}
+            className={`w-full text-left rounded-lg border p-4 transition-colors hover:bg-secondary/40 ${item.is_read ? "opacity-70" : "border-primary/40"}`}
+          >
+            <p className="font-semibold">{item.title}</p>
+            <p className="text-sm mt-0.5">{item.message}</p>
+            <p className="text-xs text-muted-foreground mt-2">{new Date(item.created_at).toLocaleString()}</p>
+          </button>
+        ))}
+      </section>
       </PullToRefresh>
     </main>
   );
