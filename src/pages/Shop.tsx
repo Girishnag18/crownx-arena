@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star } from "lucide-react";
 import BackButton from "@/components/common/BackButton";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface ShopItem {
   id: string;
@@ -243,6 +244,10 @@ const Shop = () => {
     );
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadShop();
+  }, [user]);
+
   return (
     <main className="page-container relative overflow-hidden">
       {/* Ambient glows */}
@@ -251,6 +256,7 @@ const Shop = () => {
         <div className="absolute bottom-20 right-1/4 w-[320px] h-[320px] bg-accent/6 rounded-full blur-[100px]" />
       </div>
 
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl relative z-10 space-y-5">
         <BackButton label="Back" />
         {/* Header */}
@@ -363,6 +369,7 @@ const Shop = () => {
           </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
     </main>
   );
 };

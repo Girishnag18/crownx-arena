@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Sparkles, Star, Shield, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import { useNavigate } from "react-router-dom";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 const rankGradient: Record<string, string> = {
   Bronze: "from-amber-700/25 via-amber-800/10 to-transparent",
@@ -82,8 +83,19 @@ const Achievements = () => {
     { label: "CrownScore", value: profile?.crown_score || 400, icon: Crown },
   ];
 
+  const handlePullRefresh = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("wins, win_streak, puzzles_solved, crown_score, games_played, rank_tier, level, xp, username")
+      .eq("id", user.id)
+      .single();
+    if (data) setProfile(data as unknown as ProfileData);
+  }, [user]);
+
   return (
     <div className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container mx-auto max-w-4xl">
         <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-2.5">
 
@@ -166,6 +178,7 @@ const Achievements = () => {
 
         </motion.div>
       </div>
+      </PullToRefresh>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Crown, CheckCircle, Clock, Gift } from "lucide-react";
 import BackButton from "@/components/common/BackButton";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Challenge {
   id: string;
@@ -213,8 +214,14 @@ const Challenges = () => {
     );
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadChallenges();
+    await loadProgress();
+  }, [challenges]);
+
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl mx-auto space-y-6">
       <BackButton label="Back" to="/dashboard" />
       <div className="space-y-1">
@@ -245,6 +252,7 @@ const Challenges = () => {
         </TabsContent>
       </Tabs>
       </div>
+      </PullToRefresh>
     </main>
   );
 };
