@@ -389,11 +389,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-20 pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-7xl">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.08 } } }} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <motion.div variants={fadeUp} className="lg:col-span-4 glass-card p-6 border-glow">
-            <div className="flex items-center gap-4 mb-6">
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.08 } } }} className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+          <motion.div variants={fadeUp} className="lg:col-span-4 glass-card p-4 sm:p-6 border-glow">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="relative">
                 <Avatar className="w-16 h-16 border border-primary/30 gold-glow">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
@@ -411,7 +411,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
               {[{ label: "Played", value: String(profile?.games_played || 0) }, { label: "Wins", value: String(profile?.wins || 0) }, { label: "Win Rate", value: `${winRate}%` }].map((stat) => (
                 <div key={stat.label} className="bg-secondary/50 rounded-lg p-3 text-center">
                   <div className="font-display text-lg font-bold text-foreground">{stat.value}</div>

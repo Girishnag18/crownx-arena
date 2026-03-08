@@ -264,12 +264,12 @@ const Profile = () => {
   };
 
   return (
-    <main className="container max-w-6xl py-24 px-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold font-display">Player Profile</h1>
+    <main className="container max-w-6xl pt-20 pb-12 px-4 space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold font-display">Player Profile</h1>
         {profileData && !editing && (
-          <button onClick={() => setEditing(true)} className="flex items-center gap-2 text-sm border border-border rounded-lg px-4 py-2 hover:bg-secondary/50 transition-colors">
-            <Edit3 className="w-4 h-4" /> Edit Profile
+          <button onClick={() => setEditing(true)} className="flex items-center gap-2 text-xs sm:text-sm border border-border rounded-lg px-3 sm:px-4 py-2 hover:bg-secondary/50 transition-colors shrink-0">
+            <Edit3 className="w-4 h-4" /> Edit
           </button>
         )}
       </div>
@@ -292,7 +292,7 @@ const Profile = () => {
           />
         </motion.div>
       ) : (
-        <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6 grid lg:grid-cols-3 gap-6">
+        <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="space-y-3">
             <Avatar className="w-20 h-20 border border-border">
               <AvatarImage src={form.avatar_url || undefined} alt={form.username || "Player"} />
@@ -335,12 +335,12 @@ const Profile = () => {
 
       {/* Tabs: Performance & Social */}
       <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="w-full grid grid-cols-5 bg-secondary/40">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="history">Match History</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="social">Social</TabsTrigger>
-          <TabsTrigger value="search">Find Players</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 bg-secondary/40">
+          <TabsTrigger value="performance" className="text-xs sm:text-sm">Performance</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
+          <TabsTrigger value="achievements" className="text-xs sm:text-sm">Achievements</TabsTrigger>
+          <TabsTrigger value="social" className="text-xs sm:text-sm">Social</TabsTrigger>
+          <TabsTrigger value="search" className="text-xs sm:text-sm">Find</TabsTrigger>
         </TabsList>
 
         <TabsContent value="performance">
@@ -358,7 +358,7 @@ const Profile = () => {
         </TabsContent>
 
         <TabsContent value="social">
-          <section className="grid lg:grid-cols-3 gap-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="glass-card p-6 space-y-3">
               <h2 className="text-xl font-bold font-display">Incoming Requests</h2>
               {incoming.length === 0 ? <p className="text-sm text-muted-foreground">No pending requests.</p> : incoming.map((item) => (

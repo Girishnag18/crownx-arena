@@ -154,7 +154,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background pt-20 pb-12 px-3 sm:px-4">
       <div className="container mx-auto max-w-2xl">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -163,25 +163,25 @@ const Settings = () => {
         >
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
 
-          <h1 className="font-display text-3xl font-bold mb-8">Profile Settings</h1>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Profile Settings</h1>
 
           {/* Avatar & identity */}
-          <div className="glass-card p-6 mb-6">
-            <div className="flex items-center gap-4 mb-6">
-              <Avatar className="w-16 h-16 border border-primary/30">
+          <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border border-primary/30">
                 <AvatarImage src={avatarUrl || undefined} alt={displayName} />
                 <AvatarFallback className="bg-secondary text-primary">
                   <User className="w-7 h-7" />
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="font-display text-xl font-bold">{displayName}</h2>
-                <p className="text-sm text-muted-foreground">{email}</p>
+                <h2 className="font-display text-lg sm:text-xl font-bold truncate">{displayName}</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">{email}</p>
               </div>
             </div>
 
@@ -273,7 +273,7 @@ const BoardCustomizationSection = () => {
   const { theme, pieceSet, soundEnabled, moveAnimation, showCoordinates, setTheme, setPieceSet, setSoundEnabled, setMoveAnimation, setShowCoordinates } = useBoardSettings();
 
   return (
-    <div className="glass-card p-6 mb-6 space-y-5">
+    <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6 space-y-4 sm:space-y-5">
       <div className="flex items-center gap-2">
         <Palette className="w-5 h-5 text-primary" />
         <h3 className="font-display text-lg font-bold">Board Customization</h3>
@@ -282,7 +282,7 @@ const BoardCustomizationSection = () => {
       {/* Board Theme */}
       <div className="space-y-2">
         <Label>Board Theme</Label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {BOARD_THEMES.map((t) => (
             <button
               key={t.id}
@@ -351,7 +351,7 @@ const NotificationPrefsSection = () => {
   const { prefs, toggle, categories } = useNotificationPrefs();
 
   return (
-    <div className="glass-card p-6 mb-6 space-y-4">
+    <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6 space-y-4">
       <div className="flex items-center gap-2">
         <Bell className="w-5 h-5 text-primary" />
         <h3 className="font-display text-lg font-bold">Notification Preferences</h3>
