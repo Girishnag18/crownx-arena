@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { generateChess960Fen } from "@/utils/chess960";
 
 export const usePrivateRoom = () => {
   const { user } = useAuth();
@@ -46,7 +47,7 @@ export const usePrivateRoom = () => {
     setStatus("waiting");
   }, [user]);
 
-  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null) => {
+  const joinRoom = useCallback(async (code: string, selectedDurationSeconds: number | null = null, variant: string | null = null) => {
     if (!user) return;
     setError(null);
 
@@ -94,6 +95,7 @@ export const usePrivateRoom = () => {
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
     const durationSeconds = selectedDurationSeconds ?? null;
+    const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
@@ -105,7 +107,7 @@ export const usePrivateRoom = () => {
         game_mode: "private",
         duration_seconds: durationSeconds,
         result_type: "in_progress",
-        current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        current_fen: startingFen,
         moves: [],
       })
       .select()

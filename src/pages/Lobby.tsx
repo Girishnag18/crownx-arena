@@ -34,6 +34,7 @@ const Lobby = () => {
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [chess960, setChess960] = useState(false);
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const matchmaking = useMatchmaking();
@@ -48,8 +49,8 @@ const Lobby = () => {
   }, [matchmaking.gameId, navigate]);
 
   useEffect(() => {
-    if (privateRoom.gameId) navigate(`/play?game=${privateRoom.gameId}`);
-  }, [privateRoom.gameId, navigate]);
+    if (privateRoom.gameId) navigate(`/play?game=${privateRoom.gameId}${chess960 ? "&variant=chess960" : ""}`);
+  }, [privateRoom.gameId, navigate, chess960]);
 
   const handleCopyCode = () => {
     if (!privateRoom.roomCode) return;
@@ -168,9 +169,19 @@ const Lobby = () => {
                 </motion.button>
               ))}
 
-              {/* Time control selector */}
-              <div className="glass-card p-5">
+              {/* Time control & variant selectors */}
+              <div className="glass-card p-5 space-y-4">
                 <TimeControlSelector selected={selectedTimeControl} onSelect={setSelectedTimeControl} />
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Shuffle className="w-4 h-4 text-primary" />
+                    <span className="font-display text-sm font-bold">Chess960</span>
+                    <span className="text-xs text-muted-foreground">Fischer Random</span>
+                  </div>
+                  <button onClick={() => setChess960((v) => !v)} className={`relative w-10 h-5 rounded-full transition-colors ${chess960 ? "bg-primary" : "bg-secondary border border-border"}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary-foreground transition-transform ${chess960 ? "translate-x-5" : ""}`} />
+                  </button>
+                </div>
               </div>
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
@@ -181,7 +192,7 @@ const Lobby = () => {
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Shuffle className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Chess960</h3><p className="text-sm text-muted-foreground">Fischer Random — randomized starting position</p></div></div>
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play${selectedTimeControl ? `?tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => { const params = new URLSearchParams(); if (selectedTimeControl) params.set("tc", selectedTimeControl.label); if (chess960) params.set("variant", "chess960"); navigate(`/play${params.toString() ? `?${params}` : ""}`); }} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Crown className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Local Play</h3><p className="text-sm text-muted-foreground">Play against a friend on this device</p></div></div>
               </motion.button>
 
@@ -217,7 +228,7 @@ const Lobby = () => {
                     <h3 className="font-display font-bold text-sm mb-3">Join a Room</h3>
                     <div className="flex gap-2">
                       <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())} placeholder="Enter room code" maxLength={6} className="flex-1 bg-secondary border border-border rounded-lg px-4 py-2.5 font-mono text-lg tracking-widest text-center uppercase focus:outline-none focus:ring-2 focus:ring-primary" />
-                      <button onClick={async () => { setJoiningRoom(true); await privateRoom.joinRoom(joinCode, durationSeconds); setJoiningRoom(false); }} disabled={joinCode.length < 6 || joiningRoom} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg disabled:opacity-50 transition-all hover:scale-105">
+                      <button onClick={async () => { setJoiningRoom(true); await privateRoom.joinRoom(joinCode, durationSeconds, chess960 ? "chess960" : null); setJoiningRoom(false); }} disabled={joinCode.length < 6 || joiningRoom} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg disabled:opacity-50 transition-all hover:scale-105">
                         {joiningRoom ? <Loader2 className="w-4 h-4 animate-spin" /> : "JOIN"}
                       </button>
                     </div>
