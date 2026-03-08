@@ -553,6 +553,8 @@ const Dashboard = () => {
                       >
                         View realtime Top 10 qualifiers
                       </button>
+                      </div>
+                    )}
                     )}
 
                     {tournament.created_by === user?.id && tournament.status !== "cancelled" && (
