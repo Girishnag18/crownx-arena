@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateChess960Fen } from "@/utils/chess960";
@@ -10,8 +10,8 @@ export const usePrivateRoom = () => {
   const [gameId, setGameId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "waiting" | "joined" | "ready">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [lastDuration, setLastDuration] = useState<number | null>(null);
-  const [lastIncrement, setLastIncrement] = useState<number | null>(null);
+  const lastDurationRef = useRef<number | null>(null);
+  const lastIncrementRef = useRef<number | null>(null);
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -23,8 +23,8 @@ export const usePrivateRoom = () => {
   const createRoom = useCallback(async (durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
-    setLastDuration(durationSeconds);
-    setLastIncrement(incrementSeconds);
+    lastDurationRef.current = durationSeconds;
+    lastIncrementRef.current = incrementSeconds;
     let createdRoom: { room_code: string; id: string } | null = null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -64,7 +64,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id, duration_seconds: lastDuration, increment_seconds: lastIncrement } as any)
+        .insert({ room_code: code, host_id: user.id, duration_seconds: lastDurationRef.current, increment_seconds: lastIncrementRef.current } as any)
         .select()
         .single();
 
@@ -82,7 +82,7 @@ export const usePrivateRoom = () => {
     setRoomCode(createdRoom.room_code);
     setRoomId(createdRoom.id);
     setStatus("waiting");
-  }, [user, roomId, lastDuration, lastIncrement]);
+  }, [user, roomId]);
 
   const cancelRoom = useCallback(async () => {
     if (!user || !roomId) return;
