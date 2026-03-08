@@ -809,6 +809,7 @@ export type Database = {
       matchmaking_queue: {
         Row: {
           created_at: string
+          duration_seconds: number | null
           game_mode: string
           id: string
           player_id: string
@@ -817,6 +818,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id: string
@@ -825,6 +827,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_seconds?: number | null
           game_mode?: string
           id?: string
           player_id?: string
