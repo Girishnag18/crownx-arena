@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight } from "lucide-react";
+import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import DirectMessagePanel from "@/components/social/DirectMessagePanel";
+import CrownGiftDialog from "@/components/social/CrownGiftDialog";
 import { format } from "date-fns";
 
 interface FriendProfile {
@@ -36,6 +37,7 @@ const Social = () => {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [dmFriend, setDmFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
+  const [giftFriend, setGiftFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
   const presenceRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
@@ -190,7 +192,8 @@ const Social = () => {
             {onlineFriends.map(f => (
               <FriendRow key={f.id} friend={f} online
                 onChallenge={() => challengeFriend(f.id)}
-                onMessage={() => setDmFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })} />
+                onMessage={() => setDmFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })}
+                onGift={() => setGiftFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })} />
             ))}
           </div>
 
@@ -202,7 +205,8 @@ const Social = () => {
             </h2>
             {offlineFriends.map(f => (
               <FriendRow key={f.id} friend={f} online={false}
-                onMessage={() => setDmFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })} />
+                onMessage={() => setDmFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })}
+                onGift={() => setGiftFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })} />
             ))}
           </div>
 
@@ -273,13 +277,20 @@ const Social = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Crown Gift Dialog */}
+      <AnimatePresence>
+        {giftFriend && (
+          <CrownGiftDialog friend={giftFriend} onClose={() => setGiftFriend(null)} />
+        )}
+      </AnimatePresence>
     </main>
   );
 };
 
-const FriendRow = ({ friend, online, onChallenge, onMessage }: {
+const FriendRow = ({ friend, online, onChallenge, onMessage, onGift }: {
   friend: FriendProfile; online: boolean;
-  onChallenge?: () => void; onMessage: () => void;
+  onChallenge?: () => void; onMessage: () => void; onGift?: () => void;
 }) => (
   <div className="rounded-xl border border-border bg-card/60 p-3 flex items-center gap-3">
     <div className="relative shrink-0">
@@ -298,6 +309,12 @@ const FriendRow = ({ friend, online, onChallenge, onMessage }: {
         className="p-1.5 rounded-md hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors">
         <MessageCircle className="w-3.5 h-3.5" />
       </button>
+      {onGift && (
+        <button onClick={onGift} title="Gift Crowns"
+          className="p-1.5 rounded-md hover:bg-primary/15 text-primary transition-colors">
+          <Crown className="w-3.5 h-3.5" />
+        </button>
+      )}
       {online && onChallenge && (
         <button onClick={onChallenge} title="Challenge"
           className="p-1.5 rounded-md hover:bg-primary/15 text-primary transition-colors">
