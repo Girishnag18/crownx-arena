@@ -408,6 +408,13 @@ const Profile = () => {
           </section>
         </TabsContent>
       </Tabs>
+
+      {/* DM Panel */}
+      <AnimatePresence>
+        {dmFriend && (
+          <DirectMessagePanel friend={dmFriend} onClose={() => setDmFriend(null)} />
+        )}
+      </AnimatePresence>
     </main>
   );
 };
