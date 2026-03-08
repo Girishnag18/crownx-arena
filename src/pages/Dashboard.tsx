@@ -34,6 +34,7 @@ interface Tournament {
   max_players: number;
   created_by?: string;
   status: "open" | "full" | "live" | "completed" | "cancelled";
+  tournament_type?: string;
   starts_at: string | null;
   cancelled_at?: string | null;
   registration_count?: { count: number }[];
