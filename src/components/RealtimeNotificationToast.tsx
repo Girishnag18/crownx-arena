@@ -46,6 +46,7 @@ const RealtimeNotificationToast = () => {
 
           const cfg = kindConfig[n.kind] || kindConfig.info;
 
+          // Show in-app toast
           toast(`${cfg.icon} ${n.title}`, {
             description: n.message,
             duration: 5000,
@@ -53,6 +54,17 @@ const RealtimeNotificationToast = () => {
               ? { label: "View", onClick: () => navigate(cfg.route!) }
               : undefined,
           });
+
+          // Also fire browser notification if tab is hidden
+          if (document.hidden && Notification.permission === "granted") {
+            try {
+              new Notification(`${cfg.icon} ${n.title}`, {
+                body: n.message,
+                icon: "/favicon.ico",
+                tag: `crownx-${n.kind}`,
+              });
+            } catch { /* SW will handle it */ }
+          }
         }
       )
       .subscribe();
