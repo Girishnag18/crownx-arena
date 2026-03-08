@@ -368,7 +368,7 @@ const Dashboard = () => {
         />
       )}
       <div className="container mx-auto max-w-7xl">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-2.5 sm:space-y-3">
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-1.5 sm:space-y-2">
 
           {/* ═══════════ HERO SECTION ═══════════ */}
           <motion.div variants={fadeUp} className={`rounded-xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-3.5 sm:p-5 relative overflow-hidden`}>
