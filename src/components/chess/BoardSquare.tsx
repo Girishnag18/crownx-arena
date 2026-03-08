@@ -27,9 +27,11 @@ interface BoardSquareProps {
   isLastMove: boolean;
   isMoveDestination: boolean;
   isKingInCheck: boolean;
+  isPremove?: boolean;
   showRank?: string;
   showFile?: string;
   onClick: () => void;
+  onTouchStart?: (e: React.TouchEvent) => void;
 }
 
 const BoardSquare = React.memo(({
@@ -42,9 +44,11 @@ const BoardSquare = React.memo(({
   isLastMove,
   isMoveDestination,
   isKingInCheck,
+  isPremove = false,
   showRank,
   showFile,
   onClick,
+  onTouchStart,
 }: BoardSquareProps) => {
   const hasPiece = !!pieceColor && !!pieceType;
   const spriteKey = hasPiece ? pieceColor + pieceType : "";
@@ -52,11 +56,14 @@ const BoardSquare = React.memo(({
   return (
     <button
       onClick={onClick}
-      className={`board-square relative flex items-center justify-center transition-all duration-300 ${
+      onTouchStart={onTouchStart}
+      className={`board-square relative flex items-center justify-center transition-all duration-300 touch-none ${
         isLight ? "chess-board-light" : "chess-board-dark"
       } ${isSelected ? "!bg-primary/35" : ""} ${
         isLastMove ? "!bg-yellow-300/60" : ""
-      } ${isKingInCheck ? "!bg-destructive/45" : ""}`}
+      } ${isKingInCheck ? "!bg-destructive/45" : ""} ${
+        isPremove ? "!bg-blue-400/40" : ""
+      }`}
     >
       {isMoveDestination && (
         <motion.div
@@ -64,6 +71,14 @@ const BoardSquare = React.memo(({
           initial={{ scale: 0.7, opacity: 0.2 }}
           animate={{ scale: 1.15, opacity: 0 }}
           transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
+        />
+      )}
+      {isPremove && (
+        <motion.div
+          className="absolute inset-0 border-2 border-blue-400/60"
+          initial={{ opacity: 0.4 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
         />
       )}
       {isLegal && !hasPiece && (
@@ -81,7 +96,7 @@ const BoardSquare = React.memo(({
           src={PIECE_SPRITES[spriteKey]}
           alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
           draggable={false}
-          className="w-[82%] h-[82%] object-contain select-none"
+          className="w-[82%] h-[82%] object-contain select-none pointer-events-none"
           style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.35))" }}
         />
       )}

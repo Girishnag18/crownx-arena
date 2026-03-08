@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -45,6 +45,7 @@ const Play = () => {
   const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
   const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+  const [streamerMode, setStreamerMode] = useState(false);
   const prevMoveCountRef = useRef(0);
 
   const online = useOnlineGame(onlineGameId);
@@ -417,6 +418,9 @@ const Play = () => {
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
                 arrows={showArrows ? engineArrows : []}
+                premovesEnabled={isOnline}
+                playerColor={isOnline ? online.playerColor : null}
+                streamerMode={streamerMode}
               />
             </motion.div>
 
@@ -491,6 +495,13 @@ const Play = () => {
                   title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => setStreamerMode(!streamerMode)}
+                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${streamerMode ? "text-primary border-primary/40" : ""}`}
+                  title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
+                >
+                  <Monitor className="w-4 h-4" />
                 </button>
                 {!isOnline && (
                   <button
