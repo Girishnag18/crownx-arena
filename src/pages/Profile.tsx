@@ -358,7 +358,7 @@ const Profile = () => {
         </TabsContent>
 
         <TabsContent value="social">
-          <section className="grid lg:grid-cols-3 gap-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="glass-card p-6 space-y-3">
               <h2 className="text-xl font-bold font-display">Incoming Requests</h2>
               {incoming.length === 0 ? <p className="text-sm text-muted-foreground">No pending requests.</p> : incoming.map((item) => (
