@@ -404,14 +404,14 @@ const Play = () => {
     : null;
 
   const PlayerLabel = ({ name, avatarUrl, title }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null }) => (
-    <div className="flex items-center gap-2">
-      <Avatar className="w-7 h-7 border border-border/70">
+    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      <Avatar className="w-6 h-6 sm:w-7 sm:h-7 border border-border/70 shrink-0">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
+        <AvatarFallback className="text-[9px] sm:text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
       </Avatar>
-      <span className="font-display font-bold">{name}</span>
+      <span className="font-display font-bold text-xs sm:text-sm truncate">{name}</span>
       {title && (
-        <span className="text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1.5 py-0.5 rounded-full">
+        <span className="text-[9px] sm:text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1 py-0.5 rounded-full hidden sm:inline">
           {title.icon} {title.name}
         </span>
       )}
