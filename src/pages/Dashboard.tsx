@@ -696,7 +696,7 @@ const Dashboard = () => {
                      </h3>
                      <span className="text-[10px] text-muted-foreground">{recentTournaments.length} past</span>
                    </div>
-                   <div className="divide-y divide-border/20 max-h-[18rem] overflow-y-auto">
+                   <div className="divide-y divide-border/20 max-h-[16rem] overflow-y-auto">
                      {recentTournaments.map((t) => {
                        const count = t.registration_count?.[0]?.count || 0;
                        const isCompleted = t.status === "completed";
