@@ -83,8 +83,19 @@ const Achievements = () => {
     { label: "CrownScore", value: profile?.crown_score || 400, icon: Crown },
   ];
 
+  const handlePullRefresh = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("wins, win_streak, puzzles_solved, crown_score, games_played, rank_tier, level, xp, username")
+      .eq("id", user.id)
+      .single();
+    if (data) setProfile(data as unknown as ProfileData);
+  }, [user]);
+
   return (
     <div className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container mx-auto max-w-4xl">
         <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-2.5">
 
