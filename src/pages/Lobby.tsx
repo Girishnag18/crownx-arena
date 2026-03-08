@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Clock3, Eye, Timer } from "lucide-react";
+import { Swords, Globe, Users, ArrowLeft, Copy, Check, Loader2, Crown, Bot, Clock3, Eye, Timer, Shuffle } from "lucide-react";
 import { TimeControlSelector, type TimeControl } from "@/components/chess/ChessClock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -175,6 +175,10 @@ const Lobby = () => {
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
                 <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Bot className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">vs Computer</h3><p className="text-sm text-muted-foreground">Practice with a built-in chess bot</p></div></div>
+              </motion.button>
+
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play?mode=computer&variant=chess960${selectedTimeControl ? `&tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">
+                <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-lg flex items-center justify-center bg-secondary"><Shuffle className="w-6 h-6 text-muted-foreground" /></div><div><h3 className="font-display font-bold">Chess960</h3><p className="text-sm text-muted-foreground">Fischer Random — randomized starting position</p></div></div>
               </motion.button>
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={() => navigate(`/play${selectedTimeControl ? `?tc=${selectedTimeControl.label}` : ""}`)} className="w-full glass-card p-6 text-left hover:border-primary/20 transition-all duration-300">

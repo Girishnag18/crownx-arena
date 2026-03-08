@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle } from "lucide-react";
+import { generateChess960Fen } from "@/utils/chess960";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -25,12 +26,14 @@ const Play = () => {
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
   const isRankedAI = searchParams.get("ranked") === "true";
-
+  const variant = searchParams.get("variant");
+  const isChess960 = variant === "chess960";
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
   const aiElo = playerElo + 20;
 
-  const [localGame, setLocalGame] = useState(new Chess());
+  const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
+  const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [syncAgo, setSyncAgo] = useState("just now");
@@ -172,7 +175,8 @@ const Play = () => {
   }, [online]);
 
   const resetLocalGame = () => {
-    setLocalGame(new Chess());
+    const newFen = isChess960 ? generateChess960Fen() : undefined;
+    setLocalGame(new Chess(newFen));
     setLastMove(null);
     setMoveHistory([]);
     setShowCheckmateBanner(false);
@@ -519,6 +523,7 @@ const Play = () => {
                   <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
                 {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
+                {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
                 <span className="truncate">{gameStatus}</span>
               </div>
               <div className="flex gap-1 sm:gap-2 shrink-0">
