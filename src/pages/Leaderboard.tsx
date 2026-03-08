@@ -173,8 +173,9 @@ const Leaderboard = () => {
       </div>
 
       <Tabs defaultValue="season" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 bg-secondary/40">
+        <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
           <TabsTrigger value="season">🏆 Seasonal</TabsTrigger>
+          <TabsTrigger value="friends">👥 Friends</TabsTrigger>
           <TabsTrigger value="alltime">👑 All-Time</TabsTrigger>
         </TabsList>
 
