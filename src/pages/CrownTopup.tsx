@@ -68,6 +68,7 @@ const CrownTopup = () => {
       </div>
 
       <div className="container mx-auto max-w-2xl relative z-10 space-y-6">
+        <BackButton label="Back" to="/dashboard" />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
