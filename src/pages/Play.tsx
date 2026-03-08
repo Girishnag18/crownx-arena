@@ -650,9 +650,12 @@ const Play = () => {
             </div>
 
             {/* Latest move / board info */}
-            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5">
+            <div className="glass-card p-4 sm:p-5">
               <h3 className="font-display font-bold text-sm mb-1.5 flex items-center gap-2">
-                <Swords className="w-4 h-4 text-primary" />Board Info
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Swords className="w-3.5 h-3.5 text-primary" />
+                </div>
+                Board Info
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">Last move is highlighted on the board.</p>
               {!isOnline && !isComputerGame && (
