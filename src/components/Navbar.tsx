@@ -14,6 +14,7 @@ const navLinks = [
   { to: "/puzzles", label: "Puzzles" },
   { to: "/studies", label: "Studies" },
   { to: "/openings", label: "Openings" },
+  { to: "/analysis", label: "Analysis" },
   { to: "/ratings", label: "Ratings" },
   { to: "/profile", label: "Player Profile" },
   { to: "/dashboard", label: "Arena Hub" },
