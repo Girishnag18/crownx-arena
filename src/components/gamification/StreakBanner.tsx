@@ -61,6 +61,7 @@ const StreakBanner = () => {
     setStreak(newStreak);
     setCanClaim(true);
     setVisible(true);
+    setTimeout(() => setVisible(false), 4000);
   };
 
   const claimBonus = async () => {
