@@ -507,20 +507,21 @@ const Play = () => {
               </div>
             </div>
 
+            {/* Controls bar */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className={`mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
+              className={`mt-2 sm:mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
             >
-              <div className={`flex items-center gap-2 text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"}`}>
+              <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
                 {!isOnline && (
-                  <div className={`w-3 h-3 rounded-full ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
+                  <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
-                {(isOnline && online.pendingMove) && <LoaderCircle className="w-4 h-4 animate-spin text-primary" />}
-                {gameStatus}
+                {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
+                <span className="truncate">{gameStatus}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2 shrink-0">
                 {isOnline && !online.isGameOver && (
                   <button
                     onClick={async () => {
@@ -530,7 +531,7 @@ const Play = () => {
                       setResignPending(false);
                     }}
                     disabled={resignPending}
-                    className="glass-card px-3 py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
+                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
                     title="Resign"
                   >
                     {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
@@ -538,21 +539,21 @@ const Play = () => {
                 )}
                 <button
                   onClick={() => setShowArrows(!showArrows)}
-                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
+                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
                   title={showArrows ? "Hide engine arrows" : "Show engine arrows"}
                 >
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
-                  className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                  className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
                   title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={() => setStreamerMode(!streamerMode)}
-                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${streamerMode ? "text-primary border-primary/40" : ""}`}
+                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors hidden sm:flex ${streamerMode ? "text-primary border-primary/40" : ""}`}
                   title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
                 >
                   <Monitor className="w-4 h-4" />
@@ -560,7 +561,7 @@ const Play = () => {
                 {!isOnline && (
                   <button
                     onClick={resetLocalGame}
-                    className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
+                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
                     title="New Game"
                   >
                     <RotateCcw className="w-4 h-4" />
