@@ -829,59 +829,6 @@ const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* ═══════════ RECENT GAMES ═══════════ */}
-          {recentGames.length > 0 && (
-            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
-              <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
-                <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  Recent Games
-                </h3>
-                <span className="text-[10px] text-muted-foreground">{recentGames.filter((g) => g.result_type !== "in_progress").length} games</span>
-              </div>
-              <div className="divide-y divide-border/15">
-                {recentGames.filter((g) => g.result_type !== "in_progress").map((g) => {
-                  const userWon = g.winner_id === user?.id;
-                  const userPlayedWhite = g.player_white === user?.id;
-                  const opponent = userPlayedWhite ? g.black_name || "Opponent" : g.white_name || "Opponent";
-                  const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
-
-                  return (
-                    <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/8 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${result === "Win" ? "bg-success" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
-                        <div>
-                          <span className="text-xs font-display font-bold">{opponent}</span>
-                          <p className="text-[10px] text-muted-foreground">{userPlayedWhite ? "♔ White" : "♚ Black"} · {g.result_type}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${
-                          result === "Win" ? "bg-success/10 text-success" : result === "Loss" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {result}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">{new Date(g.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-
-          {/* ═══════════ ACHIEVEMENTS ═══════════ */}
-          <motion.div variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm p-3.5 sm:p-4">
-            <AchievementsPanel
-              wins={profile?.wins || 0}
-              winStreak={profile?.win_streak || 0}
-              puzzlesSolved={profile?.puzzles_solved || 0}
-              crownScore={profile?.crown_score || 0}
-              gamesPlayed={profile?.games_played || 0}
-            />
-          </motion.div>
 
         </motion.div>
       </div>
