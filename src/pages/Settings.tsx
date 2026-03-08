@@ -273,7 +273,7 @@ const BoardCustomizationSection = () => {
   const { theme, pieceSet, soundEnabled, moveAnimation, showCoordinates, setTheme, setPieceSet, setSoundEnabled, setMoveAnimation, setShowCoordinates } = useBoardSettings();
 
   return (
-    <div className="glass-card p-6 mb-6 space-y-5">
+    <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6 space-y-4 sm:space-y-5">
       <div className="flex items-center gap-2">
         <Palette className="w-5 h-5 text-primary" />
         <h3 className="font-display text-lg font-bold">Board Customization</h3>
