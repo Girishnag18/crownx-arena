@@ -20,6 +20,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
 import { stockfish } from "@/services/stockfishService";
 
+type AIDifficulty = "beginner" | "intermediate" | "advanced";
+
+const AI_CONFIG: Record<AIDifficulty, { depth: number; eloLabel: string; thinkMs: [number, number]; useStockfish: boolean; blunderChance: number }> = {
+  beginner:     { depth: 2,  eloLabel: "~600",  thinkMs: [200, 600],  useStockfish: false, blunderChance: 0.35 },
+  intermediate: { depth: 10, eloLabel: "~1200", thinkMs: [400, 1200], useStockfish: true,  blunderChance: 0.12 },
+  advanced:     { depth: 16, eloLabel: "~2000", thinkMs: [600, 1800], useStockfish: true,  blunderChance: 0.02 },
+};
+
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -29,9 +37,11 @@ const Play = () => {
   const isRankedAI = searchParams.get("ranked") === "true";
   const variant = searchParams.get("variant");
   const isChess960 = variant === "chess960";
+  const difficulty = (searchParams.get("difficulty") as AIDifficulty) || "intermediate";
+  const aiConfig = AI_CONFIG[difficulty] || AI_CONFIG.intermediate;
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
-  const aiElo = playerElo + 20;
+  const aiElo = isRankedAI ? playerElo + 20 : parseInt(aiConfig.eloLabel.replace("~", ""));
 
   const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
   const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
@@ -43,7 +53,7 @@ const Play = () => {
   const [showGameOverPopup, setShowGameOverPopup] = useState(false);
   const [computerColor] = useState<"w" | "b">(() => (Math.random() > 0.5 ? "w" : "b"));
   const [maxBoardSizePx, setMaxBoardSizePx] = useState<number | null>(null);
-  const [aiAccuracy, setAiAccuracy] = useState(92);
+  const [aiThinking, setAiThinking] = useState(false);
   const [showCheckmateBanner, setShowCheckmateBanner] = useState(false);
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
