@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User } from "lucide-react";
+import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, ArrowUpDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
