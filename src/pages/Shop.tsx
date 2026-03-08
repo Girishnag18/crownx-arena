@@ -8,6 +8,7 @@ import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, Arrow
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
+import LegendaryEquipEffect from "@/components/gamification/LegendaryEquipEffect";
 
 interface ShopItem {
   id: string;
