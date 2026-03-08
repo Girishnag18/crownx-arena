@@ -64,7 +64,7 @@ export const usePrivateRoom = () => {
       const code = generateCode();
       const { data, error: err } = await supabase
         .from("game_rooms")
-        .insert({ room_code: code, host_id: user.id, duration_seconds: lastDuration, increment_seconds: lastIncrement } as any)
+        .insert({ room_code: code, host_id: user.id, duration_seconds: lastDurationRef.current, increment_seconds: lastIncrementRef.current } as any)
         .select()
         .single();
 
