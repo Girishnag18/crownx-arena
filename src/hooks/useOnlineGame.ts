@@ -401,6 +401,7 @@ export const useOnlineGame = (gameId: string | null) => {
     lastSyncedAt,
     makeMove,
     resign,
+    claimTimeout,
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",
