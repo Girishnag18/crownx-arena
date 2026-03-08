@@ -260,8 +260,15 @@ const Puzzles = () => {
                 <div className="flex items-center gap-3">
                   <Target className="w-5 h-5 text-primary" />
                   <div>
-                    <h1 className="font-display font-bold text-sm">
-                      {puzzle ? `Puzzle • Rating ${puzzle.rating}` : "Loading..."}
+                    <h1 className="font-display font-bold text-sm flex items-center gap-2">
+                      {puzzle ? (
+                        <>
+                          Puzzle • Rating {puzzle.rating}
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getDifficultyLevel(puzzle.rating).bg} ${getDifficultyLevel(puzzle.rating).color}`}>
+                            {getDifficultyLevel(puzzle.rating).label}
+                          </span>
+                        </>
+                      ) : "Loading..."}
                     </h1>
                     <p className="text-xs text-muted-foreground">
                       {playerColor === "w" ? "White" : "Black"} to move
