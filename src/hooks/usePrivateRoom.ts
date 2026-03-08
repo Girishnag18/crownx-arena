@@ -270,5 +270,5 @@ export const usePrivateRoom = () => {
     setError(null);
   }, []);
 
-  return { roomCode, gameId, status, error, createRoom, joinRoom, regenerateRoom, cancelRoom, reset };
+  return { roomCode, gameId, status, error, expirySeconds, createRoom, joinRoom, regenerateRoom, cancelRoom, reset };
 };
