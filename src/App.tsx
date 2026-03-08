@@ -30,6 +30,7 @@ import Studies from "./pages/Studies";
 import OpeningTrainer from "./pages/OpeningTrainer";
 import PgnAnalysis from "./pages/PgnAnalysis";
 import Challenges from "./pages/Challenges";
+import BattlePass from "./pages/BattlePass";
 import Tutorial from "./pages/Tutorial";
 import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
@@ -70,6 +71,7 @@ const RouteAnimator = () => {
           <Route path="/openings" element={<ProtectedRoute><OpeningTrainer /></ProtectedRoute>} />
           <Route path="/analysis" element={<ProtectedRoute><PgnAnalysis /></ProtectedRoute>} />
           <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
+          <Route path="/battle-pass" element={<ProtectedRoute><BattlePass /></ProtectedRoute>} />
           <Route path="/tutorial" element={<ProtectedRoute><Tutorial /></ProtectedRoute>} />
           <Route path="/clubs" element={<ProtectedRoute><Clubs /></ProtectedRoute>} />
           <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
