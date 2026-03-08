@@ -401,6 +401,19 @@ export const useOnlineGame = (gameId: string | null) => {
       .eq("id", gameData.id);
   }, [gameData, user]);
 
+  const abortGame = useCallback(async () => {
+    if (!gameData || !user) return;
+    if (gameData.result_type !== "in_progress") return;
+    const moveCount = Array.isArray(gameData.moves) ? gameData.moves.length : 0;
+    if (moveCount >= 2) return;
+    await supabase
+      .from("games")
+      .update({
+        result_type: "aborted",
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", gameData.id);
+  }, [gameData, user]);
   return {
     game,
     gameData,
@@ -415,6 +428,7 @@ export const useOnlineGame = (gameId: string | null) => {
     resign,
     claimTimeout,
     acceptDraw,
+    abortGame,
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",

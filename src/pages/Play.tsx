@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake, XCircle } from "lucide-react";
 import { ResignConfirmDialog, GameOverPopup, type RematchState } from "@/components/chess/ResignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { generateChess960Fen } from "@/utils/chess960";
@@ -576,7 +576,8 @@ const Play = () => {
         return won ? "Opponent ran out of time — You win!" : "You ran out of time";
       }
       if (rt === "stalemate") return "Stalemate — Draw";
-      if (rt === "draw") return "Draw";
+      if (rt === "draw") return "Draw by agreement";
+      if (rt === "aborted") return "Game aborted";
       if (rt === "in_progress") {
         if (clockGameOver) {
           const timedOutSide = (onlineClockWhiteMs ?? 1) <= 0 ? "w" : "b";
@@ -961,6 +962,16 @@ const Play = () => {
                     title={drawOfferState === "sent" ? "Draw offered…" : "Offer draw"}
                   >
                     <Handshake className="w-4 h-4" />
+                  </button>
+                )}
+                {/* Abort button - online, < 2 moves */}
+                {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) < 2 && (
+                  <button
+                    onClick={() => online.abortGame()}
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-muted-foreground/40 hover:bg-muted/10 transition-all text-muted-foreground"
+                    title="Abort game"
+                  >
+                    <XCircle className="w-4 h-4" />
                   </button>
                 )}
                 {/* Resign button - online */}
