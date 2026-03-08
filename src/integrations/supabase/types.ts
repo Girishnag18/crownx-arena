@@ -812,6 +812,7 @@ export type Database = {
           duration_seconds: number | null
           game_mode: string
           id: string
+          increment_seconds: number | null
           player_id: string
           rating: number
           region: string | null
@@ -821,6 +822,7 @@ export type Database = {
           duration_seconds?: number | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
           player_id: string
           rating?: number
           region?: string | null
@@ -830,6 +832,7 @@ export type Database = {
           duration_seconds?: number | null
           game_mode?: string
           id?: string
+          increment_seconds?: number | null
           player_id?: string
           rating?: number
           region?: string | null

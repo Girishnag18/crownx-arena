@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { game_mode = 'quick_play', duration_seconds = null } = await req.json().catch(() => ({}));
+    const { game_mode = 'quick_play', duration_seconds = null, increment_seconds = null } = await req.json().catch(() => ({}));
 
     // Get player's rating
     const { data: profile } = await supabase
@@ -63,6 +63,13 @@ Deno.serve(async (req) => {
       candidatesQuery = candidatesQuery.eq('duration_seconds', duration_seconds);
     }
 
+    // Filter by increment_seconds
+    if (increment_seconds === null) {
+      candidatesQuery = candidatesQuery.is('increment_seconds', null);
+    } else {
+      candidatesQuery = candidatesQuery.eq('increment_seconds', increment_seconds);
+    }
+
     const { data: candidates } = await candidatesQuery;
 
     if (candidates && candidates.length > 0) {
@@ -89,6 +96,7 @@ Deno.serve(async (req) => {
           current_fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           moves: [],
           duration_seconds: gameDuration,
+          increment_seconds: increment_seconds ?? null,
           white_time_ms: gameDuration ? gameDuration * 1000 : null,
           black_time_ms: gameDuration ? gameDuration * 1000 : null,
         })
@@ -119,6 +127,7 @@ Deno.serve(async (req) => {
         game_mode,
         rating: playerRating,
         duration_seconds: duration_seconds ?? null,
+        increment_seconds: increment_seconds ?? null,
       }, { onConflict: 'player_id' });
 
     if (queueError) {

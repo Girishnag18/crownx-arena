@@ -187,6 +187,7 @@ const Lobby = () => {
   }, [joinCode, mode]);
 
   const durationFromTC = selectedTimeControl ? selectedTimeControl.initialSeconds : null;
+  const incrementFromTC = selectedTimeControl ? selectedTimeControl.incrementSeconds : null;
 
   const gameModes = [
     { id: "quick_play" as Mode, icon: Swords, title: "Quick Play", desc: "Instant match at your skill level", accent: true },
@@ -334,7 +335,7 @@ const Lobby = () => {
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => matchmaking.startSearch("quick_play", durationFromTC)}
+          onClick={() => matchmaking.startSearch("quick_play", durationFromTC, incrementFromTC)}
           className="w-full rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-sm tracking-wider py-4 transition-all gold-glow hover:shadow-lg hover:shadow-primary/25"
         >
           {selectedTimeControl ? `FIND ${selectedTimeControl.label} MATCH` : "FIND MATCH"}
@@ -371,7 +372,7 @@ const Lobby = () => {
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center space-y-3">
           <p className="text-destructive text-sm">{matchmaking.error}</p>
           <div className="flex gap-3 justify-center">
-            <button onClick={() => matchmaking.startSearch("quick_play", durationFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">RETRY</button>
+            <button onClick={() => matchmaking.startSearch("quick_play", durationFromTC, incrementFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">RETRY</button>
             <button onClick={() => navigate("/play?mode=computer")} className="border border-primary/30 text-primary font-display font-bold text-xs px-6 py-2.5 rounded-lg hover:bg-primary/10">
               <Bot className="w-4 h-4 inline mr-1" /> vs AI
             </button>
@@ -447,7 +448,7 @@ const Lobby = () => {
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => matchmaking.startSearch("world_arena", durationFromTC)}
+          onClick={() => matchmaking.startSearch("world_arena", durationFromTC, incrementFromTC)}
           className="w-full rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-display font-bold text-sm tracking-wider py-4 transition-all gold-glow hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2"
         >
           <Globe className="w-4 h-4" />
@@ -471,7 +472,7 @@ const Lobby = () => {
       {matchmaking.state === "error" && (
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center space-y-3">
           <p className="text-destructive text-sm">{matchmaking.error}</p>
-          <button onClick={() => matchmaking.startSearch("world_arena", durationFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs px-6 py-2.5 rounded-lg">
+          <button onClick={() => matchmaking.startSearch("world_arena", durationFromTC, incrementFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs px-6 py-2.5 rounded-lg">
             RETRY
           </button>
         </div>
