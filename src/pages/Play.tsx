@@ -623,6 +623,22 @@ const Play = () => {
                 onClose={() => setShowEngineReview(false)}
               />
             )}
+
+            {isGameOver && showAICoach && (
+              <AICoach
+                moves={
+                  isOnline && online.gameData?.moves
+                    ? (online.gameData.moves as Array<{ san: string; classification?: string }>)
+                    : moveHistory.map((san) => ({ san }))
+                }
+                playerColor={isOnline ? (online.playerColor || "w") : (isComputerGame ? (computerColor === "w" ? "b" : "w") : "w")}
+                accuracy={0}
+                blunders={0}
+                mistakes={0}
+                inaccuracies={0}
+                brilliants={0}
+                onClose={() => setShowAICoach(false)}
+              />
           </motion.div>
         </div>
       </div>
