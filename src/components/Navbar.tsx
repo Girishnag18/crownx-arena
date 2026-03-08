@@ -132,10 +132,11 @@ const Navbar = () => {
   }, [user]);
 
   const handleSignOut = async () => {
-    await signOut();
+    setLoggingOut(true);
     setProfileOpen(false);
     setMobileOpen(false);
-    navigate("/");
+    await signOut();
+    navigate("/dashboard");
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
