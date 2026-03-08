@@ -114,7 +114,7 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
   const categories = Object.keys(CATEGORY_LABELS).filter(cat => items.some(i => i.category === cat));
 
   return (
-    <div className="space-y-4">
+    <>
       {categories.map(cat => {
         const info = CATEGORY_LABELS[cat];
         const catItems = items.filter(i => i.category === cat);
