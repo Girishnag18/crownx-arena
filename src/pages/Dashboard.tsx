@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2 } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2, Gift } from "lucide-react";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
+import PlacementBadge from "@/components/gamification/PlacementBadge";
+import RankPromotionOverlay from "@/components/gamification/RankPromotionOverlay";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -100,6 +102,8 @@ const Dashboard = () => {
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
   const [showCreateTournament, setShowCreateTournament] = useState(false);
+  const [promotion, setPromotion] = useState<{ oldRank: string; newRank: string } | null>(null);
+  const prevRankRef = useRef<string | null>(null);
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
@@ -107,7 +111,20 @@ const Dashboard = () => {
       .select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns, xp, puzzles_solved")
       .eq("id", userId)
       .single();
-    if (data) setProfile(data as unknown as Profile);
+    if (data) {
+      const p = data as unknown as Profile;
+      // Detect rank promotion
+      if (prevRankRef.current && prevRankRef.current !== p.rank_tier) {
+        const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown Master"];
+        const oldIdx = ranks.indexOf(prevRankRef.current);
+        const newIdx = ranks.indexOf(p.rank_tier);
+        if (newIdx > oldIdx) {
+          setPromotion({ oldRank: prevRankRef.current, newRank: p.rank_tier });
+        }
+      }
+      prevRankRef.current = p.rank_tier;
+      setProfile(p);
+    }
   };
 
   const loadRecentGames = async (userId: string) => {
@@ -341,6 +358,14 @@ const Dashboard = () => {
 
   return (
     <div className="page-container">
+      {/* Rank Promotion Overlay */}
+      {promotion && (
+        <RankPromotionOverlay
+          oldRank={promotion.oldRank}
+          newRank={promotion.newRank}
+          onDismiss={() => setPromotion(null)}
+        />
+      )}
       <div className="container mx-auto max-w-7xl">
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-5">
 
@@ -489,6 +514,32 @@ const Dashboard = () => {
                   </div>
                 </motion.div>
               )}
+
+              {/* Placement Badge */}
+              {profile && profile.games_played < 10 && (
+                <motion.div variants={fadeUp}>
+                  <PlacementBadge gamesPlayed={profile.games_played} />
+                </motion.div>
+              )}
+
+              {/* Daily Spin */}
+              <motion.div variants={fadeUp}>
+                <button
+                  onClick={() => navigate("/daily-spin")}
+                  className="w-full rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 p-4 text-left group transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                      <Gift className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display font-bold text-xs">Daily Spin</p>
+                      <p className="text-[10px] text-muted-foreground">Free daily Crown rewards</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
+                  </div>
+                </button>
+              </motion.div>
 
               {/* Daily Puzzle */}
               <motion.div variants={fadeUp}>
