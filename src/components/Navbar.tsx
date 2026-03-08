@@ -82,6 +82,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<NavbarProfile | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
