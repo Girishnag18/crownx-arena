@@ -43,6 +43,7 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
   const [items, setItems] = useState<ShopItem[]>([]);
   const [purchases, setPurchases] = useState<Map<string, Purchase>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [legendaryEffect, setLegendaryEffect] = useState<{ icon: string; name: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
