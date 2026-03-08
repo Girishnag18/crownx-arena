@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBoardSettings } from "@/contexts/BoardSettingsContext";
 import BoardSquare from "./BoardSquare";
 import BoardArrows from "./BoardArrows";
 
@@ -57,6 +58,19 @@ const ChessBoard = ({
   } | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const prevTurnRef = useRef(game.turn());
+  const moveCountRef = useRef(0);
+  const [slideAnimKey, setSlideAnimKey] = useState(0);
+  const { moveAnimation } = useBoardSettings();
+
+  // Increment animation key when lastMove changes so slide plays once per move
+  const prevLastMoveRef = useRef(lastMove);
+  useEffect(() => {
+    if (lastMove && lastMove !== prevLastMoveRef.current) {
+      moveCountRef.current += 1;
+      setSlideAnimKey(moveCountRef.current);
+    }
+    prevLastMoveRef.current = lastMove;
+  }, [lastMove]);
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
@@ -327,6 +341,21 @@ const ChessBoard = ({
             const isPremoveSquare = premove?.from === square || premove?.to === square;
             const isDragSource = dragState?.from === square;
 
+            // Calculate slide offset for the piece that just landed here
+            let slideFrom: { dx: number; dy: number } | undefined;
+            if (moveAnimation && lastMove && square === lastMove.to && !dragState) {
+              const fromFi = files.indexOf(lastMove.from[0]);
+              const fromRi = ranks.indexOf(lastMove.from[1]);
+              const toFi = fi;
+              const toRi = ri;
+              if (fromFi >= 0 && fromRi >= 0) {
+                slideFrom = {
+                  dx: (fromFi - toFi),
+                  dy: (fromRi - toRi),
+                };
+              }
+            }
+
             return (
               <BoardSquare
                 key={square}
@@ -344,6 +373,8 @@ const ChessBoard = ({
                 showFile={!streamerMode && ri === 7 ? file : undefined}
                 onClick={() => handleSquareClick(square)}
                 onTouchStart={(e) => handleTouchStart(e, square)}
+                slideFrom={slideFrom}
+                slideAnimKey={slideAnimKey}
               />
             );
           })
