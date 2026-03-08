@@ -9,22 +9,10 @@ export const authService = {
     supabase.auth.signInWithPassword({ email, password }),
 
   signInWithGoogle: async () =>
-    supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: buildRedirect(oauthCallbackPath),
-        queryParams: {
-          prompt: "select_account",
-          access_type: "offline",
-        },
-      },
-    }),
-
-  signInWithFacebook: async () =>
-    supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: buildRedirect(oauthCallbackPath),
+    lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+      extraParams: {
+        prompt: "select_account",
       },
     }),
 
