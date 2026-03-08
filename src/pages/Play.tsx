@@ -963,6 +963,16 @@ const Play = () => {
                     <Handshake className="w-4 h-4" />
                   </button>
                 )}
+                {/* Abort button - online, < 2 moves */}
+                {isOnline && !online.isGameOver && ((online.gameData?.moves as any[])?.length ?? 0) < 2 && (
+                  <button
+                    onClick={() => online.abortGame()}
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-muted-foreground/40 hover:bg-muted/10 transition-all text-muted-foreground"
+                    title="Abort game"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                )}
                 {/* Resign button - online */}
                 {isOnline && !online.isGameOver && (
                   <button
