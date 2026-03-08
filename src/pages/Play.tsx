@@ -420,6 +420,21 @@ const Play = () => {
           setDrawOfferState("idle");
         }
       })
+      .on("broadcast", { event: "takeback_request" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setTakebackState("received");
+        }
+      })
+      .on("broadcast", { event: "takeback_accept" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setTakebackState("idle");
+        }
+      })
+      .on("broadcast", { event: "takeback_decline" }, ({ payload }) => {
+        if (payload.from !== user.id) {
+          setTakebackState("idle");
+        }
+      })
       .subscribe();
 
     rematchChannelRef.current = channel;
