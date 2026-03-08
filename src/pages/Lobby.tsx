@@ -40,6 +40,8 @@ const Lobby = () => {
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [chess960, setChess960] = useState(false);
+  const [roomPreview, setRoomPreview] = useState<{ host_username: string | null; duration_seconds: number | null } | null>(null);
+  const [fetchingPreview, setFetchingPreview] = useState(false);
   const worldChatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -137,7 +139,51 @@ const Lobby = () => {
     privateRoom.reset();
     setMode(null);
     setJoinCode("");
+    setRoomPreview(null);
   };
+
+  // Fetch room preview when a valid 6-char code is entered
+  useEffect(() => {
+    if (joinCode.length !== 6 || mode !== "private") {
+      setRoomPreview(null);
+      return;
+    }
+    const sanitized = joinCode.trim().toUpperCase();
+    if (!/^[A-Z2-9]{6}$/.test(sanitized)) return;
+
+    let cancelled = false;
+    setFetchingPreview(true);
+    (async () => {
+      const { data: room } = await supabase
+        .from("game_rooms")
+        .select("duration_seconds, host_id")
+        .eq("room_code", sanitized)
+        .eq("status", "waiting")
+        .single();
+
+      if (cancelled) return;
+      if (!room) {
+        setRoomPreview(null);
+        setFetchingPreview(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", room.host_id)
+        .single();
+
+      if (cancelled) return;
+      setRoomPreview({
+        host_username: profile?.username ?? "Unknown",
+        duration_seconds: (room as any).duration_seconds ?? null,
+      });
+      setFetchingPreview(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [joinCode, mode]);
 
   const durationFromTC = selectedTimeControl ? selectedTimeControl.initialSeconds : null;
 
@@ -542,12 +588,42 @@ const Lobby = () => {
               />
               <button
                 onClick={async () => { setJoiningRoom(true); await privateRoom.joinRoom(joinCode, durationFromTC, chess960 ? "chess960" : null); setJoiningRoom(false); }}
-                disabled={joinCode.length < 6 || joiningRoom}
+                disabled={joinCode.length < 6 || joiningRoom || fetchingPreview}
                 className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg disabled:opacity-40 transition-all hover:opacity-90"
               >
                 {joiningRoom ? <Loader2 className="w-4 h-4 animate-spin" /> : "JOIN"}
               </button>
             </div>
+
+            {/* Room preview */}
+            {fetchingPreview && joinCode.length === 6 && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" /> Looking up room…
+              </div>
+            )}
+            {roomPreview && !fetchingPreview && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1.5"
+              >
+                <div className="flex items-center gap-2">
+                  <UserCheck className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-display font-bold text-xs">Host: {roomPreview.host_username}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Timer className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-display font-bold text-xs">
+                    {roomPreview.duration_seconds
+                      ? (() => {
+                          const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds);
+                          return tc ? `${tc.label} (${tc.category})` : `${roomPreview.duration_seconds / 60} min`;
+                        })()
+                      : "No time limit"}
+                  </span>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       )}
