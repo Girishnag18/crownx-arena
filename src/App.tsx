@@ -105,10 +105,13 @@ const App = () => (
         <AuthProvider>
           <BoardSettingsProvider>
             <Navbar />
+            <MobileBottomNav />
             <AchievementListener />
             <StreakBanner />
             <RealtimeNotificationToast />
-            <RouteAnimator />
+            <div className="pb-14 lg:pb-0">
+              <RouteAnimator />
+            </div>
           </BoardSettingsProvider>
         </AuthProvider>
       </BrowserRouter>
