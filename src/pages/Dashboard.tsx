@@ -475,18 +475,29 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ════════ RECENT TOURNAMENTS ════════ */}
-          {recentTournaments.length > 0 && (
-            <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
-              <div className={cardHeader}>
-                <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                  <div className={sectionIcon}><Clock className="w-3 h-3 text-muted-foreground" /></div>
-                  Recent Tournaments
-                </h3>
-                <span className="text-[10px] text-muted-foreground font-medium">{recentTournaments.length} completed</span>
+          <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
+            <div className={cardHeader}>
+              <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                <div className={sectionIcon}><Clock className="w-3 h-3 text-muted-foreground" /></div>
+                Recent Tournaments
+              </h3>
+              {recentTournaments.length > 0 && (
+                <span className="text-[10px] text-muted-foreground font-medium">{recentTournaments.length} ended</span>
+              )}
+            </div>
+            {recentTournaments.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <div className="w-10 h-10 rounded-xl bg-secondary/30 flex items-center justify-center mx-auto mb-2">
+                  <Clock className="w-5 h-5 text-muted-foreground/25" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">No recent tournaments</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">Completed and cancelled tournaments appear here</p>
               </div>
+            ) : (
               <div className="divide-y divide-border/10 max-h-[14rem] overflow-y-auto">
                 {recentTournaments.map((t) => {
                   const count = t.registration_count?.[0]?.count || 0;
+                  const isCancelled = t.status === "cancelled";
                   return (
                     <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/6 transition-colors">
                       <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -503,15 +514,17 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-primary/8 text-primary">COMPLETED</span>
+                        <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${isCancelled ? "bg-destructive/10 text-destructive" : "bg-primary/8 text-primary"}`}>
+                          {isCancelled ? "CANCELLED" : "COMPLETED"}
+                        </span>
                         <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1 rounded-lg border border-border/25 text-muted-foreground hover:text-foreground hover:border-primary/25 font-display font-bold transition-colors">Details</button>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
 
         </motion.div>
       </div>
