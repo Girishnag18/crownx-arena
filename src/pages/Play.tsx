@@ -10,6 +10,7 @@ import ChessBoard from "@/components/chess/ChessBoard";
 import GameReview from "@/components/chess/GameReview";
 import AICoach from "@/components/chess/AICoach";
 import ReportButton from "@/components/chess/ReportButton";
+import VoiceChess from "@/components/chess/VoiceChess";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
@@ -552,6 +553,14 @@ const Play = () => {
             </div>
 
             <OpeningExplorer moves={displayMoves} />
+
+            {!isGameOver && (
+              <VoiceChess
+                game={game}
+                onMove={isOnline ? handleOnlineMove : handleLocalMove}
+                disabled={isOnline ? !online.isMyTurn || online.isGameOver : (isComputerGame ? game.turn() === computerColor : false)}
+              />
+            )}
 
             <div className="glass-card p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
