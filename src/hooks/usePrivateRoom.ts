@@ -18,7 +18,7 @@ export const usePrivateRoom = () => {
     return code;
   };
 
-  const createRoom = useCallback(async (durationSeconds: number | null = null) => {
+  const createRoom = useCallback(async (durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
     if (!user) return;
     setError(null);
     let createdRoom: { room_code: string; id: string } | null = null;
