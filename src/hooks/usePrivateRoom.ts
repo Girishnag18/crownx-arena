@@ -199,7 +199,7 @@ export const usePrivateRoom = () => {
 
   // Listen for room updates (host waiting for guest)
   useEffect(() => {
-    if (!roomId || status !== "waiting") return;
+    if (!roomId || (status !== "waiting" && status !== "joined")) return;
 
     const channel = supabase
       .channel(`room-${roomId}`)
