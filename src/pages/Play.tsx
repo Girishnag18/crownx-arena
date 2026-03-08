@@ -810,7 +810,7 @@ const Play = () => {
                       ? <span className="text-[10px] text-muted-foreground/50">—</span>
                       : capturedPieces.capturedByWhite.slice(0, 8).map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
                   </div>
-                  {timeControl && (
+                  {showClock && (
                     <ClockFace
                       ms={flipped ? blackMs : whiteMs}
                       isActive={clockActiveSide === (flipped ? "b" : "w")}
