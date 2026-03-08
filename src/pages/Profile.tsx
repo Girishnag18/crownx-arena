@@ -310,8 +310,10 @@ const Profile = () => {
 
       {/* Tabs: Performance & Social */}
       <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
+        <TabsList className="w-full grid grid-cols-5 bg-secondary/40">
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="history">Match History</TabsTrigger>
+          <TabsTrigger value="achievements">Achievements</TabsTrigger>
           <TabsTrigger value="social">Social</TabsTrigger>
           <TabsTrigger value="search">Find Players</TabsTrigger>
         </TabsList>
