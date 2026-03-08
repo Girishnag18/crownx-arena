@@ -23,6 +23,7 @@ import Ratings from "./pages/Ratings";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Spectate from "./pages/Spectate";
+import TournamentDetail from "./pages/TournamentDetail";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
