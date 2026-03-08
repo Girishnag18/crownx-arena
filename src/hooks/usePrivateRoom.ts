@@ -12,6 +12,11 @@ export const usePrivateRoom = () => {
   const [error, setError] = useState<string | null>(null);
   const lastDurationRef = useRef<number | null>(null);
   const lastIncrementRef = useRef<number | null>(null);
+  const [expirySeconds, setExpirySeconds] = useState<number>(0);
+  const expiryTimerRef = useRef<number | null>(null);
+  const countdownRef = useRef<number | null>(null);
+
+  const ROOM_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
