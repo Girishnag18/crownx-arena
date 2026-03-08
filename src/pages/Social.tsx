@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award } from "lucide-react";
+import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
