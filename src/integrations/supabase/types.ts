@@ -342,6 +342,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cosmetic_loadouts: {
+        Row: {
+          created_at: string
+          id: string
+          item_ids: string[]
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_ids?: string[]
+          name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_ids?: string[]
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_logins: {
         Row: {
           bonus_claimed: boolean
