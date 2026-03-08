@@ -630,7 +630,7 @@ const Dashboard = () => {
                      const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
 
                      return (
-                       <div key={tournament.id} className="px-5 py-3.5 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors">
+                       <div key={tournament.id} className="px-4 py-3 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors">
                          <div className="flex items-center justify-between gap-3">
                            <div className="flex-1 min-w-0">
                              <div className="flex items-center gap-2">
