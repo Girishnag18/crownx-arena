@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2 } from "lucide-react";
+import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2, Gift } from "lucide-react";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
+import PlacementBadge from "@/components/gamification/PlacementBadge";
+import RankPromotionOverlay from "@/components/gamification/RankPromotionOverlay";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
