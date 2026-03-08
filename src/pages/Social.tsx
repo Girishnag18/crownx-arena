@@ -247,6 +247,9 @@ const Social = () => {
                   {item.type === "game_end" && (
                     <Trophy className={`w-4 h-4 shrink-0 ${item.detail.includes("won") ? "text-primary" : "text-muted-foreground"}`} />
                   )}
+                  {item.type === "achievement" && (
+                    <Award className="w-4 h-4 shrink-0 text-primary" />
+                  )}
                 </motion.div>
               ))}
             </div>
