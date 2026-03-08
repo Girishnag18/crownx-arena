@@ -110,7 +110,7 @@ const ProfileCard = ({
         {/* Avatar */}
         <div className="absolute -bottom-10 left-6">
           <div className="relative">
-            <Avatar className={`w-20 h-20 border-[3px] border-card shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)] ${frameClass}`}>
+            <Avatar className={`w-20 h-20 border-[3px] border-card shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)] ${frameClass}`} style={frameStyle}>
               <AvatarImage src={avatar_url || undefined} alt={username} />
               <AvatarFallback className="bg-secondary text-primary text-xl font-display font-bold">
                 <User className="w-8 h-8" />
