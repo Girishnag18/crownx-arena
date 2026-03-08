@@ -64,6 +64,11 @@ class SoundManager {
         case "illegal":
           this.playTone(ctx, 200, 0.1, "sawtooth", 0.15);
           break;
+        case "playerJoined":
+          this.playTone(ctx, 523, 0.1, "sine", 0.3);
+          setTimeout(() => this.playTone(ctx, 784, 0.1, "sine", 0.3), 120);
+          setTimeout(() => this.playTone(ctx, 1047, 0.15, "sine", 0.35), 240);
+          break;
       }
     } catch {
       // Audio not available
