@@ -9,7 +9,8 @@ import PerformanceTab from "@/components/profile/PerformanceTab";
 import MatchHistory from "@/components/profile/MatchHistory";
 import AchievementShowcase from "@/components/profile/AchievementShowcase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Edit3, X, Swords, MessageCircle, Search, Users, UserPlus, Clock, Upload, Save, User } from "lucide-react";
+import { Edit3, X, Swords, MessageCircle, Search, Users, UserPlus, Clock, Upload, Save, User, Palette } from "lucide-react";
+import MyCosmeticsSection from "@/components/profile/MyCosmeticsSection";
 import DirectMessagePanel from "@/components/social/DirectMessagePanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -368,11 +369,12 @@ const Profile = () => {
           {/* ═══════════ TABS ═══════════ */}
           <motion.div variants={fadeUp}>
             <Tabs defaultValue="performance" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-1 h-auto">
+              <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-1 h-auto">
                 {[
                   { value: "performance", label: "Performance", icon: "📊" },
                   { value: "history", label: "History", icon: "⚔️" },
                   { value: "achievements", label: "Achievements", icon: "🏆" },
+                  { value: "cosmetics", label: "Cosmetics", icon: "🎨" },
                   { value: "social", label: "Social", icon: "👥" },
                   { value: "search", label: "Find", icon: "🔍" },
                 ].map((tab) => (
@@ -397,6 +399,10 @@ const Profile = () => {
 
                 <TabsContent value="achievements" className="mt-0">
                   {user && <AchievementShowcase playerId={user.id} />}
+                </TabsContent>
+
+                <TabsContent value="cosmetics" className="mt-0">
+                  {user && <MyCosmeticsSection userId={user.id} onEquipChange={loadEquippedItems} />}
                 </TabsContent>
 
                 <TabsContent value="social" className="mt-0">

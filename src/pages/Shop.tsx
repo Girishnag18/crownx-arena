@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User } from "lucide-react";
+import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, ArrowUpDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
@@ -203,6 +203,7 @@ const Shop = () => {
   const [buying, setBuying] = useState<string | null>(null);
   const [category, setCategory] = useState("all");
   const [rarity, setRarity] = useState("all");
+  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "rarity" | "newest">("price_asc");
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
 
@@ -316,11 +317,23 @@ const Shop = () => {
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
   };
 
-  const filteredItems = items.filter(i => {
-    if (category !== "all" && i.category !== category) return false;
-    if (rarity !== "all" && i.rarity !== rarity) return false;
-    return true;
-  });
+  const RARITY_ORDER: Record<string, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
+
+  const filteredItems = items
+    .filter(i => {
+      if (category !== "all" && i.category !== category) return false;
+      if (rarity !== "all" && i.rarity !== rarity) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "price_asc": return a.price_crowns - b.price_crowns;
+        case "price_desc": return b.price_crowns - a.price_crowns;
+        case "rarity": return (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0);
+        case "newest": return b.id.localeCompare(a.id);
+        default: return 0;
+      }
+    });
   const ownedItems = items.filter(i => purchases.has(i.id));
 
   const ItemCard = ({ item, idx }: { item: ShopItem; idx: number }) => {
@@ -478,6 +491,30 @@ const Shop = () => {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Sort:</span>
+              {([
+                { key: "price_asc", label: "Price ↑" },
+                { key: "price_desc", label: "Price ↓" },
+                { key: "rarity", label: "Rarity" },
+                { key: "newest", label: "Newest" },
+              ] as const).map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => setSortBy(s.key)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-display font-bold transition-all duration-300 ${
+                    sortBy === s.key
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "bg-card/40 text-muted-foreground border border-border/30 hover:bg-secondary/50"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
 
             {loading ? (
