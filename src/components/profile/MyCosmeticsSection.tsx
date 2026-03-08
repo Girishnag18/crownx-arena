@@ -170,6 +170,15 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
     toast.success("Loadout deleted.");
   };
 
+  const renameLoadout = async (id: string) => {
+    const name = editingLoadoutName.trim();
+    if (!name) { setEditingLoadoutId(null); return; }
+    await (supabase as any).from("cosmetic_loadouts").update({ name }).eq("id", id);
+    setLoadouts(prev => prev.map(l => l.id === id ? { ...l, name } : l));
+    setEditingLoadoutId(null);
+    toast.success("Loadout renamed!");
+  };
+
   if (loading) return null;
   if (items.length === 0) {
     return (
