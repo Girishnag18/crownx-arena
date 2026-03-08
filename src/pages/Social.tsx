@@ -275,6 +275,13 @@ const Social = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Crown Gift Dialog */}
+      <AnimatePresence>
+        {giftFriend && (
+          <CrownGiftDialog friend={giftFriend} onClose={() => setGiftFriend(null)} />
+        )}
+      </AnimatePresence>
     </main>
   );
 };
