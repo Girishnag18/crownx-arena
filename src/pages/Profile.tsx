@@ -97,9 +97,30 @@ const Profile = () => {
     setOutgoing(outgoingRows.map((entry) => ({ ...entry, addressee: profileMap.get(entry.addressee_id) })));
   };
 
+  const loadEquippedItems = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("shop_purchases")
+      .select("item_id, is_equipped")
+      .eq("user_id", user.id)
+      .eq("is_equipped", true);
+
+    if (data && data.length > 0) {
+      const itemIds = data.map((p) => p.item_id);
+      const { data: items } = await supabase
+        .from("shop_items")
+        .select("name, icon, category, rarity")
+        .in("id", itemIds);
+      setEquippedItems((items || []) as EquippedItem[]);
+    } else {
+      setEquippedItems([]);
+    }
+  };
+
   useEffect(() => {
     loadMyProfile();
     loadSocialData();
+    loadEquippedItems();
   }, [user?.id]);
 
   useEffect(() => {
