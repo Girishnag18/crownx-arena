@@ -34,6 +34,7 @@ interface Tournament {
   max_players: number;
   created_by?: string;
   status: "open" | "full" | "live" | "completed" | "cancelled";
+  tournament_type?: string;
   starts_at: string | null;
   cancelled_at?: string | null;
   registration_count?: { count: number }[];
@@ -156,7 +157,7 @@ const Dashboard = () => {
   const loadTournaments = async () => {
     const { data } = await (supabase as any)
       .from("tournaments")
-      .select("id, name, prize_pool, max_players, created_by, status, starts_at, registration_count:tournament_registrations(count)")
+      .select("id, name, prize_pool, max_players, created_by, status, starts_at, tournament_type, registration_count:tournament_registrations(count)")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -318,8 +319,13 @@ const Dashboard = () => {
     document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [location.search]);
 
-  const liveTournamentCount = useMemo(
-    () => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled").length,
+  const activeTournaments = useMemo(
+    () => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled"),
+    [tournaments],
+  );
+
+  const recentTournaments = useMemo(
+    () => tournaments.filter((t) => t.status === "completed" || t.status === "cancelled"),
     [tournaments],
   );
 
@@ -495,13 +501,13 @@ const Dashboard = () => {
               <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
-                  <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-primary" />
-                    Tournaments
-                    {liveTournamentCount > 0 && (
-                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full ml-1">{liveTournamentCount} active</span>
-                    )}
-                  </h3>
+                   <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                     <Trophy className="w-4 h-4 text-primary" />
+                     Tournaments
+                     {activeTournaments.length > 0 && (
+                       <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full ml-1">{activeTournaments.length} active</span>
+                     )}
+                   </h3>
                   <button
                     onClick={() => setShowCreateTournament(!showCreateTournament)}
                     className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors"
@@ -551,81 +557,126 @@ const Dashboard = () => {
 
                 {/* Tournament list */}
                 <div className="max-h-[22rem] overflow-y-auto">
-                  {tournaments.length === 0 && (
-                    <div className="px-5 py-10 text-center">
-                      <Trophy className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">No tournaments yet. Create one to get started!</p>
-                    </div>
-                  )}
-                  {tournaments.map((tournament, idx) => {
-                    const count = tournament.registration_count?.[0]?.count || 0;
-                    const isRegistered = registeredTournamentIds.includes(tournament.id);
-                    const isFull = count >= tournament.max_players;
-                    const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
-                    const isReady = startsAtMs > 0 && Date.now() >= startsAtMs && tournament.status !== "cancelled";
-                    const isCancelled = tournament.status === "cancelled";
+                   {activeTournaments.length === 0 && (
+                     <div className="px-5 py-10 text-center">
+                       <Trophy className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                       <p className="text-xs text-muted-foreground">No active tournaments. Create one to get started!</p>
+                     </div>
+                   )}
+                   {activeTournaments.map((tournament) => {
+                     const count = tournament.registration_count?.[0]?.count || 0;
+                     const isRegistered = registeredTournamentIds.includes(tournament.id);
+                     const isFull = count >= tournament.max_players;
+                     const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
+                     const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
 
-                    return (
-                      <div key={tournament.id} className={`px-5 py-3.5 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors ${isCancelled ? "opacity-40" : ""}`}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-display font-bold text-xs truncate">{tournament.name}</h4>
-                              {isReady && !isCancelled && (
-                                <span className="flex items-center gap-1 text-[9px] bg-emerald-500/15 text-emerald-400 font-bold px-1.5 py-0.5 rounded-full">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                  LIVE
-                                </span>
-                              )}
-                              {isCancelled && (
-                                <span className="text-[9px] bg-destructive/10 text-destructive font-bold px-1.5 py-0.5 rounded-full">CANCELLED</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                              <span>{count}/{tournament.max_players} players</span>
-                              <span>₹{tournament.prize_pool} prize</span>
-                              {tournament.starts_at && (
-                                <span>{new Date(tournament.starts_at).toLocaleDateString()} {new Date(tournament.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              )}
-                            </div>
-                          </div>
+                     return (
+                       <div key={tournament.id} className="px-5 py-3.5 border-b border-border/20 last:border-0 hover:bg-secondary/10 transition-colors">
+                         <div className="flex items-center justify-between gap-3">
+                           <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-2">
+                               <h4 className="font-display font-bold text-xs truncate">{tournament.name}</h4>
+                               {isReady && (
+                                 <span className="flex items-center gap-1 text-[9px] bg-emerald-500/15 text-emerald-400 font-bold px-1.5 py-0.5 rounded-full">
+                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                   LIVE
+                                 </span>
+                               )}
+                             </div>
+                             <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                               <span>{count}/{tournament.max_players} players</span>
+                               <span>₹{tournament.prize_pool} prize</span>
+                               {tournament.starts_at && (
+                                 <span>{new Date(tournament.starts_at).toLocaleDateString()} {new Date(tournament.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                               )}
+                             </div>
+                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isReady && !isCancelled && (
-                              <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary font-display font-bold hover:bg-primary/20 transition-colors">
-                                View
-                              </button>
-                            )}
-                            {!isCancelled && (
-                              <button
-                                onClick={() => registerTournament(tournament.id)}
-                                disabled={isRegistered || isFull || registeringTournamentId === tournament.id}
-                                className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-colors ${
-                                  isRegistered
-                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                    : isFull
-                                      ? "bg-muted text-muted-foreground"
-                                      : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
-                                }`}
-                              >
-                                {isRegistered ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === tournament.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                           <div className="flex items-center gap-2 shrink-0">
+                             {isReady && (
+                               <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary font-display font-bold hover:bg-primary/20 transition-colors">
+                                 View
+                               </button>
+                             )}
+                             <button
+                               onClick={() => registerTournament(tournament.id)}
+                               disabled={isRegistered || isFull || registeringTournamentId === tournament.id}
+                               className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                                 isRegistered
+                                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                   : isFull
+                                     ? "bg-muted text-muted-foreground"
+                                     : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                               }`}
+                             >
+                               {isRegistered ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === tournament.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
+                             </button>
+                           </div>
+                         </div>
 
-                        {tournament.created_by === user?.id && !isCancelled && (
-                          <button onClick={() => cancelTournament(tournament)} className="mt-2 text-[10px] px-2 py-1 rounded-md bg-destructive/10 text-destructive font-semibold hover:bg-destructive/20 transition-colors">
-                            Cancel & Refund
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          </div>
+                         {tournament.created_by === user?.id && (
+                           <button onClick={() => cancelTournament(tournament)} className="mt-2 text-[10px] px-2 py-1 rounded-md bg-destructive/10 text-destructive font-semibold hover:bg-destructive/20 transition-colors">
+                             Cancel & Refund
+                           </button>
+                         )}
+                       </div>
+                     );
+                   })}
+                 </div>
+               </div>
+             </motion.div>
+
+             {/* Recent Tournaments (Completed / Cancelled) */}
+             {recentTournaments.length > 0 && (
+               <motion.div variants={fadeUp} className="lg:col-span-12">
+                 <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
+                   <div className="px-5 py-4 border-b border-border/30 flex items-center justify-between">
+                     <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                       <Clock className="w-4 h-4 text-muted-foreground" />
+                       Recent Tournaments
+                     </h3>
+                     <span className="text-[10px] text-muted-foreground">{recentTournaments.length} past</span>
+                   </div>
+                   <div className="divide-y divide-border/20 max-h-[18rem] overflow-y-auto">
+                     {recentTournaments.map((t) => {
+                       const count = t.registration_count?.[0]?.count || 0;
+                       const isCompleted = t.status === "completed";
+                       return (
+                         <div key={t.id} className="px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-secondary/10 transition-colors">
+                           <div className="flex items-center gap-3 flex-1 min-w-0">
+                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCompleted ? "bg-primary/10" : "bg-destructive/10"}`}>
+                               <Trophy className={`w-4 h-4 ${isCompleted ? "text-primary" : "text-destructive"}`} />
+                             </div>
+                             <div className="min-w-0">
+                               <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
+                               <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                                 <span className="capitalize">{t.tournament_type || "swiss"}</span>
+                                 <span>{count} players</span>
+                                 <span>₹{t.prize_pool} prize</span>
+                                 {t.starts_at && <span>{new Date(t.starts_at).toLocaleDateString()}</span>}
+                               </div>
+                             </div>
+                           </div>
+                           <div className="flex items-center gap-2 shrink-0">
+                             <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${
+                               isCompleted ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+                             }`}>
+                               {t.status.toUpperCase()}
+                             </span>
+                             {isCompleted && (
+                               <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg border border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/30 font-display font-bold transition-colors">
+                                 Details
+                               </button>
+                             )}
+                           </div>
+                         </div>
+                       );
+                     })}
+                   </div>
+                 </div>
+               </motion.div>
+             )}
+           </div>
 
           {/* ═══════════ RECENT GAMES ═══════════ */}
           {recentGames.length > 0 && (
