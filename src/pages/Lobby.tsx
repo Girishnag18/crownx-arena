@@ -372,7 +372,7 @@ const Lobby = () => {
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center space-y-3">
           <p className="text-destructive text-sm">{matchmaking.error}</p>
           <div className="flex gap-3 justify-center">
-            <button onClick={() => matchmaking.startSearch("quick_play", durationFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">RETRY</button>
+            <button onClick={() => matchmaking.startSearch("quick_play", durationFromTC, incrementFromTC)} className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg">RETRY</button>
             <button onClick={() => navigate("/play?mode=computer")} className="border border-primary/30 text-primary font-display font-bold text-xs px-6 py-2.5 rounded-lg hover:bg-primary/10">
               <Bot className="w-4 h-4 inline mr-1" /> vs AI
             </button>
