@@ -461,6 +461,10 @@ const Dashboard = () => {
           </motion.div>
 
           <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
+            <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
+
+            <DailyPuzzleCard />
+
             <div className="space-y-3">
               {[{ icon: Globe, title: "Online Mode", desc: "Quick Play, World Arena and Private Rooms", to: "/lobby", accent: true }].map((mode) => (
                 <motion.button key={mode.title} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate(mode.to)} className={`glass-card p-5 text-left group transition-all duration-300 ${mode.accent ? "border-primary/30 gold-glow" : "hover:border-primary/20"}`}>
