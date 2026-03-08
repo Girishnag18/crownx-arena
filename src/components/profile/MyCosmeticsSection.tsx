@@ -94,6 +94,9 @@ const MyCosmeticsSection = ({ userId, onEquipChange }: MyCosmeticsSectionProps) 
     await (supabase as any).from("shop_purchases").update({ is_equipped: newEquipped }).eq("user_id", userId).eq("item_id", item.id);
     setPurchases(prev => { const next = new Map(prev); next.set(item.id, { ...current, is_equipped: newEquipped }); return next; });
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
+    if (newEquipped && item.rarity === "legendary") {
+      setLegendaryEffect({ icon: item.icon, name: item.name });
+    }
     onEquipChange?.();
   };
 
