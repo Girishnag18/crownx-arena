@@ -486,7 +486,7 @@ const Lobby = () => {
       </div>
 
       {/* Chess960 */}
-      <div className="rounded-xl border border-border/40 bg-card/60 px-4 py-3 flex items-center justify-between">
+      <div className="glass-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shuffle className="w-3.5 h-3.5 text-primary" />
           <span className="font-display text-xs font-bold">Chess960</span>
