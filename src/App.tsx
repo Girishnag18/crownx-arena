@@ -30,6 +30,7 @@ import Studies from "./pages/Studies";
 import OpeningTrainer from "./pages/OpeningTrainer";
 import PgnAnalysis from "./pages/PgnAnalysis";
 import Challenges from "./pages/Challenges";
+import BattlePass from "./pages/BattlePass";
 import Tutorial from "./pages/Tutorial";
 import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
