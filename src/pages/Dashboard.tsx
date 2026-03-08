@@ -280,10 +280,23 @@ const Dashboard = () => {
     );
   }
 
+  const handlePullRefresh = useCallback(async () => {
+    if (!user) return;
+    await Promise.all([
+      loadProfile(user.id),
+      loadTournaments(),
+      loadRecentTournaments(),
+      loadMyRegistrations(user.id),
+      loadRecentGames(user.id),
+      loadRatingOverview(user.id),
+    ]);
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-background pt-16 pb-24 lg:pb-6">
       {promotion && <RankPromotionOverlay oldRank={promotion.oldRank} newRank={promotion.newRank} onDismiss={() => setPromotion(null)} />}
 
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
         <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-3">
 
