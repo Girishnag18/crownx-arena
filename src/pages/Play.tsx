@@ -433,18 +433,18 @@ const Play = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-2 sm:px-4">
+    <div className="min-h-screen bg-background pt-14 sm:pt-18 pb-16 lg:pb-8 px-2 sm:px-4">
       <div className="container mx-auto max-w-[1500px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
           <div className="lg:col-span-9 flex flex-col items-center">
             {/* Top player bar */}
-            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
-              <div className="flex items-center justify-between text-xs sm:text-sm">
-                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} />
-                <div className="flex items-center gap-1.5 sm:gap-3">
-                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
+            <div className={`w-full ${boardSizeClass} mb-1.5 sm:mb-2.5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5`}>
+              <div className="flex items-center justify-between">
+                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} isTop />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-base opacity-80" title="Captured pieces">
                     {capturedPieces.capturedByBlack.length === 0
-                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      ? <span className="text-[10px] text-muted-foreground/50">—</span>
                       : capturedPieces.capturedByBlack.slice(0, 8).map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
                   </div>
                   {timeControl && (
