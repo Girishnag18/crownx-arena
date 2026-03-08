@@ -60,7 +60,7 @@ const CrownTopup = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12 px-4 relative overflow-hidden">
+    <div className="page-container relative overflow-hidden">
       {/* Ambient glows */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-20 left-1/4 w-[420px] h-[420px] bg-primary/8 rounded-full blur-[120px]" />

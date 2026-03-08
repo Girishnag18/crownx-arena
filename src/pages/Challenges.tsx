@@ -214,10 +214,11 @@ const Challenges = () => {
   };
 
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="page-container">
+      <div className="container max-w-4xl mx-auto space-y-6">
       <BackButton label="Back" to="/dashboard" />
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold font-display">Challenges</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold font-display">Challenges</h1>
         <p className="text-muted-foreground text-sm">Complete daily & weekly challenges to earn Crowns and XP.</p>
       </div>
 
@@ -243,6 +244,7 @@ const Challenges = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </main>
   );
 };

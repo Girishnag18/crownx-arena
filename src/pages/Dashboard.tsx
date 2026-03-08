@@ -280,7 +280,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-16 pb-20 lg:pb-6">
+    <div className="min-h-screen bg-background pt-16 pb-24 lg:pb-6">
       {promotion && <RankPromotionOverlay oldRank={promotion.oldRank} newRank={promotion.newRank} onDismiss={() => setPromotion(null)} />}
 
       <div className="container mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
@@ -351,7 +351,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ════════ QUICK ACTIONS ════════ */}
-          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-2">
+          <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
               { title: "Play Online", desc: "Quick match", icon: Globe, onClick: () => navigate("/lobby"), accent: true },
               { title: "Puzzles", desc: "Train tactics", icon: Target, onClick: () => navigate("/puzzles") },

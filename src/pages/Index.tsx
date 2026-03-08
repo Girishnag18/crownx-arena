@@ -327,7 +327,7 @@ const Index = () => {
       </section>
 
       {/* ───── FOOTER ───── */}
-      <footer className="border-t border-border/30">
+      <footer className="border-t border-border/30 pb-20 lg:pb-0">
         <div className="container max-w-5xl px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">

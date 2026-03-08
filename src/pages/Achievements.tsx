@@ -83,7 +83,7 @@ const Achievements = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-2 sm:px-4">
+    <div className="page-container">
       <div className="container mx-auto max-w-4xl">
         <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-2.5">
 

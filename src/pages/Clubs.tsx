@@ -136,14 +136,14 @@ const Clubs = () => {
 
   if (loading) {
     return (
-      <main className="container max-w-4xl py-24 px-4 flex items-center justify-center min-h-[60vh]">
+      <main className="page-container flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </main>
     );
   }
 
   return (
-    <main className="container max-w-4xl py-24 px-4 space-y-6">
+    <main className="page-container">
       <AnimatePresence mode="wait">
         {view === "list" && (
           <motion.div key="list" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-6">
