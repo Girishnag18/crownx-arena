@@ -251,8 +251,18 @@ const Play = () => {
 
     let cancelled = false;
     setAiThinking(true);
+    setAiThinkProgress(0);
 
     const thinkDelay = aiConfig.thinkMs[0] + Math.random() * (aiConfig.thinkMs[1] - aiConfig.thinkMs[0]);
+
+    // Animate progress bar during think time
+    const startTime = performance.now();
+    const progressInterval = window.setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const pct = Math.min(95, (elapsed / thinkDelay) * 90); // Cap at 95% until move is made
+      setAiThinkProgress(pct);
+    }, 50);
+    aiThinkTimerRef.current = progressInterval;
 
     const pickWeighted = (candidates: Array<{ move: any; score: number }>) => {
       // Add controlled noise and pick weighted by score
