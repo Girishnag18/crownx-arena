@@ -45,6 +45,7 @@ const Play = () => {
   const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
   const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
+  const [streamerMode, setStreamerMode] = useState(false);
   const prevMoveCountRef = useRef(0);
 
   const online = useOnlineGame(onlineGameId);
