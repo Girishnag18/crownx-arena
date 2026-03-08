@@ -9,7 +9,8 @@ import PerformanceTab from "@/components/profile/PerformanceTab";
 import MatchHistory from "@/components/profile/MatchHistory";
 import AchievementShowcase from "@/components/profile/AchievementShowcase";
 import { motion } from "framer-motion";
-import { Edit3, X, Swords } from "lucide-react";
+import { Edit3, X, Swords, MessageCircle } from "lucide-react";
+import DirectMessagePanel from "@/components/social/DirectMessagePanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 
