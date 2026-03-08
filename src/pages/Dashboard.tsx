@@ -527,7 +527,7 @@ const Dashboard = () => {
               <motion.div variants={fadeUp}>
                 <button
                   onClick={() => navigate("/daily-spin")}
-                  className="w-full rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 p-4 text-left group transition-all duration-200"
+                  className="w-full rounded-lg border border-primary/25 bg-primary/5 hover:bg-primary/10 p-3 text-left group transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
