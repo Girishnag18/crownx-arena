@@ -49,6 +49,7 @@ const Leaderboard = () => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [players, setPlayers] = useState<LeaderboardPlayer[]>([]);
+  const [friendPlayers, setFriendPlayers] = useState<LeaderboardPlayer[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
   const [seasonEntries, setSeasonEntries] = useState<SeasonEntry[]>([]);
