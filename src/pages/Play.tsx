@@ -487,7 +487,7 @@ const Play = () => {
 
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
-                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
+                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                     {capturedPieces.capturedByWhite.length === 0
