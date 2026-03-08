@@ -78,6 +78,7 @@ const Dashboard = () => {
   const [newMaxRegistrations, setNewMaxRegistrations] = useState("128");
   const [newStartsAt, setNewStartsAt] = useState("");
   const [createTournamentLoading, setCreateTournamentLoading] = useState(false);
+  const [newTournamentType, setNewTournamentType] = useState("swiss");
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
   const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
@@ -241,6 +242,7 @@ const Dashboard = () => {
       max_players: parsedMaxRegistrations,
       created_by: user.id,
       status: "open",
+      tournament_type: newTournamentType,
       starts_at: newStartsAt ? new Date(newStartsAt).toISOString() : new Date(Date.now() + 1000 * 60 * 45).toISOString(),
     }).select("id, name, prize_pool, max_players, status, starts_at").single();
     setCreateTournamentLoading(false);
@@ -494,6 +496,13 @@ const Dashboard = () => {
                   <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Start Date & Time</label>
                   <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] text-muted-foreground uppercase tracking-wide">Format</label>
+                  <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="swiss">Swiss</option>
+                    <option value="arena">Arena</option>
+                  </select>
+                </div>
                 <button onClick={createTournament} disabled={createTournamentLoading} className="md:col-span-2 w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-xs font-display font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-60 transition-all duration-300">
                   {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating Tournament...</> : <><Plus className="w-3.5 h-3.5" /> Create Tournament</>}
                 </button>
@@ -525,8 +534,15 @@ const Dashboard = () => {
                     </div>
 
                     {isReady && (
-                      <button
-                        onClick={async () => {
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => navigate(`/tournament/${tournament.id}`)}
+                          className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary font-semibold"
+                        >
+                          View Bracket & Standings
+                        </button>
+                        <button
+                          onClick={async () => {
                           const leaders = await getTournamentLeaderboard(tournament.id);
                           const leaderText = leaders.length > 0
                             ? leaders.map((l, i) => `#${i + 1} ${l.playerId.slice(0, 6)} (${l.wins}W/${l.matches}M)`).join(" | ")
@@ -537,6 +553,7 @@ const Dashboard = () => {
                       >
                         View realtime Top 10 qualifiers
                       </button>
+                      </div>
                     )}
 
                     {tournament.created_by === user?.id && tournament.status !== "cancelled" && (
