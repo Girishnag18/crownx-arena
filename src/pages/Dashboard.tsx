@@ -422,7 +422,7 @@ const Dashboard = () => {
             </div>
 
             {/* XP Bar */}
-            <div className="mt-5 relative">
+            <div className="mt-3 relative">
               <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
             </div>
           </motion.div>
