@@ -274,9 +274,10 @@ const Play = () => {
   }, [game, showArrows, isGameOver]);
 
   useEffect(() => {
-    if (!game.isCheckmate()) {
+    if (!game.isCheckmate() && !clockGameOver) {
       setShowCheckmateBanner(false);
       setShowPostGameReview(false);
+      setShowGameOverPopup(false);
       return;
     }
 
@@ -284,10 +285,11 @@ const Play = () => {
     const timer = window.setTimeout(() => {
       setShowCheckmateBanner(false);
       setShowPostGameReview(true);
-    }, 5000);
+      setShowGameOverPopup(true);
+    }, 3000);
 
     return () => window.clearTimeout(timer);
-  }, [game]);
+  }, [game, clockGameOver]);
 
   const gameStatus = useMemo(() => {
     if (isOnline && online.gameData) {
