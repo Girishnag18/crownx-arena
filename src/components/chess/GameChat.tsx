@@ -166,7 +166,7 @@ const GameChat = ({ gameId, isSpectator = false }: GameChatProps) => {
           return (
             <div key={msg.id} className={`flex items-start gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
               <Avatar className="w-5 h-5 flex-shrink-0 mt-0.5">
-                <AvatarImage src={getAvatarUrl(msg.avatar_url)} />
+                <AvatarImage src={msg.avatar_url || undefined} />
                 <AvatarFallback className="text-[8px]">{(msg.username || "?")[0]}</AvatarFallback>
               </Avatar>
               <div className={`max-w-[75%] ${isMe ? "text-right" : ""}`}>
