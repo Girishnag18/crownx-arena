@@ -292,7 +292,7 @@ const Profile = () => {
           />
         </motion.div>
       ) : (
-        <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6 grid lg:grid-cols-3 gap-6">
+        <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="space-y-3">
             <Avatar className="w-20 h-20 border border-border">
               <AvatarImage src={form.avatar_url || undefined} alt={form.username || "Player"} />
