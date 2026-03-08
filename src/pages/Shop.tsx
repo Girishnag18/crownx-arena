@@ -203,6 +203,7 @@ const Shop = () => {
   const [buying, setBuying] = useState<string | null>(null);
   const [category, setCategory] = useState("all");
   const [rarity, setRarity] = useState("all");
+  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "rarity" | "newest">("price_asc");
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
 
