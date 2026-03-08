@@ -20,6 +20,7 @@ const navLinks = [
   { to: "/profile", label: "Player Profile" },
   { to: "/dashboard", label: "Arena Hub" },
   { to: "/rules", label: "How to Play" },
+  { to: "/tutorial", label: "Tutorial" },
 ];
 
 const profileMenuItems = [
