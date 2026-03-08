@@ -36,7 +36,10 @@ const StreakBanner = () => {
     if (todayLogin) {
       setStreak(todayLogin.streak);
       setCanClaim(!todayLogin.bonus_claimed);
-      if (!todayLogin.bonus_claimed) setVisible(true);
+      if (!todayLogin.bonus_claimed) {
+        setVisible(true);
+        setTimeout(() => setVisible(false), 4000);
+      }
       return;
     }
 
