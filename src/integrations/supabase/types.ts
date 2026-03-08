@@ -420,6 +420,80 @@ export type Database = {
         }
         Relationships: []
       }
+      studies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          opening_name: string | null
+          owner_id: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          opening_name?: string | null
+          owner_id: string
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          opening_name?: string | null
+          owner_id?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      study_chapters: {
+        Row: {
+          annotations: Json | null
+          created_at: string
+          fen: string
+          id: string
+          moves: Json | null
+          sort_order: number
+          study_id: string
+          title: string
+        }
+        Insert: {
+          annotations?: Json | null
+          created_at?: string
+          fen?: string
+          id?: string
+          moves?: Json | null
+          sort_order?: number
+          study_id: string
+          title?: string
+        }
+        Update: {
+          annotations?: Json | null
+          created_at?: string
+          fen?: string
+          id?: string
+          moves?: Json | null
+          sort_order?: number
+          study_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_chapters_study_id_fkey"
+            columns: ["study_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_matches: {
         Row: {
           created_at: string
