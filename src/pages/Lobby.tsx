@@ -618,7 +618,7 @@ const Lobby = () => {
                     {roomPreview.duration_seconds
                       ? (() => {
                           const tc = TIME_CONTROLS.find((t) => t.initialSeconds === roomPreview.duration_seconds && t.incrementSeconds === (roomPreview.increment_seconds ?? 0));
-                          if (tc) return `${tc.label} (${tc.category})`;
+                          if (tc) return `${CATEGORY_ICONS[tc.category] || ""} ${tc.label} (${tc.category})`;
                           const mins = roomPreview.duration_seconds / 60;
                           const inc = roomPreview.increment_seconds ?? 0;
                           return inc > 0 ? `${mins}+${inc}` : `${mins} min`;
