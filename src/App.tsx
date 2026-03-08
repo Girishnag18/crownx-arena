@@ -40,6 +40,7 @@ import Shop from "./pages/Shop";
 import DailyRewards from "./pages/DailyRewards";
 import DailySpin from "./pages/DailySpin";
 import Replay from "./pages/Replay";
+import Achievements from "./pages/Achievements";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
 import StreakBanner from "./components/gamification/StreakBanner";
@@ -101,6 +102,7 @@ const RouteAnimator = () => {
           <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
           <Route path="/daily-rewards" element={<ProtectedRoute><DailyRewards /></ProtectedRoute>} />
           <Route path="/daily-spin" element={<ProtectedRoute><DailySpin /></ProtectedRoute>} />
+          <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
           <Route path="/replay" element={<ProtectedRoute><Replay /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />

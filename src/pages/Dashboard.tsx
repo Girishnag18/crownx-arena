@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Zap, Swords, Target, Flame, BarChart3, Settings, Gamepad2, Gift, Shield, Star, Sparkles } from "lucide-react";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
-import AchievementsPanel from "@/components/gamification/AchievementsPanel";
 import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
 import PlacementBadge from "@/components/gamification/PlacementBadge";
 import RankPromotionOverlay from "@/components/gamification/RankPromotionOverlay";
@@ -355,7 +354,7 @@ const Dashboard = () => {
   );
 
   const recentTournaments = useMemo(
-    () => tournaments.filter((t) => t.status === "completed" || t.status === "cancelled"),
+    () => tournaments.filter((t) => t.status === "completed"),
     [tournaments],
   );
 
@@ -601,246 +600,234 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* ── Right Column — Tournaments ── */}
-            <motion.div variants={fadeUp} className="lg:col-span-8">
-              <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
-                {/* Header */}
-                <div className="px-4 py-3 border-b border-border/20 flex items-center justify-between bg-gradient-to-r from-card/80 to-transparent">
-                  <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                      <Trophy className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    Tournaments
-                    {activeTournaments.length > 0 && (
-                      <span className="text-[9px] bg-primary/15 text-primary font-bold px-2 py-0.5 rounded-full">{activeTournaments.length} active</span>
-                    )}
-                  </h3>
-                  <button
-                    onClick={() => setShowCreateTournament(!showCreateTournament)}
-                    className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Create
-                  </button>
-                </div>
+            {/* ── Right Column — Recent Games ── */}
+            <div className="lg:col-span-8 space-y-2">
+              {/* Recent Games */}
+              {recentGames.length > 0 && (
+                <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
+                  <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
+                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      Recent Games
+                    </h3>
+                    <span className="text-[10px] text-muted-foreground">{recentGames.filter((g) => g.result_type !== "in_progress").length} games</span>
+                  </div>
+                  <div className="divide-y divide-border/15">
+                    {recentGames.filter((g) => g.result_type !== "in_progress").map((g) => {
+                      const userWon = g.winner_id === user?.id;
+                      const userPlayedWhite = g.player_white === user?.id;
+                      const opponent = userPlayedWhite ? g.black_name || "Opponent" : g.white_name || "Opponent";
+                      const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
 
-                {/* Create form */}
-                {showCreateTournament && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    transition={{ duration: 0.25 }}
-                    className="border-b border-border/20 px-4 py-3.5 bg-secondary/8"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Tournament Name</label>
-                        <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Weekend Crown Clash" className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Prize Pool</label>
-                        <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="500" type="number" min={0} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Max Players</label>
-                        <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="128" type="number" min={2} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Start Time</label>
-                        <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Format</label>
-                        <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all">
-                          <option value="swiss">Swiss</option>
-                          <option value="arena">Arena</option>
-                        </select>
-                      </div>
-                      <button onClick={createTournament} disabled={createTournamentLoading || !newTournamentName.trim()} className="sm:col-span-2 w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-xs font-display font-bold tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 transition-opacity">
-                        {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</> : <><Plus className="w-3.5 h-3.5" /> Create Tournament</>}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Tournament list */}
-                <div className="max-h-[22rem] overflow-y-auto">
-                  {activeTournaments.length === 0 && (
-                    <div className="px-4 py-10 text-center">
-                      <div className="w-12 h-12 rounded-xl bg-secondary/40 flex items-center justify-center mx-auto mb-3">
-                        <Trophy className="w-6 h-6 text-muted-foreground/30" />
-                      </div>
-                      <p className="text-xs text-muted-foreground font-medium">No active tournaments</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">Create one to get started!</p>
-                    </div>
-                  )}
-                  {activeTournaments.map((tournament, i) => {
-                    const count = tournament.registration_count?.[0]?.count || 0;
-                    const isRegistered = registeredTournamentIds.includes(tournament.id);
-                    const isFull = count >= tournament.max_players;
-                    const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
-                    const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
-
-                    return (
-                      <div key={tournament.id} className={`px-4 py-3 border-b border-border/15 last:border-0 hover:bg-secondary/8 transition-colors ${i === 0 ? "" : ""}`}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-display font-bold text-xs truncate">{tournament.name}</h4>
-                              {isReady && (
-                                <span className="inline-flex items-center gap-1 text-[8px] bg-success/15 text-success font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                                  Live
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground">
-                              <span className="inline-flex items-center gap-1"><User className="w-2.5 h-2.5" />{count}/{tournament.max_players}</span>
-                              <span>₹{tournament.prize_pool}</span>
-                              {tournament.starts_at && (
-                                <span className="hidden sm:inline">{new Date(tournament.starts_at).toLocaleDateString()} {new Date(tournament.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              )}
+                      return (
+                        <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/8 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${result === "Win" ? "bg-success" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
+                            <div>
+                              <span className="text-xs font-display font-bold">{opponent}</span>
+                              <p className="text-[10px] text-muted-foreground">{userPlayedWhite ? "♔ White" : "♚ Black"} · {g.result_type}</p>
                             </div>
                           </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${
+                              result === "Win" ? "bg-success/10 text-success" : result === "Loss" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
+                            }`}>
+                              {result}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">{new Date(g.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </div>
 
-                          <div className="flex items-center gap-1.5 shrink-0">
+          {/* ═══════════ TOURNAMENTS — FULL WIDTH BOTTOM ═══════════ */}
+          <motion.div variants={fadeUp}>
+            <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-border/20 flex items-center justify-between bg-gradient-to-r from-card/80 to-transparent">
+                <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <Trophy className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  Tournaments
+                  {activeTournaments.length > 0 && (
+                    <span className="text-[9px] bg-primary/15 text-primary font-bold px-2 py-0.5 rounded-full">{activeTournaments.length} active</span>
+                  )}
+                </h3>
+                <button
+                  onClick={() => setShowCreateTournament(!showCreateTournament)}
+                  className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Create
+                </button>
+              </div>
+
+              {/* Create form */}
+              {showCreateTournament && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className="border-b border-border/20 px-4 py-3.5 bg-secondary/8"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+                      <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Tournament Name</label>
+                      <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Weekend Crown Clash" className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Prize Pool</label>
+                      <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} placeholder="500" type="number" min={0} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Max Players</label>
+                      <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} placeholder="128" type="number" min={2} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Start Time</label>
+                      <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Format</label>
+                      <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-secondary/40 border border-border/30 rounded-lg px-3 py-2 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all">
+                        <option value="swiss">Swiss</option>
+                        <option value="arena">Arena</option>
+                      </select>
+                    </div>
+                    <button onClick={createTournament} disabled={createTournamentLoading || !newTournamentName.trim()} className="sm:col-span-2 lg:col-span-3 w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-xs font-display font-bold tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 transition-opacity">
+                      {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</> : <><Plus className="w-3.5 h-3.5" /> Create Tournament</>}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Tournament list */}
+              <div className="max-h-[28rem] overflow-y-auto">
+                {activeTournaments.length === 0 && (
+                  <div className="px-4 py-10 text-center">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/40 flex items-center justify-center mx-auto mb-3">
+                      <Trophy className="w-6 h-6 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium">No active tournaments</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Create one to get started!</p>
+                  </div>
+                )}
+                {activeTournaments.map((tournament, i) => {
+                  const count = tournament.registration_count?.[0]?.count || 0;
+                  const isRegistered = registeredTournamentIds.includes(tournament.id);
+                  const isFull = count >= tournament.max_players;
+                  const startsAtMs = tournament.starts_at ? new Date(tournament.starts_at).getTime() : 0;
+                  const isReady = startsAtMs > 0 && Date.now() >= startsAtMs;
+
+                  return (
+                    <div key={tournament.id} className={`px-4 py-3 border-b border-border/15 last:border-0 hover:bg-secondary/8 transition-colors`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-display font-bold text-xs truncate">{tournament.name}</h4>
                             {isReady && (
-                              <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary font-display font-bold hover:bg-primary/15 transition-colors">
-                                View
-                              </button>
+                              <span className="inline-flex items-center gap-1 text-[8px] bg-success/15 text-success font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                                Live
+                              </span>
                             )}
-                            <button
-                              onClick={() => registerTournament(tournament.id)}
-                              disabled={isRegistered || isFull || registeringTournamentId === tournament.id}
-                              className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-all ${
-                                isRegistered
-                                  ? "bg-success/10 text-success border border-success/20"
-                                  : isFull
-                                    ? "bg-muted text-muted-foreground"
-                                    : "bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 hover:border-primary/30"
-                              }`}
-                            >
-                              {isRegistered ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === tournament.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
-                            </button>
+                          </div>
+                          <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground">
+                            <span className="inline-flex items-center gap-1"><User className="w-2.5 h-2.5" />{count}/{tournament.max_players}</span>
+                            <span>₹{tournament.prize_pool}</span>
+                            {tournament.starts_at && (
+                              <span className="hidden sm:inline">{new Date(tournament.starts_at).toLocaleDateString()} {new Date(tournament.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            )}
                           </div>
                         </div>
 
-                        {tournament.created_by === user?.id && (
-                          <button onClick={() => cancelTournament(tournament)} className="mt-2 text-[10px] px-2.5 py-1 rounded-md bg-destructive/10 text-destructive font-semibold hover:bg-destructive/15 transition-colors">
-                            Cancel & Refund
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isReady && (
+                            <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary font-display font-bold hover:bg-primary/15 transition-colors">
+                              View
+                            </button>
+                          )}
+                          <button
+                            onClick={() => registerTournament(tournament.id)}
+                            disabled={isRegistered || isFull || registeringTournamentId === tournament.id}
+                            className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-all ${
+                              isRegistered
+                                ? "bg-success/10 text-success border border-success/20"
+                                : isFull
+                                  ? "bg-muted text-muted-foreground"
+                                  : "bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 hover:border-primary/30"
+                            }`}
+                          >
+                            {isRegistered ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === tournament.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
                           </button>
-                        )}
+                        </div>
+                      </div>
+
+                      {tournament.created_by === user?.id && (
+                        <button onClick={() => cancelTournament(tournament)} className="mt-2 text-[10px] px-2.5 py-1 rounded-md bg-destructive/10 text-destructive font-semibold hover:bg-destructive/15 transition-colors">
+                          Cancel & Refund
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ═══════════ RECENT TOURNAMENTS ═══════════ */}
+          {recentTournaments.length > 0 && (
+            <motion.div variants={fadeUp}>
+              <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
+                  <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    Recent Tournaments
+                  </h3>
+                  <span className="text-[10px] text-muted-foreground">{recentTournaments.length} completed</span>
+                </div>
+                <div className="divide-y divide-border/15 max-h-[14rem] overflow-y-auto">
+                  {recentTournaments.map((t) => {
+                    const count = t.registration_count?.[0]?.count || 0;
+                    return (
+                      <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/8 transition-colors">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-primary/10">
+                            <Trophy className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
+                            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                              <span className="capitalize">{t.tournament_type || "swiss"}</span>
+                              <span>{count} players</span>
+                              <span>₹{t.prize_pool}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[9px] font-display font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            COMPLETED
+                          </span>
+                          <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1 rounded-lg border border-border/30 text-muted-foreground hover:text-foreground hover:border-primary/30 font-display font-bold transition-colors">
+                            Details
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
             </motion.div>
-
-            {/* Recent Tournaments */}
-            {recentTournaments.length > 0 && (
-              <motion.div variants={fadeUp} className="lg:col-span-12">
-                <div className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
-                    <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                      Recent Tournaments
-                    </h3>
-                    <span className="text-[10px] text-muted-foreground">{recentTournaments.length} past</span>
-                  </div>
-                  <div className="divide-y divide-border/15 max-h-[14rem] overflow-y-auto">
-                    {recentTournaments.map((t) => {
-                      const count = t.registration_count?.[0]?.count || 0;
-                      const isCompleted = t.status === "completed";
-                      return (
-                        <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/8 transition-colors">
-                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isCompleted ? "bg-primary/10" : "bg-destructive/10"}`}>
-                              <Trophy className={`w-3.5 h-3.5 ${isCompleted ? "text-primary" : "text-destructive"}`} />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
-                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
-                                <span className="capitalize">{t.tournament_type || "swiss"}</span>
-                                <span>{count} players</span>
-                                <span>₹{t.prize_pool}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${
-                              isCompleted ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-                            }`}>
-                              {t.status.toUpperCase()}
-                            </span>
-                            {isCompleted && (
-                              <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1 rounded-lg border border-border/30 text-muted-foreground hover:text-foreground hover:border-primary/30 font-display font-bold transition-colors">
-                                Details
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* ═══════════ RECENT GAMES ═══════════ */}
-          {recentGames.length > 0 && (
-            <motion.div id="history-section" variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm overflow-hidden scroll-mt-20">
-              <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
-                <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  Recent Games
-                </h3>
-                <span className="text-[10px] text-muted-foreground">{recentGames.filter((g) => g.result_type !== "in_progress").length} games</span>
-              </div>
-              <div className="divide-y divide-border/15">
-                {recentGames.filter((g) => g.result_type !== "in_progress").map((g) => {
-                  const userWon = g.winner_id === user?.id;
-                  const userPlayedWhite = g.player_white === user?.id;
-                  const opponent = userPlayedWhite ? g.black_name || "Opponent" : g.white_name || "Opponent";
-                  const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
-
-                  return (
-                    <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/8 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${result === "Win" ? "bg-success" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
-                        <div>
-                          <span className="text-xs font-display font-bold">{opponent}</span>
-                          <p className="text-[10px] text-muted-foreground">{userPlayedWhite ? "♔ White" : "♚ Black"} · {g.result_type}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[10px] font-display font-bold px-2 py-0.5 rounded-full ${
-                          result === "Win" ? "bg-success/10 text-success" : result === "Loss" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {result}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">{new Date(g.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
           )}
 
-          {/* ═══════════ ACHIEVEMENTS ═══════════ */}
-          <motion.div variants={fadeUp} className="rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm p-3.5 sm:p-4">
-            <AchievementsPanel
-              wins={profile?.wins || 0}
-              winStreak={profile?.win_streak || 0}
-              puzzlesSolved={profile?.puzzles_solved || 0}
-              crownScore={profile?.crown_score || 0}
-              gamesPlayed={profile?.games_played || 0}
-            />
-          </motion.div>
 
         </motion.div>
       </div>
