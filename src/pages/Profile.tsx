@@ -288,6 +288,7 @@ const Profile = () => {
             losses={profileData.losses}
             games_played={profileData.games_played}
             win_streak={profileData.win_streak}
+            equippedItems={equippedItems}
           />
         </motion.div>
       ) : (
