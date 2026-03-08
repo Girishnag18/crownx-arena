@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2 } from "lucide-react";
+import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -69,18 +69,27 @@ const Social = () => {
         .in("id", friendIds);
       setFriends((profiles || []) as unknown as FriendProfile[]);
 
-      // Build activity feed from recent friend games
-      const { data: recentGames } = await supabase
-        .from("games")
-        .select("id, created_at, result_type, winner_id, player_white, player_black")
-        .or(friendIds.map(id => `player1_id.eq.${id},player2_id.eq.${id}`).join(","))
-        .neq("result_type", "pending")
-        .neq("result_type", "in_progress")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      const activityItems: ActivityItem[] = (recentGames || []).map((g: any) => {
+
+      // Fetch games and achievements in parallel
+      const [{ data: recentGames }, { data: friendAchievements }] = await Promise.all([
+        supabase
+          .from("games")
+          .select("id, created_at, result_type, winner_id, player_white, player_black")
+          .or(friendIds.map(id => `player1_id.eq.${id},player2_id.eq.${id}`).join(","))
+          .neq("result_type", "pending")
+          .neq("result_type", "in_progress")
+          .order("created_at", { ascending: false })
+          .limit(15),
+        (supabase as any)
+          .from("player_achievements")
+          .select("id, user_id, unlocked_at, achievement_id, achievements(title, icon)")
+          .in("user_id", friendIds)
+          .order("unlocked_at", { ascending: false })
+          .limit(15),
+      ]);
+
+      const gameItems: ActivityItem[] = (recentGames || []).map((g: any) => {
         const friendId = friendIds.find(id => id === g.player_white || id === g.player_black);
         const friendProfile = friendId ? profileMap.get(friendId) : null;
         const won = g.winner_id === friendId;
@@ -95,7 +104,24 @@ const Social = () => {
           timestamp: g.created_at,
         };
       });
-      setActivity(activityItems);
+
+      const achievementItems: ActivityItem[] = (friendAchievements || []).map((a: any) => {
+        const fp = profileMap.get(a.user_id);
+        return {
+          id: a.id,
+          type: "achievement" as const,
+          player_id: a.user_id,
+          player_name: (fp as any)?.username || "Player",
+          player_avatar: (fp as any)?.avatar_url || null,
+          detail: `unlocked ${a.achievements?.icon || "🏆"} ${a.achievements?.title || "an achievement"}`,
+          timestamp: a.unlocked_at,
+        };
+      });
+
+      const combined = [...gameItems, ...achievementItems]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 25);
+      setActivity(combined);
     }
     setLoading(false);
   };
@@ -220,6 +246,9 @@ const Social = () => {
                   </div>
                   {item.type === "game_end" && (
                     <Trophy className={`w-4 h-4 shrink-0 ${item.detail.includes("won") ? "text-primary" : "text-muted-foreground"}`} />
+                  )}
+                  {item.type === "achievement" && (
+                    <Award className="w-4 h-4 shrink-0 text-primary" />
                   )}
                 </motion.div>
               ))}
