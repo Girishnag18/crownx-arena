@@ -675,7 +675,7 @@ const Play = () => {
                 {isOnline
                   ? `Playing as ${online.playerColor === "w" ? "White" : "Black"} · ${online.playerName} vs ${online.opponentName}`
                   : isComputerGame
-                    ? `You are ${computerColor === "w" ? "Black" : "White"} · AI accuracy: ${aiAccuracy}%`
+                    ? `You are ${computerColor === "w" ? "Black" : "White"} · ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} difficulty`
                     : `Pass-and-play · ${localBottomColor === "w" ? "White" : "Black"} at bottom`}
               </p>
               {timeControl && (
