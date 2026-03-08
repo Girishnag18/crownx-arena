@@ -496,6 +496,13 @@ const Play = () => {
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </button>
+                <button
+                  onClick={() => setStreamerMode(!streamerMode)}
+                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${streamerMode ? "text-primary border-primary/40" : ""}`}
+                  title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
+                >
+                  <Monitor className="w-4 h-4" />
+                </button>
                 {!isOnline && (
                   <button
                     onClick={resetLocalGame}
