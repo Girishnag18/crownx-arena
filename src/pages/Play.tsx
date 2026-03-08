@@ -34,16 +34,14 @@ const AI_CONFIG: Record<AIDifficulty, AILevelConfig> = {
 const STREAK_KEY = "chess_ai_streak"; // positive = player winning streak, negative = losing streak
 
 function getAdaptiveConfig(base: AILevelConfig, streak: number): AILevelConfig {
-  // Player on a win streak → AI gets harder (less blunders, more depth)
-  // Player on a lose streak → AI gets easier (more blunders, less depth)
   const clampedStreak = Math.max(-5, Math.min(5, streak));
-  const blunderAdj = clampedStreak * -0.04; // win streak → fewer blunders; lose streak → more
-  const depthAdj = Math.round(clampedStreak * 1); // ±1 depth per streak game
+  const depthAdj = Math.round(clampedStreak * 1);
+  const noiseAdj = clampedStreak * -8; // win streak → less noise; lose streak → more noise
 
   return {
     ...base,
-    depth: Math.max(1, Math.min(20, base.depth + depthAdj)),
-    blunderChance: Math.max(0.01, Math.min(0.6, base.blunderChance + blunderAdj)),
+    depth: Math.max(1, Math.min(22, base.depth + depthAdj)),
+    noiseCP: Math.max(5, Math.min(300, base.noiseCP + noiseAdj)),
   };
 }
 
