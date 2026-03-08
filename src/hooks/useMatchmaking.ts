@@ -50,6 +50,7 @@ export const useMatchmaking = () => {
           if (joined && row.result_type === "in_progress" && durationMatch) {
             setState("matched");
             setGameId(row.id);
+            soundManager.play("matchFound");
             clearSearchState();
           }
         },
