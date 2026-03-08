@@ -579,58 +579,61 @@ const Play = () => {
             </motion.div>
           </div>
 
-          {/* Side panel - collapsible on mobile */}
+          {/* Side panel */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-3 sm:space-y-4"
+            className="lg:col-span-3 space-y-3"
           >
-            <div className="glass-card p-3 sm:p-5 border-glow space-y-2 sm:space-y-3">
+            {/* Game info card */}
+            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5 space-y-3">
               <h3 className="font-display font-bold text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-primary" />
-                {isOnline ? `Live match: ${online.playerName} vs ${online.opponentName}` : "Local Game"}
+                {isOnline ? "Live Match" : isComputerGame ? "vs Computer" : "Local Game"}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 {isOnline
-                  ? `You are playing as ${online.playerColor === "w" ? "White" : "Black"}. Points update in real-time as profile score changes.`
+                  ? `Playing as ${online.playerColor === "w" ? "White" : "Black"} · ${online.playerName} vs ${online.opponentName}`
                   : isComputerGame
-                    ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
-                    : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} pieces are at the bottom for the current player.`}
+                    ? `You are ${computerColor === "w" ? "Black" : "White"} · AI accuracy: ${aiAccuracy}%`
+                    : `Pass-and-play · ${localBottomColor === "w" ? "White" : "Black"} at bottom`}
               </p>
               {timeControl && (
-                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 text-xs">
-                  <span className="text-muted-foreground">Time control: </span>
+                <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 text-xs flex items-center justify-between">
+                  <span className="text-muted-foreground">Time control</span>
                   <span className="font-display font-bold text-primary">{timeControl.label}</span>
-                  <span className="text-muted-foreground"> ({timeControl.category})</span>
                 </div>
               )}
               {isOnline && (
-                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-display">
-                    <span className="text-muted-foreground">Realtime sync</span>
-                    <span className={`flex items-center gap-1.5 ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
-                      {online.syncState === "live" ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-                      {online.syncState === "live" ? "Connected" : "Reconnecting"}
+                <div className="rounded-lg bg-secondary/40 border border-border/30 px-3 py-2 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Status</span>
+                    <span className={`flex items-center gap-1.5 font-medium ${online.syncState === "live" ? "text-emerald-400" : "text-destructive"}`}>
+                      {online.syncState === "live" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                      {online.syncState === "live" ? "Live" : "Reconnecting"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Last sync</span>
-                    <span className="text-foreground/90">{syncAgo}</span>
+                    <span className="text-foreground/80">{syncAgo}</span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="glass-card p-5 border border-primary/20">
-              <h3 className="font-display font-bold text-sm mb-2 flex items-center gap-2"><Swords className="w-4 h-4 text-primary" />Latest move</h3>
-              <p className="text-xs text-muted-foreground">The most recent move is highlighted in yellow on the board so you can instantly see your opponent's last move.</p>
+            {/* Latest move / board info */}
+            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5">
+              <h3 className="font-display font-bold text-sm mb-1.5 flex items-center gap-2">
+                <Swords className="w-4 h-4 text-primary" />Board Info
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">Last move is highlighted on the board.</p>
               {!isOnline && !isComputerGame && (
                 <button
                   onClick={() => setLocalBottomColor((prev) => (prev === "w" ? "b" : "w"))}
-                  className="mt-3 w-full border rounded-lg px-3 py-2 text-xs font-display font-bold"
+                  className="mt-3 w-full rounded-lg border border-border/40 bg-secondary/40 px-3 py-2 text-xs font-display font-bold hover:bg-secondary/60 transition-colors"
                 >
-                  Switch Seat (show {localBottomColor === "w" ? "Black" : "White"} at bottom)
+                  Switch Seat ({localBottomColor === "w" ? "Black" : "White"} at bottom)
                 </button>
               )}
             </div>
@@ -649,58 +652,60 @@ const Play = () => {
               <GameChat gameId={onlineGameId} />
             )}
 
-            <div className="glass-card p-5">
+            {/* Move History */}
+            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
-              <div className="max-h-64 overflow-y-auto space-y-1 text-sm font-mono">
+              <div className="max-h-64 overflow-y-auto space-y-0.5 text-sm font-mono">
                 {movePairs.length === 0 && (
                   <p className="text-xs text-muted-foreground italic">No moves yet</p>
                 )}
                 {movePairs.map((pair) => (
-                  <div key={pair.num} className="flex items-center gap-2 py-0.5">
-                    <span className="text-muted-foreground w-6 text-right text-xs">{pair.num}.</span>
+                  <div key={pair.num} className="flex items-center gap-2 py-1 px-1.5 rounded-md hover:bg-secondary/30 transition-colors">
+                    <span className="text-muted-foreground/60 w-6 text-right text-xs tabular-nums">{pair.num}.</span>
                     <span className="w-16 text-foreground">{pair.white}</span>
-                    <span className="w-16 text-foreground">{pair.black || ""}</span>
+                    <span className="w-16 text-foreground/80">{pair.black || ""}</span>
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Game Over panel */}
             {isGameOver && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="glass-card p-5 border-glow gold-glow text-center space-y-4"
+                className="rounded-xl border border-primary/25 bg-primary/5 p-5 sm:p-6 text-center space-y-4 shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]"
               >
-                <Crown className="w-8 h-8 text-primary mx-auto mb-1" />
+                <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto">
+                  <Crown className="w-7 h-7 text-primary" />
+                </div>
                 <p className="font-display font-bold text-lg">{gameStatus}</p>
 
-                {/* Stats summary */}
                 <div className="flex justify-center gap-4 text-xs text-muted-foreground">
                   <span>{displayMoves.length} moves</span>
-                  {timeControl && <span>Time: {timeControl.label}</span>}
+                  {timeControl && <span>{timeControl.label}</span>}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 pt-1">
                   {isOnline ? (
                     <>
                       <button
                         onClick={() => navigate("/lobby")}
-                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg hover:opacity-90 transition-opacity"
                       >
-                        🔄 FIND NEW MATCH
+                        Find New Match
                       </button>
                       <button
                         onClick={() => setShowEngineReview(true)}
-                        className="w-full border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10 transition-colors"
+                        className="w-full rounded-lg border border-primary/30 text-primary font-display font-bold text-xs tracking-wider py-2.5 hover:bg-primary/10 transition-colors"
                       >
-                        📊 ANALYZE GAME
+                        Analyze Game
                       </button>
                       <button
                         onClick={() => setShowAICoach(true)}
-                        className="w-full border border-border text-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                        className="w-full rounded-lg border border-border/40 text-foreground font-display font-bold text-xs tracking-wider py-2.5 hover:bg-secondary/50 transition-colors"
                       >
-                        🧠 AI COACH REVIEW
+                        AI Coach Review
                       </button>
                       <button
                         onClick={() => navigate("/lobby")}
@@ -713,21 +718,21 @@ const Play = () => {
                     <>
                       <button
                         onClick={resetLocalGame}
-                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider py-2.5 rounded-lg hover:opacity-90 transition-opacity"
                       >
-                        🔄 REMATCH
+                        Rematch
                       </button>
                       <button
                         onClick={() => setShowEngineReview(true)}
-                        className="w-full border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10 transition-colors"
+                        className="w-full rounded-lg border border-primary/30 text-primary font-display font-bold text-xs tracking-wider py-2.5 hover:bg-primary/10 transition-colors"
                       >
-                        📊 ANALYZE GAME
+                        Analyze Game
                       </button>
                       <button
                         onClick={() => setShowAICoach(true)}
-                        className="w-full border border-border text-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                        className="w-full rounded-lg border border-border/40 text-foreground font-display font-bold text-xs tracking-wider py-2.5 hover:bg-secondary/50 transition-colors"
                       >
-                        🧠 AI COACH REVIEW
+                        AI Coach Review
                       </button>
                       <button
                         onClick={() => navigate("/lobby")}
@@ -745,13 +750,13 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card p-5 border border-primary/30"
+                className="rounded-xl border border-primary/20 bg-card/60 backdrop-blur-sm p-5"
               >
                 <p className="font-display font-bold text-sm">Post-Game Analysis</p>
                 <p className="text-xs text-muted-foreground mt-1 mb-3">Get a full engine-powered review of your game.</p>
                 <div className="flex flex-wrap gap-2">
-                  <button onClick={() => setShowEngineReview(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">ENGINE REVIEW</button>
-                  <button onClick={() => setShowAICoach(true)} className="bg-primary/15 text-primary text-xs font-display font-bold px-3 py-2 rounded-md">AI COACH</button>
+                  <button onClick={() => setShowEngineReview(true)} className="rounded-lg bg-primary/10 text-primary text-xs font-display font-bold px-3 py-2 hover:bg-primary/20 transition-colors">Engine Review</button>
+                  <button onClick={() => setShowAICoach(true)} className="rounded-lg bg-primary/10 text-primary text-xs font-display font-bold px-3 py-2 hover:bg-primary/20 transition-colors">AI Coach</button>
                   {isOnline && online.gameData && (
                     <ReportButton
                       gameId={online.gameData.id}
@@ -762,7 +767,7 @@ const Play = () => {
                       }
                     />
                   )}
-                  <button onClick={() => navigate("/lobby")} className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md">BACK TO LOBBY</button>
+                  <button onClick={() => navigate("/lobby")} className="rounded-lg bg-secondary/60 text-xs font-display font-bold px-3 py-2 hover:bg-secondary/80 transition-colors">Back to Lobby</button>
                   <button
                     onClick={() => {
                       if (window.confirm("Need a rematch?")) {
@@ -770,9 +775,9 @@ const Play = () => {
                         else resetLocalGame();
                       }
                     }}
-                    className="bg-secondary text-xs font-display font-bold px-3 py-2 rounded-md"
+                    className="rounded-lg bg-secondary/60 text-xs font-display font-bold px-3 py-2 hover:bg-secondary/80 transition-colors"
                   >
-                    ASK REMATCH
+                    Rematch
                   </button>
                 </div>
               </motion.div>
