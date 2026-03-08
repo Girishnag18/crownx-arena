@@ -265,6 +265,17 @@ const Clubs = () => {
               </div>
             </div>
 
+            {/* Team Battles */}
+            {myClubIds.has(selectedClub.id) && (
+              <div className="glass-card p-5 border border-primary/20">
+                <TeamBattlePanel
+                  clubId={selectedClub.id}
+                  clubName={selectedClub.name}
+                  allClubs={clubs.map(c => ({ id: c.id, name: c.name, member_count: c.member_count }))}
+                />
+              </div>
+            )}
+
             {/* Members List */}
             <div className="space-y-2">
               <h3 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-wider">
