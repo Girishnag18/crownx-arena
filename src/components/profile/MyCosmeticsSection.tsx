@@ -201,6 +201,7 @@ const MyCosmeticsSection = ({ userId, username = "Player", avatarUrl, onEquipCha
   const equippedTitle = equippedItems.find(i => i.category === "title");
   const equippedFrame = equippedItems.find(i => i.category === "avatar_frame");
   const equippedBadges = equippedItems.filter(i => i.category === "badge");
+  const equippedBoardTheme = equippedItems.find(i => i.category === "board_theme");
 
   const FRAME_GLOW: Record<string, string> = {
     legendary: "border-primary/50 shadow-[0_0_12px_-3px_hsl(var(--primary)/0.4)]",
@@ -212,13 +213,9 @@ const MyCosmeticsSection = ({ userId, username = "Player", avatarUrl, onEquipCha
   const previewFrameClass = equippedFrame && !previewFrameColor ? (FRAME_GLOW[equippedFrame.rarity] || "") : "";
   const previewFrameStyle = previewFrameColor ? { borderColor: previewFrameColor, boxShadow: `0 0 12px -3px ${previewFrameColor}` } : {};
 
-  // Mini board squares for preview
-  const miniBoard = Array.from({ length: 16 }, (_, i) => {
-    const row = Math.floor(i / 4);
-    const col = i % 4;
-    const isLight = (row + col) % 2 === 0;
-    return isLight ? "bg-amber-200 dark:bg-amber-100/70" : "bg-amber-800 dark:bg-amber-700/80";
-  });
+  // Board theme colors for preview
+  const boardLight = equippedBoardTheme?.metadata?.light_square || null;
+  const boardDark = equippedBoardTheme?.metadata?.dark_square || null;
 
   return (
     <>
@@ -261,11 +258,21 @@ const MyCosmeticsSection = ({ userId, username = "Player", avatarUrl, onEquipCha
               </div>
             </div>
 
-            {/* Mini board */}
+            {/* Mini board with equipped theme */}
             <div className="grid grid-cols-4 aspect-[2/1] max-h-[80px]">
-              {miniBoard.map((cls, i) => (
-                <div key={i} className={`${cls}`} />
-              ))}
+              {Array.from({ length: 16 }, (_, i) => {
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                const isLight = (row + col) % 2 === 0;
+                const useCustom = boardLight && boardDark;
+                return (
+                  <div
+                    key={i}
+                    className={useCustom ? "" : (isLight ? "bg-amber-200 dark:bg-amber-100/70" : "bg-amber-800 dark:bg-amber-700/80")}
+                    style={useCustom ? { backgroundColor: isLight ? boardLight : boardDark } : undefined}
+                  />
+                );
+              })}
             </div>
 
             {/* Mock opponent bar */}

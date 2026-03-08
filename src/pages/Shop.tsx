@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, ArrowUpDown } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
 import EquipEffect from "@/components/gamification/EquipEffect";
@@ -196,8 +196,14 @@ const PreviewDialog = ({ item, onClose }: { item: ShopItem; onClose: () => void 
   );
 };
 
+const FRAME_GLOW: Record<string, string> = {
+  legendary: "border-primary/50 shadow-[0_0_14px_-3px_hsl(var(--primary)/0.4)]",
+  rare: "border-blue-500/40 shadow-[0_0_12px_-3px_rgba(59,130,246,0.3)]",
+  uncommon: "border-emerald-500/40",
+};
+
 const Shop = () => {
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const [items, setItems] = useState<ShopItem[]>([]);
   const [purchases, setPurchases] = useState<Map<string, Purchase>>(new Map());
   const [walletBalance, setWalletBalance] = useState(0);
@@ -208,6 +214,7 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
   const [equipEffect, setEquipEffect] = useState<{ icon: string; name: string; rarity: "legendary" | "rare" | "uncommon" } | null>(null);
+  const [showProfilePreview, setShowProfilePreview] = useState(true);
 
   useEffect(() => { loadShop(); }, [user?.id]);
 
@@ -449,6 +456,118 @@ const Shop = () => {
             <span className="text-[10px] text-muted-foreground">Crowns</span>
           </div>
         </motion.div>
+
+        {/* ─── Animated Profile Preview Card ─── */}
+        {(() => {
+          const equippedIds = Array.from(purchases.entries()).filter(([, p]) => p.is_equipped).map(([id]) => id);
+          const equippedShopItems = items.filter(i => equippedIds.includes(i.id));
+          const eqTitle = equippedShopItems.find(i => i.category === "title");
+          const eqFrame = equippedShopItems.find(i => i.category === "avatar_frame");
+          const eqBadges = equippedShopItems.filter(i => i.category === "badge");
+          const eqBoard = equippedShopItems.find(i => i.category === "board_theme");
+
+          const frameBorderColor = eqFrame?.metadata?.border_color;
+          const frameClass = eqFrame && !frameBorderColor ? (FRAME_GLOW[eqFrame.rarity] || "") : "";
+          const frameStyle = frameBorderColor ? { borderColor: frameBorderColor, boxShadow: `0 0 14px -3px ${frameBorderColor}` } : {};
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.15 }}
+            >
+              <button
+                onClick={() => setShowProfilePreview(!showProfilePreview)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-t-xl bg-card/60 border border-border/30 border-b-0 text-xs font-display font-bold text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Eye className="w-3.5 h-3.5 text-primary" /> Your Look
+                  {equippedIds.length > 0 && (
+                    <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{equippedIds.length} equipped</span>
+                  )}
+                </span>
+                {showProfilePreview ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+              <AnimatePresence>
+                {showProfilePreview && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                    className="overflow-hidden rounded-b-xl border border-border/30 border-t-0 bg-card/40 backdrop-blur-sm"
+                  >
+                    <div className="p-4 flex flex-col sm:flex-row items-center gap-4">
+                      {/* Profile preview */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <motion.div
+                          key={eqFrame?.id || "none"}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          <Avatar className={`w-14 h-14 border-[3px] shadow-lg ${frameClass || "border-border/40"}`} style={frameStyle}>
+                            <AvatarImage src={(authProfile as any)?.avatar_url || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-secondary to-secondary/60 font-display font-bold text-lg">
+                              <User className="w-6 h-6" />
+                            </AvatarFallback>
+                          </Avatar>
+                        </motion.div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-display font-bold text-sm">{(authProfile as any)?.username || "Player"}</span>
+                            {eqBadges.map(b => (
+                              <motion.span
+                                key={b.id}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="text-xs"
+                                title={b.name}
+                              >
+                                {b.icon}
+                              </motion.span>
+                            ))}
+                          </div>
+                          {eqTitle ? (
+                            <motion.span
+                              key={eqTitle.id}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="text-[10px] text-primary font-display font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+                            >
+                              {eqTitle.icon} {eqTitle.name}
+                            </motion.span>
+                          ) : (
+                            <span className="text-[9px] text-muted-foreground/50 italic">No title equipped</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Mini board preview */}
+                      <div className="shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-border/30 shadow-sm">
+                        <div className="grid grid-cols-4 grid-rows-4 w-full h-full">
+                          {Array.from({ length: 16 }, (_, i) => {
+                            const r = Math.floor(i / 4);
+                            const c = i % 4;
+                            const isLight = (r + c) % 2 === 0;
+                            const hasCustom = eqBoard?.metadata?.light_square && eqBoard?.metadata?.dark_square;
+                            return (
+                              <div
+                                key={i}
+                                className={hasCustom ? "" : (isLight ? "bg-amber-200 dark:bg-amber-100/70" : "bg-amber-800 dark:bg-amber-700/80")}
+                                style={hasCustom ? { backgroundColor: isLight ? eqBoard.metadata.light_square : eqBoard.metadata.dark_square } : undefined}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })()}
 
         <Tabs defaultValue="shop" className="w-full">
           <TabsList className="w-full grid grid-cols-2 bg-secondary/40 border border-border/30 rounded-xl">
