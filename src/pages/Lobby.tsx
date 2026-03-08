@@ -344,11 +344,11 @@ const Lobby = () => {
       <div className="glass-card p-6 text-center relative overflow-hidden border-glow">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_70%)]" />
         <div className="relative">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 mb-3">
-            <Globe className="w-7 h-7 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/25 mb-3 gold-glow">
+            <Globe className="w-8 h-8 text-primary" />
           </div>
           <h2 className="font-display text-2xl font-black tracking-tight">World Arena</h2>
-          <p className="text-xs text-muted-foreground mt-1">Compete globally for leaderboard rankings</p>
+          <p className="text-xs text-muted-foreground mt-1.5">Compete globally for leaderboard rankings</p>
         </div>
       </div>
 
