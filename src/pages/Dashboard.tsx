@@ -515,11 +515,11 @@ const Dashboard = () => {
                 <div className={sectionIcon}><Clock className="w-3 h-3 text-muted-foreground" /></div>
                 Recent Tournaments
               </h3>
-              {recentTournaments.length > 0 && (
-                <span className="text-[10px] text-muted-foreground font-medium">{recentTournaments.length} ended</span>
+              {recentTournamentsList.length > 0 && (
+                <span className="text-[10px] text-muted-foreground font-medium">{recentTournamentsList.length} ended</span>
               )}
             </div>
-            {recentTournaments.length === 0 ? (
+            {recentTournamentsList.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <div className="w-10 h-10 rounded-xl bg-secondary/30 flex items-center justify-center mx-auto mb-2">
                   <Clock className="w-5 h-5 text-muted-foreground/25" />
@@ -529,8 +529,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="divide-y divide-border/10 max-h-[14rem] overflow-y-auto">
-                {recentTournaments.map((t) => {
-                  const count = t.registration_count?.[0]?.count || 0;
+                {recentTournamentsList.map((t) => {
                   const isCancelled = t.status === "cancelled";
                   return (
                     <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/6 transition-colors">
@@ -542,7 +541,7 @@ const Dashboard = () => {
                           <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
                           <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
                             <span className="capitalize">{t.tournament_type || "swiss"}</span>
-                            <span>{count} players</span>
+                            <span>{t.player_count} players</span>
                             <span>₹{t.prize_pool}</span>
                           </div>
                         </div>
@@ -551,7 +550,6 @@ const Dashboard = () => {
                         <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${isCancelled ? "bg-destructive/10 text-destructive" : "bg-primary/8 text-primary"}`}>
                           {isCancelled ? "CANCELLED" : "COMPLETED"}
                         </span>
-                        <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1 rounded-lg border border-border/25 text-muted-foreground hover:text-foreground hover:border-primary/25 font-display font-bold transition-colors">Details</button>
                       </div>
                     </div>
                   );
