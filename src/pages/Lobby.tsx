@@ -156,7 +156,7 @@ const Lobby = () => {
     (async () => {
       const { data: room } = await supabase
         .from("game_rooms")
-        .select("duration_seconds, host_id")
+        .select("duration_seconds, increment_seconds, host_id")
         .eq("room_code", sanitized)
         .eq("status", "waiting")
         .single();
