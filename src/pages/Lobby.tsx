@@ -159,7 +159,7 @@ const Lobby = () => {
         .select("duration_seconds, increment_seconds, host_id")
         .eq("room_code", sanitized)
         .eq("status", "waiting")
-        .single();
+        .maybeSingle();
 
       if (cancelled) return;
       if (!room) {
