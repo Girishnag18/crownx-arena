@@ -121,7 +121,8 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
         )}
       </AnimatePresence>
 
-      <div className="chess-board-shell grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl">
+      <div className="chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl">
+        <BoardArrows arrows={arrows} flipped={flipped} />
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
             const square = (file + rank) as Square;
