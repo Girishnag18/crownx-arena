@@ -286,9 +286,9 @@ const Social = () => {
   );
 };
 
-const FriendRow = ({ friend, online, onChallenge, onMessage }: {
+const FriendRow = ({ friend, online, onChallenge, onMessage, onGift }: {
   friend: FriendProfile; online: boolean;
-  onChallenge?: () => void; onMessage: () => void;
+  onChallenge?: () => void; onMessage: () => void; onGift?: () => void;
 }) => (
   <div className="rounded-xl border border-border bg-card/60 p-3 flex items-center gap-3">
     <div className="relative shrink-0">

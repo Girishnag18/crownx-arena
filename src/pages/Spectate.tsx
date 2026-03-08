@@ -306,6 +306,9 @@ const Spectate = () => {
                 </div>
               </div>
 
+              {/* Emoji Reactions */}
+              <EmojiReactions gameId={selectedGame.id} />
+
               {/* Commentary panel */}
               <div className="glass-card p-4 flex flex-col" style={{ height: "16rem" }}>
                 <h3 className="font-display font-bold text-sm mb-2 flex items-center gap-2">
