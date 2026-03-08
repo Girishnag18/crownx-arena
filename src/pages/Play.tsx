@@ -26,7 +26,8 @@ const Play = () => {
   const onlineGameId = searchParams.get("game");
   const mode = searchParams.get("mode");
   const isRankedAI = searchParams.get("ranked") === "true";
-
+  const variant = searchParams.get("variant");
+  const isChess960 = variant === "chess960";
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
   const aiElo = playerElo + 20;
