@@ -358,7 +358,7 @@ const Dashboard = () => {
   const rank = profile?.rank_tier || "Bronze";
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-2 sm:px-4">
+    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-16 lg:pb-4 px-1.5 sm:px-3">
       {/* Rank Promotion Overlay */}
       {promotion && (
         <RankPromotionOverlay
@@ -368,7 +368,7 @@ const Dashboard = () => {
         />
       )}
       <div className="container mx-auto max-w-7xl">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-2.5 sm:space-y-3">
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.05 } } }} className="space-y-1.5 sm:space-y-2">
 
           {/* ═══════════ HERO SECTION ═══════════ */}
           <motion.div variants={fadeUp} className={`rounded-xl border border-border/40 bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} backdrop-blur-sm p-3.5 sm:p-5 relative overflow-hidden`}>
@@ -428,7 +428,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ═══════════ QUICK ACTIONS ROW ═══════════ */}
-          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1.5 sm:gap-2">
+          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-1 sm:gap-1.5">
             {[
               { title: "Play Online", desc: "Quick Play & Arena", icon: Globe, onClick: () => navigate("/lobby"), accent: true },
               { title: "Puzzles", desc: "Sharpen your tactics", icon: Target, onClick: () => navigate("/puzzles") },
@@ -457,10 +457,10 @@ const Dashboard = () => {
           </motion.div>
 
           {/* ═══════════ MAIN GRID ═══════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 sm:gap-2">
 
             {/* Left Column — Wallet, Rank, Daily Puzzle */}
-            <div className="lg:col-span-4 space-y-2">
+            <div className="lg:col-span-4 space-y-1.5">
               {/* Wallet */}
               <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 <button
