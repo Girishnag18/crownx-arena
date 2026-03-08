@@ -543,14 +543,86 @@ const Play = () => {
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
     : moveHistory;
 
+  // For online games, derive timeControl from game data
+  const effectiveTimeControl = useMemo(() => {
+    if (isOnline && online.gameData) {
+      const gd = online.gameData as any;
+      if (gd.duration_seconds) {
+        const inc = gd.increment_seconds ?? 0;
+        const match = TIME_CONTROLS.find(
+          (t) => t.initialSeconds === gd.duration_seconds && t.incrementSeconds === inc
+        );
+        return match || {
+          label: `${gd.duration_seconds / 60}+${inc}`,
+          category: "rapid" as const,
+          initialSeconds: gd.duration_seconds,
+          incrementSeconds: inc,
+        };
+      }
+      return null;
+    }
+    return timeControl;
+  }, [isOnline, online.gameData, timeControl]);
+
+  // Synced online clock: count down locally from DB-authoritative values
+  useEffect(() => {
+    if (!isOnline || !online.gameData) return;
+    const gd = online.gameData as any;
+    if (gd.white_time_ms == null || gd.black_time_ms == null) return;
+
+    // Set base times from DB
+    setOnlineClockWhiteMs(gd.white_time_ms);
+    setOnlineClockBlackMs(gd.black_time_ms);
+  }, [isOnline, online.gameData?.white_time_ms, online.gameData?.black_time_ms]);
+
+  // Local countdown for online clock
+  useEffect(() => {
+    if (!isOnline || !online.gameData || isGameOver) return;
+    const gd = online.gameData as any;
+    if (gd.white_time_ms == null || gd.black_time_ms == null || !gd.last_move_at) return;
+
+    const activeTurn = game.turn();
+    const lastMoveTime = new Date(gd.last_move_at).getTime();
+
+    const tick = () => {
+      const elapsed = Date.now() - lastMoveTime;
+      if (activeTurn === "w") {
+        const remaining = Math.max(0, gd.white_time_ms - elapsed);
+        setOnlineClockWhiteMs(remaining);
+        if (remaining <= 0) {
+          setClockGameOver(true);
+          soundManager.play("gameEnd");
+          return;
+        }
+      } else {
+        const remaining = Math.max(0, gd.black_time_ms - elapsed);
+        setOnlineClockBlackMs(remaining);
+        if (remaining <= 0) {
+          setClockGameOver(true);
+          soundManager.play("gameEnd");
+          return;
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+
+    let rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [isOnline, online.gameData?.white_time_ms, online.gameData?.black_time_ms, online.gameData?.last_move_at, game, isGameOver]);
+
   const clockActiveSide = (game.isGameOver() || clockGameOver) ? null : game.turn();
-  const { whiteMs, blackMs } = useChessClock(
-    timeControl,
+  const { whiteMs: localWhiteMs, blackMs: localBlackMs } = useChessClock(
+    isOnline ? null : timeControl, // Only use local clock for non-online games
     clockActiveSide,
     displayMoves.length > 0,
     isGameOver,
     handleTimeUp,
   );
+
+  // Use synced clock for online, local clock otherwise
+  const whiteMs = isOnline ? (onlineClockWhiteMs ?? 0) : localWhiteMs;
+  const blackMs = isOnline ? (onlineClockBlackMs ?? 0) : localBlackMs;
+  const showClock = isOnline ? !!effectiveTimeControl : !!timeControl;
 
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
