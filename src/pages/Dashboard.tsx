@@ -358,6 +358,14 @@ const Dashboard = () => {
 
   return (
     <div className="page-container">
+      {/* Rank Promotion Overlay */}
+      {promotion && (
+        <RankPromotionOverlay
+          oldRank={promotion.oldRank}
+          newRank={promotion.newRank}
+          onDismiss={() => setPromotion(null)}
+        />
+      )}
       <div className="container mx-auto max-w-7xl">
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-5">
 
