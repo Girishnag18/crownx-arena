@@ -9,6 +9,7 @@ import ChessBoard from "@/components/chess/ChessBoard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import EvalBar from "@/components/chess/EvalBar";
 import { format } from "date-fns";
 import type { Square } from "chess.js";
 
