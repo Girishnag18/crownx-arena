@@ -136,7 +136,10 @@ const Navbar = () => {
     setProfileOpen(false);
     setMobileOpen(false);
     await signOut();
-    navigate("/dashboard");
+    setTimeout(() => {
+      setLoggingOut(false);
+      navigate("/");
+    }, 1200);
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
