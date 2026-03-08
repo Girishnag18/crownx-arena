@@ -114,7 +114,7 @@ const Profile = () => {
       const itemIds = data.map((p) => p.item_id);
       const { data: items } = await supabase
         .from("shop_items")
-        .select("name, icon, category, rarity")
+        .select("name, icon, category, rarity, metadata")
         .in("id", itemIds);
       setEquippedItems((items || []) as EquippedItem[]);
     } else {
