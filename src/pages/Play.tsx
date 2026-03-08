@@ -428,16 +428,11 @@ const Play = () => {
                       : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
                   </div>
                   {timeControl && (
-                    <div className="w-24">
-                      <ChessClock
-                        timeControl={timeControl}
-                        activeSide={game.isGameOver() || clockGameOver ? null : game.turn()}
-                        gameStarted={displayMoves.length > 0}
-                        gameOver={isGameOver}
-                        onTimeUp={handleTimeUp}
-                        flipped={flipped}
-                      />
-                    </div>
+                    <ClockFace
+                      ms={flipped ? whiteMs : blackMs}
+                      isActive={clockActiveSide === (flipped ? "w" : "b")}
+                      side={flipped ? "w" : "b"}
+                    />
                   )}
                 </div>
               </div>
