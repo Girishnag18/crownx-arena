@@ -523,6 +523,7 @@ const Play = () => {
                   <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
                 )}
                 {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
+                {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
                 <span className="truncate">{gameStatus}</span>
               </div>
               <div className="flex gap-1 sm:gap-2 shrink-0">
