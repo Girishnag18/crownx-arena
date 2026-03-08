@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { game_mode = 'quick_play', duration_seconds = null } = await req.json().catch(() => ({}));
+    const { game_mode = 'quick_play' } = await req.json().catch(() => ({}));
 
     // Get player's rating
     const { data: profile } = await supabase
