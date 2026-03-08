@@ -468,7 +468,7 @@ const Dashboard = () => {
                   className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors"
                 >
                     <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Wallet className="w-4 h-4 text-primary" />
                     </div>
                     <div>
