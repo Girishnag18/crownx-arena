@@ -482,7 +482,7 @@ const Dashboard = () => {
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="border-t border-border/30 px-4 py-4 space-y-3"
+                    className="border-t border-border/30 px-3 py-3 space-y-2"
                   >
                     <div className="flex items-center gap-2 text-lg font-display font-bold">
                       <Crown className="w-5 h-5 text-primary" />
