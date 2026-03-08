@@ -38,6 +38,7 @@ import Shop from "./pages/Shop";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
 import StreakBanner from "./components/gamification/StreakBanner";
+import RealtimeNotificationToast from "./components/RealtimeNotificationToast";
 
 
 const queryClient = new QueryClient();
@@ -101,6 +102,7 @@ const App = () => (
             <Navbar />
             <AchievementListener />
             <StreakBanner />
+            <RealtimeNotificationToast />
             <RouteAnimator />
           </BoardSettingsProvider>
         </AuthProvider>
