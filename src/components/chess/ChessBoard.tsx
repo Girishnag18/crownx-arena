@@ -383,7 +383,7 @@ const ChessBoard = ({
             );
           })
         )}
-      </div>
+      </motion.div>
 
       {/* Drag ghost piece */}
       {dragState && (
