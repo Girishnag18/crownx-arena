@@ -107,7 +107,7 @@ export const usePrivateRoom = () => {
         game_mode: "private",
         duration_seconds: durationSeconds,
         result_type: "in_progress",
-        current_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        current_fen: startingFen,
         moves: [],
       })
       .select()

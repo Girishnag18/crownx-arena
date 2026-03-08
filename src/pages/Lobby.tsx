@@ -49,8 +49,8 @@ const Lobby = () => {
   }, [matchmaking.gameId, navigate]);
 
   useEffect(() => {
-    if (privateRoom.gameId) navigate(`/play?game=${privateRoom.gameId}`);
-  }, [privateRoom.gameId, navigate]);
+    if (privateRoom.gameId) navigate(`/play?game=${privateRoom.gameId}${chess960 ? "&variant=chess960" : ""}`);
+  }, [privateRoom.gameId, navigate, chess960]);
 
   const handleCopyCode = () => {
     if (!privateRoom.roomCode) return;
