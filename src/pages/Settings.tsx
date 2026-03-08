@@ -172,7 +172,7 @@ const Settings = () => {
 
           {/* Avatar & identity */}
           <div className="glass-card p-4 sm:p-6 mb-4 sm:mb-6">
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
               <Avatar className="w-16 h-16 border border-primary/30">
                 <AvatarImage src={avatarUrl || undefined} alt={displayName} />
                 <AvatarFallback className="bg-secondary text-primary">
