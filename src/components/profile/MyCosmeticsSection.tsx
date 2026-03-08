@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Check, Star, Sparkles, Crown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EquippedItem } from "@/components/ProfileCard";
+import LegendaryEquipEffect from "@/components/gamification/LegendaryEquipEffect";
 import { EquippedItem } from "@/components/ProfileCard";
 
 interface ShopItem {

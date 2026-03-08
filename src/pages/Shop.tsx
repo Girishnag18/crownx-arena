@@ -582,6 +582,14 @@ const Shop = () => {
       {previewItem && (
         <PreviewDialog item={previewItem} onClose={() => setPreviewItem(null)} />
       )}
+
+      {/* Legendary Equip Effect */}
+      <LegendaryEquipEffect
+        show={!!legendaryEffect}
+        icon={legendaryEffect?.icon || ""}
+        name={legendaryEffect?.name || ""}
+        onComplete={() => setLegendaryEffect(null)}
+      />
     </main>
   );
 };
