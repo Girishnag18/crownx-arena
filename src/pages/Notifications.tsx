@@ -124,20 +124,33 @@ const Notifications = () => {
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
                 {group.label}
               </h2>
-              <div className="glass-card p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+              <div className="glass-card p-2 sm:p-3 space-y-1.5 sm:space-y-2 overflow-hidden">
+                <AnimatePresence initial={false}>
                 {group.items.map((item) => (
-                  <button
+                  <motion.div
                     key={item.id}
+                    layout
+                    initial={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -300, height: 0, marginBottom: 0, padding: 0 }}
+                    transition={{ duration: 0.25 }}
+                    drag="x"
+                    dragDirectionLock
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={{ left: 0.4, right: 0 }}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -100) dismissNotification(item.id);
+                    }}
                     onClick={() => markNotificationRead(item.id)}
-                    className={`w-full text-left rounded-lg border p-3 sm:p-4 transition-colors hover:bg-secondary/40 ${item.is_read ? "opacity-70" : "border-primary/40"}`}
+                    className={`relative w-full text-left rounded-lg border p-3 sm:p-4 transition-colors hover:bg-secondary/40 cursor-grab active:cursor-grabbing touch-pan-y ${item.is_read ? "opacity-70" : "border-primary/40"}`}
                   >
                     <p className="font-semibold text-sm sm:text-base">{item.title}</p>
                     <p className="text-xs sm:text-sm mt-0.5">{item.message}</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">
                       {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
-                  </button>
+                  </motion.div>
                 ))}
+                </AnimatePresence>
               </div>
             </section>
           ))
