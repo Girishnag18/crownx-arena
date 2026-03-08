@@ -8,7 +8,7 @@ import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, Arrow
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
-import LegendaryEquipEffect from "@/components/gamification/LegendaryEquipEffect";
+import EquipEffect from "@/components/gamification/EquipEffect";
 
 interface ShopItem {
   id: string;
@@ -207,7 +207,7 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "rarity" | "newest">("price_asc");
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
-  const [legendaryEffect, setLegendaryEffect] = useState<{ icon: string; name: string } | null>(null);
+  const [equipEffect, setEquipEffect] = useState<{ icon: string; name: string; rarity: "legendary" | "rare" | "uncommon" } | null>(null);
 
   useEffect(() => { loadShop(); }, [user?.id]);
 
@@ -317,8 +317,8 @@ const Shop = () => {
     });
 
     toast.success(newEquipped ? `${item.icon} ${item.name} equipped!` : `${item.name} unequipped`);
-    if (newEquipped && item.rarity === "legendary") {
-      setLegendaryEffect({ icon: item.icon, name: item.name });
+    if (newEquipped && ["legendary", "rare", "uncommon"].includes(item.rarity)) {
+      setEquipEffect({ icon: item.icon, name: item.name, rarity: item.rarity as "legendary" | "rare" | "uncommon" });
     }
   };
 
@@ -583,12 +583,13 @@ const Shop = () => {
         <PreviewDialog item={previewItem} onClose={() => setPreviewItem(null)} />
       )}
 
-      {/* Legendary Equip Effect */}
-      <LegendaryEquipEffect
-        show={!!legendaryEffect}
-        icon={legendaryEffect?.icon || ""}
-        name={legendaryEffect?.name || ""}
-        onComplete={() => setLegendaryEffect(null)}
+      {/* Equip Effect */}
+      <EquipEffect
+        show={!!equipEffect}
+        icon={equipEffect?.icon || ""}
+        name={equipEffect?.name || ""}
+        rarity={equipEffect?.rarity || "uncommon"}
+        onComplete={() => setEquipEffect(null)}
       />
     </main>
   );
