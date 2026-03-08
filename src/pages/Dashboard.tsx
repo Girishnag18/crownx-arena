@@ -318,8 +318,13 @@ const Dashboard = () => {
     document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [location.search]);
 
-  const liveTournamentCount = useMemo(
-    () => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled").length,
+  const activeTournaments = useMemo(
+    () => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled"),
+    [tournaments],
+  );
+
+  const recentTournaments = useMemo(
+    () => tournaments.filter((t) => t.status === "completed" || t.status === "cancelled"),
     [tournaments],
   );
 
