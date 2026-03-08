@@ -89,8 +89,7 @@ const Index = () => {
           }}
         />
 
-        <motion.div
-          style={{ opacity: heroOpacity, scale: heroScale }}
+        <div
           className="relative container max-w-5xl px-4 sm:px-6 text-center"
         >
           <motion.div
