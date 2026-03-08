@@ -157,6 +157,10 @@ const Social = () => {
   const onlineFriends = friends.filter(f => onlineIds.has(f.id));
   const offlineFriends = friends.filter(f => !onlineIds.has(f.id));
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadData();
+  }, [user]);
+
   if (loading) {
     return (
       <main className="page-container flex items-center justify-center min-h-[60vh]">
@@ -167,6 +171,7 @@ const Social = () => {
 
   return (
     <main className="page-container">
+      <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="container max-w-4xl mx-auto space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-xl sm:text-3xl font-bold font-display flex items-center gap-2">
