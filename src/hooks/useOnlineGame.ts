@@ -20,6 +20,7 @@ interface PlayerSummary {
   username: string;
   crown_score: number;
   avatar_url: string | null;
+  equippedTitle?: { name: string; icon: string } | null;
 }
 
 export const useOnlineGame = (gameId: string | null) => {
@@ -55,10 +56,35 @@ export const useOnlineGame = (gameId: string | null) => {
 
         const playerIds = [gd.player_white, gd.player_black].filter(Boolean) as string[];
         if (playerIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("id, username, crown_score, avatar_url")
-            .in("id", playerIds);
+          const [{ data: profiles }, { data: purchases }] = await Promise.all([
+            supabase
+              .from("profiles")
+              .select("id, username, crown_score, avatar_url")
+              .in("id", playerIds),
+            supabase
+              .from("shop_purchases")
+              .select("user_id, item_id, is_equipped")
+              .in("user_id", playerIds)
+              .eq("is_equipped", true),
+          ]);
+
+          // Fetch title items for equipped purchases
+          let titleMap = new Map<string, { name: string; icon: string }>();
+          if (purchases && purchases.length > 0) {
+            const itemIds = purchases.map((p) => p.item_id);
+            const { data: items } = await supabase
+              .from("shop_items")
+              .select("id, name, icon, category")
+              .in("id", itemIds)
+              .eq("category", "title");
+            if (items) {
+              const itemById = new Map(items.map((i) => [i.id, i]));
+              for (const p of purchases) {
+                const item = itemById.get(p.item_id);
+                if (item) titleMap.set(p.user_id, { name: item.name, icon: item.icon });
+              }
+            }
+          }
 
           if (profiles) {
             const profileMap = new Map(
@@ -69,6 +95,7 @@ export const useOnlineGame = (gameId: string | null) => {
                   username: profile.username || "Player",
                   crown_score: profile.crown_score || 1200,
                   avatar_url: profile.avatar_url || null,
+                  equippedTitle: titleMap.get(profile.id) || null,
                 } satisfies PlayerSummary,
               ]),
             );

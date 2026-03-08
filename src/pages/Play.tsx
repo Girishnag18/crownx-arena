@@ -396,13 +396,25 @@ const Play = () => {
     ? (online.playerColor === "w" ? online.whitePlayer?.avatar_url : online.blackPlayer?.avatar_url)
     : null;
 
-  const PlayerLabel = ({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) => (
+  const topTitle = isOnline
+    ? (online.playerColor === "w" ? online.blackPlayer?.equippedTitle : online.whitePlayer?.equippedTitle)
+    : null;
+  const bottomTitle = isOnline
+    ? (online.playerColor === "w" ? online.whitePlayer?.equippedTitle : online.blackPlayer?.equippedTitle)
+    : null;
+
+  const PlayerLabel = ({ name, avatarUrl, title }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null }) => (
     <div className="flex items-center gap-2">
       <Avatar className="w-7 h-7 border border-border/70">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
         <AvatarFallback className="text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
       </Avatar>
       <span className="font-display font-bold">{name}</span>
+      {title && (
+        <span className="text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1.5 py-0.5 rounded-full">
+          {title.icon} {title.name}
+        </span>
+      )}
     </div>
   );
 
@@ -421,7 +433,7 @@ const Play = () => {
           <div className="lg:col-span-9 flex flex-col items-center">
             <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
-                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} />
+                <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} title={topTitle} />
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                     {capturedPieces.capturedByBlack.length === 0
@@ -475,7 +487,7 @@ const Play = () => {
 
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
-                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
+                <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1 text-lg" title="Pieces captured by this side">
                     {capturedPieces.capturedByWhite.length === 0
