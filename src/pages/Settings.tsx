@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Zap, ArrowLeft } from "lucide-react";
+import { Loader2, Zap, ArrowLeft, Settings as SettingsIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +11,11 @@ import EmailChangeSection from "@/components/settings/EmailChangeSection";
 import PasswordSection from "@/components/settings/PasswordSection";
 import { BoardCustomizationSection } from "@/components/settings/BoardCustomizationSection";
 import { NotificationPrefsSection } from "@/components/settings/NotificationPrefsSection";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
 
 const Settings = () => {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -119,42 +124,63 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-16 sm:pt-20 pb-16 lg:pb-12 px-3 sm:px-4">
+    <div className="page-container">
       <div className="container mx-auto max-w-2xl">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-4">
 
-          <h1 className="font-display text-xl sm:text-3xl font-bold mb-5 sm:mb-8">Profile Settings</h1>
+          {/* Back + Header */}
+          <motion.div variants={fadeUp}>
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4 transition-colors font-display font-bold"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <SettingsIcon className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight">Settings</h1>
+                <p className="text-[10px] text-muted-foreground">Manage your profile, security, and preferences</p>
+              </div>
+            </div>
+          </motion.div>
 
-          <ProfileSection
-            displayName={displayName} email={email} avatarUrl={avatarUrl}
-            avatarUploading={avatarUploading} username={username} bio={bio}
-            dateOfBirth={dateOfBirth} uid={uid} saving={saving}
-            onAvatarUpload={onAvatarUpload} onUsernameChange={setUsername}
-            onBioChange={setBio} onDateOfBirthChange={setDateOfBirth} onSave={saveSettings}
-          />
+          <motion.div variants={fadeUp}>
+            <ProfileSection
+              displayName={displayName} email={email} avatarUrl={avatarUrl}
+              avatarUploading={avatarUploading} username={username} bio={bio}
+              dateOfBirth={dateOfBirth} uid={uid} saving={saving}
+              onAvatarUpload={onAvatarUpload} onUsernameChange={setUsername}
+              onBioChange={setBio} onDateOfBirthChange={setDateOfBirth} onSave={saveSettings}
+            />
+          </motion.div>
 
-          <EmailChangeSection
-            email={email} pendingEmail={pendingEmail} emailOtp={emailOtp}
-            onPendingEmailChange={setPendingEmail} onEmailOtpChange={setEmailOtp}
-            onRequestOtp={requestEmailOtp} onVerifyOtp={verifyEmailOtp}
-          />
+          <motion.div variants={fadeUp}>
+            <EmailChangeSection
+              email={email} pendingEmail={pendingEmail} emailOtp={emailOtp}
+              onPendingEmailChange={setPendingEmail} onEmailOtpChange={setEmailOtp}
+              onRequestOtp={requestEmailOtp} onVerifyOtp={verifyEmailOtp}
+            />
+          </motion.div>
 
-          <PasswordSection onSendReset={sendPasswordOtp} />
+          <motion.div variants={fadeUp}>
+            <PasswordSection onSendReset={sendPasswordOtp} />
+          </motion.div>
 
-          <BoardCustomizationSection />
+          <motion.div variants={fadeUp}>
+            <BoardCustomizationSection />
+          </motion.div>
 
-          <NotificationPrefsSection />
+          <motion.div variants={fadeUp}>
+            <NotificationPrefsSection />
+          </motion.div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-4">
-            <Zap className="w-3.5 h-3.5 text-primary" />
+          <motion.div variants={fadeUp} className="flex items-center gap-2 text-[10px] text-muted-foreground pb-4">
+            <Zap className="w-3 h-3 text-primary" />
             Profile changes sync in real-time across all sessions
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>
