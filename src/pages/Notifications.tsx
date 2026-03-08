@@ -13,6 +13,33 @@ type PlayerNotification = {
   created_at: string;
 };
 
+type GroupedNotifications = { label: string; items: PlayerNotification[] }[];
+
+const groupByDate = (items: PlayerNotification[]): GroupedNotifications => {
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const yesterdayStr = new Date(now.getTime() - 86400000).toDateString();
+
+  const groups: Record<string, PlayerNotification[]> = {};
+  const order: string[] = [];
+
+  for (const item of items) {
+    const dateStr = new Date(item.created_at).toDateString();
+    let label: string;
+    if (dateStr === todayStr) label = "Today";
+    else if (dateStr === yesterdayStr) label = "Yesterday";
+    else label = "Earlier";
+
+    if (!groups[label]) {
+      groups[label] = [];
+      order.push(label);
+    }
+    groups[label].push(item);
+  }
+
+  return order.map((label) => ({ label, items: groups[label] }));
+};
+
 const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<PlayerNotification[]>([]);
@@ -43,6 +70,7 @@ const Notifications = () => {
   }, [user]);
 
   const unreadCount = useMemo(() => notifications.filter((item) => !item.is_read).length, [notifications]);
+  const grouped = useMemo(() => groupByDate(notifications), [notifications]);
 
   const markNotificationRead = async (notificationId: string) => {
     await (supabase as any).from("player_notifications").update({ is_read: true }).eq("id", notificationId);
@@ -64,19 +92,34 @@ const Notifications = () => {
           <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Unread: {unreadCount}</span>
         </header>
 
-        <section className="glass-card p-3 sm:p-6 space-y-2 sm:space-y-3">
-          {notifications.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No notifications yet.</p> : notifications.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => markNotificationRead(item.id)}
-              className={`w-full text-left rounded-lg border p-3 sm:p-4 transition-colors hover:bg-secondary/40 ${item.is_read ? "opacity-70" : "border-primary/40"}`}
-            >
-              <p className="font-semibold text-sm sm:text-base">{item.title}</p>
-              <p className="text-xs sm:text-sm mt-0.5">{item.message}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">{new Date(item.created_at).toLocaleString()}</p>
-            </button>
-          ))}
-        </section>
+        {notifications.length === 0 ? (
+          <section className="glass-card p-3 sm:p-6">
+            <p className="text-sm text-muted-foreground text-center py-4">No notifications yet.</p>
+          </section>
+        ) : (
+          grouped.map((group) => (
+            <section key={group.label} className="space-y-2">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
+                {group.label}
+              </h2>
+              <div className="glass-card p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => markNotificationRead(item.id)}
+                    className={`w-full text-left rounded-lg border p-3 sm:p-4 transition-colors hover:bg-secondary/40 ${item.is_read ? "opacity-70" : "border-primary/40"}`}
+                  >
+                    <p className="font-semibold text-sm sm:text-base">{item.title}</p>
+                    <p className="text-xs sm:text-sm mt-0.5">{item.message}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">
+                      {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))
+        )}
       </div>
       </PullToRefresh>
     </main>
