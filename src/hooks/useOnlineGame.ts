@@ -20,6 +20,7 @@ interface PlayerSummary {
   username: string;
   crown_score: number;
   avatar_url: string | null;
+  equippedTitle?: { name: string; icon: string } | null;
 }
 
 export const useOnlineGame = (gameId: string | null) => {
