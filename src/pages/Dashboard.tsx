@@ -460,7 +460,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 sm:gap-2">
 
             {/* Left Column — Wallet, Rank, Daily Puzzle */}
-            <div className="lg:col-span-4 space-y-2">
+            <div className="lg:col-span-4 space-y-1.5">
               {/* Wallet */}
               <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 <button
