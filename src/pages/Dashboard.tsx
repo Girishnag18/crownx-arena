@@ -755,7 +755,7 @@ const Dashboard = () => {
                   const result = g.result_type === "draw" || g.result_type === "stalemate" ? "Draw" : userWon ? "Win" : "Loss";
 
                   return (
-                    <div key={g.id} className="px-5 py-3 flex items-center justify-between hover:bg-secondary/10 transition-colors">
+                    <div key={g.id} className="px-4 py-2.5 flex items-center justify-between hover:bg-secondary/10 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${result === "Win" ? "bg-emerald-500" : result === "Loss" ? "bg-destructive" : "bg-muted-foreground"}`} />
                         <div>
