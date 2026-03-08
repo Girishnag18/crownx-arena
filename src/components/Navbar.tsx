@@ -151,7 +151,7 @@ const Navbar = () => {
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl"
       >
         <div className="container mx-auto flex items-center justify-between px-4 py-2.5 md:px-6">
           <Link to="/" className="flex items-center gap-2 group shrink-0">
