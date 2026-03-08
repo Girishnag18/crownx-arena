@@ -373,6 +373,7 @@ const Play = () => {
     if (game.isStalemate()) return "Stalemate — Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
+    if (isComputerGame && aiThinking) return "AI is thinking…";
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
   }, [game, isInCheck, isOnline, online, user, clockGameOver]);
 
