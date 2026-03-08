@@ -205,7 +205,8 @@ const Social = () => {
             </h2>
             {offlineFriends.map(f => (
               <FriendRow key={f.id} friend={f} online={false}
-                onMessage={() => setDmFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })} />
+                onMessage={() => setDmFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })}
+                onGift={() => setGiftFriend({ id: f.id, username: f.username, avatar_url: f.avatar_url })} />
             ))}
           </div>
 
