@@ -12,6 +12,7 @@ export const useMatchmaking = () => {
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const gameSubscriptionRef = useRef<RealtimeChannel | null>(null);
+  const searchStartedAt = useRef<string | null>(null);
 
   const clearSearchState = useCallback(() => {
     if (pollRef.current) {
