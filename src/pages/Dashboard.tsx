@@ -111,7 +111,20 @@ const Dashboard = () => {
       .select("username, avatar_url, crown_score, rank_tier, games_played, wins, losses, draws, level, win_streak, wallet_crowns, xp, puzzles_solved")
       .eq("id", userId)
       .single();
-    if (data) setProfile(data as unknown as Profile);
+    if (data) {
+      const p = data as unknown as Profile;
+      // Detect rank promotion
+      if (prevRankRef.current && prevRankRef.current !== p.rank_tier) {
+        const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown Master"];
+        const oldIdx = ranks.indexOf(prevRankRef.current);
+        const newIdx = ranks.indexOf(p.rank_tier);
+        if (newIdx > oldIdx) {
+          setPromotion({ oldRank: prevRankRef.current, newRank: p.rank_tier });
+        }
+      }
+      prevRankRef.current = p.rank_tier;
+      setProfile(p);
+    }
   };
 
   const loadRecentGames = async (userId: string) => {
