@@ -41,6 +41,7 @@ import DailyRewards from "./pages/DailyRewards";
 import DailySpin from "./pages/DailySpin";
 import Replay from "./pages/Replay";
 import Achievements from "./pages/Achievements";
+import MatchHistoryPage from "./pages/MatchHistoryPage";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
 import StreakBanner from "./components/gamification/StreakBanner";
