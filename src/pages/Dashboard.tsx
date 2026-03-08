@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Target, Flame, BarChart3, Settings, Gamepad2, Gift, Shield, Sparkles } from "lucide-react";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
