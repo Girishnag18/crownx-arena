@@ -236,7 +236,7 @@ const Play = () => {
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver || resignPending);
+  const isGameOver = isOnline ? (online.isGameOver || clockGameOver) : (game.isGameOver() || clockGameOver || resignPending);
 
   // Show game over popup when online game ends
   useEffect(() => {
