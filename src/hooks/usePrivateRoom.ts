@@ -95,6 +95,7 @@ export const usePrivateRoom = () => {
     const whiteId = isWhite ? claimedRoom.host_id : user.id;
     const blackId = isWhite ? user.id : claimedRoom.host_id;
     const durationSeconds = selectedDurationSeconds ?? null;
+    const startingFen = variant === "chess960" ? generateChess960Fen() : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     const { data: game, error: gameErr } = await supabase
       .from("games")
