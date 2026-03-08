@@ -28,23 +28,30 @@ interface AchievementsPanelProps {
   gamesPlayed?: number;
 }
 
-// Achievement unlock conditions
-const UNLOCK_CONDITIONS: Record<string, (stats: AchievementsPanelProps) => boolean> = {
-  first_game: (s) => (s.gamesPlayed || 0) >= 1,
-  win_5: (s) => (s.wins || 0) >= 5,
-  win_25: (s) => (s.wins || 0) >= 25,
-  win_100: (s) => (s.wins || 0) >= 100,
-  streak_3: (s) => (s.winStreak || 0) >= 3,
-  streak_5: (s) => (s.winStreak || 0) >= 5,
-  streak_10: (s) => (s.winStreak || 0) >= 10,
-  puzzle_10: (s) => (s.puzzlesSolved || 0) >= 10,
-  puzzle_50: (s) => (s.puzzlesSolved || 0) >= 50,
-  puzzle_100: (s) => (s.puzzlesSolved || 0) >= 100,
-  elo_500: (s) => (s.crownScore || 0) >= 500,
-  elo_800: (s) => (s.crownScore || 0) >= 800,
-  elo_1200: (s) => (s.crownScore || 0) >= 1200,
-  elo_1600: (s) => (s.crownScore || 0) >= 1600,
+// Achievement unlock conditions & progress targets
+const ACHIEVEMENT_TARGETS: Record<string, { getter: (s: AchievementsPanelProps) => number; target: number }> = {
+  first_game: { getter: (s) => s.gamesPlayed || 0, target: 1 },
+  win_5: { getter: (s) => s.wins || 0, target: 5 },
+  win_25: { getter: (s) => s.wins || 0, target: 25 },
+  win_100: { getter: (s) => s.wins || 0, target: 100 },
+  streak_3: { getter: (s) => s.winStreak || 0, target: 3 },
+  streak_5: { getter: (s) => s.winStreak || 0, target: 5 },
+  streak_10: { getter: (s) => s.winStreak || 0, target: 10 },
+  puzzle_10: { getter: (s) => s.puzzlesSolved || 0, target: 10 },
+  puzzle_50: { getter: (s) => s.puzzlesSolved || 0, target: 50 },
+  puzzle_100: { getter: (s) => s.puzzlesSolved || 0, target: 100 },
+  elo_500: { getter: (s) => s.crownScore || 0, target: 500 },
+  elo_800: { getter: (s) => s.crownScore || 0, target: 800 },
+  elo_1200: { getter: (s) => s.crownScore || 0, target: 1200 },
+  elo_1600: { getter: (s) => s.crownScore || 0, target: 1600 },
 };
+
+const UNLOCK_CONDITIONS: Record<string, (stats: AchievementsPanelProps) => boolean> = Object.fromEntries(
+  Object.entries(ACHIEVEMENT_TARGETS).map(([key, { getter, target }]) => [
+    key,
+    (s: AchievementsPanelProps) => getter(s) >= target,
+  ])
+);
 
 const AchievementsPanel = ({ wins = 0, winStreak = 0, puzzlesSolved = 0, crownScore = 0, gamesPlayed = 0 }: AchievementsPanelProps) => {
   const { user } = useAuth();
@@ -183,24 +190,56 @@ const AchievementsPanel = ({ wins = 0, winStreak = 0, puzzlesSolved = 0, crownSc
                 {categoryAchievements.map((achievement) => {
                   const isUnlocked = unlocked.has(achievement.id);
                   return (
-                    <div
-                      key={achievement.id}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-                        isUnlocked
-                          ? "bg-primary/10 border border-primary/20"
-                          : "bg-secondary/30 border border-border/40 opacity-60"
-                      }`}
-                    >
-                      <span className={`text-xl ${isUnlocked ? "" : "grayscale"}`}>{achievement.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-display font-bold truncate">{achievement.title}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{achievement.description}</p>
-                      </div>
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <Star className={`w-3 h-3 ${isUnlocked ? "text-primary" : "text-muted-foreground/40"}`} />
-                        <span className="text-[10px] text-muted-foreground">{achievement.xp_reward}</span>
-                      </div>
-                    </div>
+                    (() => {
+                      const target = ACHIEVEMENT_TARGETS[achievement.key];
+                      const current = target ? Math.min(target.getter(stats), target.target) : 0;
+                      const pct = target ? Math.round((current / target.target) * 100) : 0;
+
+                      return (
+                        <div
+                          key={achievement.id}
+                          className={`rounded-lg px-3 py-2.5 transition-all ${
+                            isUnlocked
+                              ? "bg-primary/10 border border-primary/20"
+                              : "bg-secondary/30 border border-border/40"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`text-xl ${isUnlocked ? "" : "grayscale opacity-50"}`}>{achievement.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-display font-bold truncate ${isUnlocked ? "text-foreground" : "text-muted-foreground"}`}>{achievement.title}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{achievement.description}</p>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {isUnlocked ? (
+                                <span className="text-[10px] font-bold text-primary flex items-center gap-0.5">
+                                  <Star className="w-3 h-3 text-primary fill-primary" />
+                                  {achievement.xp_reward} XP
+                                </span>
+                              ) : target ? (
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                  {current}/{target.target}
+                                </span>
+                              ) : (
+                                <Star className="w-3 h-3 text-muted-foreground/40" />
+                              )}
+                            </div>
+                          </div>
+                          {!isUnlocked && target && (
+                            <div className="mt-1.5 ml-8">
+                              <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                                <motion.div
+                                  className="h-full rounded-full bg-primary/60"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${pct}%` }}
+                                  transition={{ duration: 0.6, ease: "easeOut" }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()
                   );
                 })}
               </div>
