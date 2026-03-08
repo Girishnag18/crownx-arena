@@ -13,6 +13,7 @@ import ReportButton from "@/components/chess/ReportButton";
 import VoiceChess from "@/components/chess/VoiceChess";
 import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import GameChat from "@/components/chess/GameChat";
+import { TIME_CONTROLS, type TimeControl, TimeControlSelector, useChessClock, ClockFace } from "@/components/chess/ChessClock";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
 import { stockfish } from "@/services/stockfishService";
@@ -46,6 +47,11 @@ const Play = () => {
   const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const [streamerMode, setStreamerMode] = useState(false);
+  const [timeControl, setTimeControl] = useState<TimeControl | null>(() => {
+    const tc = searchParams.get("tc");
+    return tc ? TIME_CONTROLS.find((t) => t.label === tc) || null : null;
+  });
+  const [clockGameOver, setClockGameOver] = useState(false);
   const prevMoveCountRef = useRef(0);
 
   const online = useOnlineGame(onlineGameId);
@@ -172,11 +178,17 @@ const Play = () => {
     setShowCheckmateBanner(false);
     setShowPostGameReview(false);
     setLocalBottomColor("w");
+    setClockGameOver(false);
   };
+
+  const handleTimeUp = useCallback((side: "w" | "b") => {
+    setClockGameOver(true);
+    soundManager.play("gameEnd");
+  }, []);
 
   const game = isOnline && online.game ? online.game : localGame;
   const isInCheck = game.isCheck();
-  const isGameOver = isOnline ? online.isGameOver : game.isGameOver();
+  const isGameOver = isOnline ? online.isGameOver : (game.isGameOver() || clockGameOver);
 
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
@@ -287,16 +299,26 @@ const Play = () => {
         return online.isMyTurn ? "Your turn" : "Opponent's turn";
       }
     }
+    if (clockGameOver) return `Time's up! ${game.turn() === "w" ? "Black" : "White"} wins on time!`;
     if (game.isCheckmate()) return `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins!`;
     if (game.isStalemate()) return "Stalemate — Draw";
     if (game.isDraw()) return "Draw";
     if (isInCheck) return `${game.turn() === "w" ? "White" : "Black"} is in check!`;
     return `${game.turn() === "w" ? "White" : "Black"} to move`;
-  }, [game, isInCheck, isOnline, online, user]);
+  }, [game, isInCheck, isOnline, online, user, clockGameOver]);
 
   const displayMoves = isOnline && online.gameData?.moves
     ? (online.gameData.moves as Array<{ san: string }>).map((m) => m.san)
     : moveHistory;
+
+  const clockActiveSide = (game.isGameOver() || clockGameOver) ? null : game.turn();
+  const { whiteMs, blackMs } = useChessClock(
+    timeControl,
+    clockActiveSide,
+    displayMoves.length > 0,
+    isGameOver,
+    handleTimeUp,
+  );
 
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
@@ -400,10 +422,19 @@ const Play = () => {
             <div className={`w-full ${boardSizeClass} mb-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={topPlayerName} avatarUrl={topAvatar} />
-                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
-                  {capturedPieces.capturedByBlack.length === 0
-                    ? <span className="text-xs text-muted-foreground">No captures</span>
-                    : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                    {capturedPieces.capturedByBlack.length === 0
+                      ? <span className="text-xs text-muted-foreground">No captures</span>
+                      : capturedPieces.capturedByBlack.map((piece, index) => <span key={`cap-black-${index}`}>{piece}</span>)}
+                  </div>
+                  {timeControl && (
+                    <ClockFace
+                      ms={flipped ? whiteMs : blackMs}
+                      isActive={clockActiveSide === (flipped ? "w" : "b")}
+                      side={flipped ? "w" : "b"}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -445,10 +476,19 @@ const Play = () => {
             <div className={`w-full ${boardSizeClass} mt-3 rounded-lg border border-border/60 bg-secondary/20 px-4 py-2`}>
               <div className="flex items-center justify-between text-sm">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} />
-                <div className="flex gap-1 text-lg" title="Pieces captured by this side">
-                  {capturedPieces.capturedByWhite.length === 0
-                    ? <span className="text-xs text-muted-foreground">No captures</span>
-                    : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1 text-lg" title="Pieces captured by this side">
+                    {capturedPieces.capturedByWhite.length === 0
+                      ? <span className="text-xs text-muted-foreground">No captures</span>
+                      : capturedPieces.capturedByWhite.map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
+                  </div>
+                  {timeControl && (
+                    <ClockFace
+                      ms={flipped ? blackMs : whiteMs}
+                      isActive={clockActiveSide === (flipped ? "b" : "w")}
+                      side={flipped ? "b" : "w"}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -534,6 +574,13 @@ const Play = () => {
                     ? `You are ${computerColor === "w" ? "Black" : "White"}. Computer is ${computerColor === "w" ? "White" : "Black"}. Tactical AI accuracy this move: ${aiAccuracy}%.`
                     : `Pass-and-play mode: ${localBottomColor === "w" ? "White" : "Black"} pieces are at the bottom for the current player.`}
               </p>
+              {timeControl && (
+                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 text-xs">
+                  <span className="text-muted-foreground">Time control: </span>
+                  <span className="font-display font-bold text-primary">{timeControl.label}</span>
+                  <span className="text-muted-foreground"> ({timeControl.category})</span>
+                </div>
+              )}
               {isOnline && (
                 <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-display">
