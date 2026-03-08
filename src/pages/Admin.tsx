@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { BarChart3, ShieldAlert, Users, Eye, CheckCircle, XCircle, LoaderCircle, Search, Ban, Clock, Trophy, TrendingUp, Crown, Activity } from "lucide-react";
+import { BarChart3, ShieldAlert, Users, Eye, CheckCircle, XCircle, LoaderCircle, Search, Ban, Clock, Trophy, TrendingUp, Crown, Activity, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface GameReport {
   id: string;
@@ -33,6 +37,31 @@ interface UserRow {
   rank_tier: string;
 }
 
+interface TournamentRow {
+  id: string;
+  name: string;
+  status: string;
+  tournament_type: string;
+  max_players: number;
+  prize_pool: number;
+  current_round: number;
+  max_rounds: number;
+  starts_at: string | null;
+  created_at: string;
+  reg_count?: number;
+}
+
+interface UserBan {
+  id: string;
+  user_id: string;
+  ban_type: string;
+  reason: string;
+  expires_at: string | null;
+  is_active: boolean;
+  created_at: string;
+  username?: string;
+}
+
 interface Stats {
   totalUsers: number;
   openReports: number;
@@ -40,53 +69,85 @@ interface Stats {
   totalGames: number;
   activeTournaments: number;
   avgRating: number;
+  activeBans: number;
 }
 
 const Admin = () => {
+  const { user } = useAuth();
   const [reports, setReports] = useState<GameReport[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [tournaments, setTournaments] = useState<TournamentRow[]>([]);
+  const [bans, setBans] = useState<UserBan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<Stats>({ totalUsers: 0, openReports: 0, weeklyMatches: 0, totalGames: 0, activeTournaments: 0, avgRating: 0 });
+  const [stats, setStats] = useState<Stats>({ totalUsers: 0, openReports: 0, weeklyMatches: 0, totalGames: 0, activeTournaments: 0, avgRating: 0, activeBans: 0 });
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
   const [reportFilter, setReportFilter] = useState<"all" | "pending" | "confirmed" | "dismissed">("all");
+
+  // Ban dialog
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [banTarget, setBanTarget] = useState<UserRow | null>(null);
+  const [banType, setBanType] = useState<"permanent" | "temporary">("temporary");
+  const [banDuration, setBanDuration] = useState("24h");
+  const [banReason, setBanReason] = useState("");
+  const [banSubmitting, setBanSubmitting] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
 
-    const [{ data: reportData }, { data: userData }, { count: userCount }, { count: gameCount }, { count: weeklyCount }, { count: tournamentCount }] = await Promise.all([
+    const [{ data: reportData }, { data: userData }, { count: userCount }, { count: gameCount }, { count: weeklyCount }, { data: tournamentData }, { data: banData }] = await Promise.all([
       supabase.from("game_reports" as any).select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("profiles").select("id, username, avatar_url, crown_score, games_played, wins, losses, wallet_crowns, created_at, rank_tier").order("crown_score", { ascending: false }).limit(200),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("games").select("id", { count: "exact", head: true }),
       supabase.from("games").select("id", { count: "exact", head: true }).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
-      supabase.from("tournaments").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabase.from("tournaments").select("*").order("created_at", { ascending: false }).limit(50),
+      (supabase as any).from("user_bans").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(100),
     ]);
 
     const typedReports = (reportData as any[] || []) as GameReport[];
     const typedUsers = (userData || []) as unknown as UserRow[];
+    const typedTournaments = (tournamentData || []) as unknown as TournamentRow[];
+    const typedBans = (banData || []) as unknown as UserBan[];
 
     // Enrich reports
-    const playerIds = [...new Set(typedReports.map(r => r.reported_player_id))];
-    if (playerIds.length > 0) {
-      const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", playerIds);
+    const reportPlayerIds = [...new Set(typedReports.map(r => r.reported_player_id))];
+    if (reportPlayerIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", reportPlayerIds);
       const pMap = new Map((profiles || []).map(p => [p.id, p.username]));
       typedReports.forEach(r => { r.reported_username = pMap.get(r.reported_player_id) || "Unknown"; });
+    }
+
+    // Enrich bans with usernames
+    const banUserIds = [...new Set(typedBans.map(b => b.user_id))];
+    if (banUserIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("id, username").in("id", banUserIds);
+      const pMap = new Map((profiles || []).map(p => [p.id, p.username]));
+      typedBans.forEach(b => { b.username = pMap.get(b.user_id) || "Unknown"; });
+    }
+
+    // Enrich tournaments with registration count
+    for (const t of typedTournaments) {
+      const { count } = await supabase.from("tournament_registrations").select("id", { count: "exact", head: true }).eq("tournament_id", t.id);
+      t.reg_count = count || 0;
     }
 
     const avgRating = typedUsers.length > 0 ? Math.round(typedUsers.reduce((s, u) => s + u.crown_score, 0) / typedUsers.length) : 0;
 
     setReports(typedReports);
     setUsers(typedUsers);
+    setTournaments(typedTournaments);
+    setBans(typedBans);
     setStats({
       totalUsers: userCount || 0,
       openReports: typedReports.filter(r => r.status === "pending").length,
       weeklyMatches: weeklyCount || 0,
       totalGames: gameCount || 0,
-      activeTournaments: tournamentCount || 0,
+      activeTournaments: typedTournaments.filter(t => t.status === "active" || t.status === "open").length,
       avgRating,
+      activeBans: typedBans.length,
     });
     setLoading(false);
   };
@@ -110,13 +171,75 @@ const Admin = () => {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, crown_score: 400, rank_tier: "Bronze" } : u));
   };
 
+  const openBanDialog = (u: UserRow) => {
+    setBanTarget(u);
+    setBanType("temporary");
+    setBanDuration("24h");
+    setBanReason("");
+    setBanDialogOpen(true);
+  };
+
+  const submitBan = async () => {
+    if (!user || !banTarget) return;
+    setBanSubmitting(true);
+
+    const durationMs: Record<string, number> = {
+      "24h": 86400000,
+      "3d": 3 * 86400000,
+      "7d": 7 * 86400000,
+      "30d": 30 * 86400000,
+    };
+
+    const expiresAt = banType === "permanent" ? null : new Date(Date.now() + (durationMs[banDuration] || 86400000)).toISOString();
+
+    const { error } = await (supabase as any).from("user_bans").insert({
+      user_id: banTarget.id,
+      banned_by: user.id,
+      ban_type: banType === "permanent" ? "permanent" : `temp_${banDuration}`,
+      reason: banReason || "Violation of terms",
+      expires_at: expiresAt,
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(`${banTarget.username || "Player"} has been ${banType === "permanent" ? "banned" : "suspended"}`);
+      setBanDialogOpen(false);
+      await loadData();
+    }
+    setBanSubmitting(false);
+  };
+
+  const liftBan = async (banId: string) => {
+    setProcessingId(banId);
+    const { error } = await (supabase as any).from("user_bans").update({ is_active: false }).eq("id", banId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Ban lifted");
+      setBans(prev => prev.filter(b => b.id !== banId));
+      setStats(s => ({ ...s, activeBans: s.activeBans - 1 }));
+    }
+    setProcessingId(null);
+  };
+
+  const updateTournamentStatus = async (tournamentId: string, newStatus: string) => {
+    setProcessingId(tournamentId);
+    const { error } = await supabase.from("tournaments").update({ status: newStatus } as any).eq("id", tournamentId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(`Tournament status → ${newStatus}`);
+      setTournaments(prev => prev.map(t => t.id === tournamentId ? { ...t, status: newStatus } : t));
+    }
+    setProcessingId(null);
+  };
+
   const statCards = [
     { title: "Total Players", value: stats.totalUsers.toLocaleString(), icon: Users, color: "text-primary" },
     { title: "Open Reports", value: stats.openReports.toString(), icon: ShieldAlert, color: "text-destructive" },
     { title: "Weekly Matches", value: stats.weeklyMatches.toLocaleString(), icon: Activity, color: "text-primary" },
     { title: "Total Games", value: stats.totalGames.toLocaleString(), icon: BarChart3, color: "text-primary" },
-    { title: "Active Tournaments", value: stats.activeTournaments.toString(), icon: Trophy, color: "text-amber-500" },
-    { title: "Avg. Rating", value: stats.avgRating.toString(), icon: TrendingUp, color: "text-primary" },
+    { title: "Tournaments", value: stats.activeTournaments.toString(), icon: Trophy, color: "text-amber-500" },
+    { title: "Active Bans", value: stats.activeBans.toString(), icon: Ban, color: "text-destructive" },
   ];
 
   const filteredReports = reports.filter(r => reportFilter === "all" || r.status === reportFilter);
@@ -126,6 +249,16 @@ const Admin = () => {
     if (score >= 70) return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">HIGH {score}</span>;
     if (score >= 40) return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">MED {score}</span>;
     return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">LOW {score}</span>;
+  };
+
+  const getTournamentStatusBadge = (status: string) => {
+    const map: Record<string, string> = {
+      open: "bg-green-500/20 text-green-500",
+      active: "bg-primary/20 text-primary",
+      completed: "bg-muted text-muted-foreground",
+      cancelled: "bg-destructive/20 text-destructive",
+    };
+    return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${map[status] || "bg-muted text-muted-foreground"}`}>{status}</span>;
   };
 
   if (loading) {
@@ -140,7 +273,7 @@ const Admin = () => {
     <main className="container max-w-6xl py-24 px-4 space-y-6">
       <div>
         <h1 className="text-3xl font-bold font-display">Admin Command Center</h1>
-        <p className="text-sm text-muted-foreground">Moderation, user management, and platform analytics.</p>
+        <p className="text-sm text-muted-foreground">Moderation, user management, tournaments, and platform analytics.</p>
       </div>
 
       {/* Stats Grid */}
@@ -155,10 +288,11 @@ const Admin = () => {
       </div>
 
       <Tabs defaultValue="reports" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
-          <TabsTrigger value="reports">🛡️ Reports ({stats.openReports})</TabsTrigger>
-          <TabsTrigger value="users">👥 Users ({stats.totalUsers})</TabsTrigger>
-          <TabsTrigger value="actions">⚙️ Moderation</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-4 bg-secondary/40">
+          <TabsTrigger value="reports">🛡️ Reports</TabsTrigger>
+          <TabsTrigger value="users">👥 Users</TabsTrigger>
+          <TabsTrigger value="tournaments">🏆 Tournaments</TabsTrigger>
+          <TabsTrigger value="bans">🚫 Bans</TabsTrigger>
         </TabsList>
 
         {/* Reports Tab */}
@@ -201,13 +335,6 @@ const Admin = () => {
                     <p className="text-xs text-muted-foreground">
                       Game: {report.game_id.slice(0, 8)}… · {format(new Date(report.created_at), "MMM d, HH:mm")}
                     </p>
-                    {report.analysis?.flags && (
-                      <div className="flex gap-1 flex-wrap mt-1">
-                        {(report.analysis.flags as string[]).map((flag: string) => (
-                          <span key={flag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">{flag}</span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {report.status === "pending" ? (
@@ -224,9 +351,6 @@ const Admin = () => {
                         {report.status.toUpperCase()}
                       </span>
                     )}
-                    <a href={`/play?game=${report.game_id}`} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md bg-primary/15 text-primary hover:bg-primary/25">
-                      <Eye className="w-3.5 h-3.5" /> View
-                    </a>
                   </div>
                 </div>
               ))}
@@ -268,12 +392,11 @@ const Admin = () => {
                   <p className="text-[10px] text-muted-foreground">CrownScore</p>
                 </div>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => resetUserRating(u.id)}
-                    className="text-[10px] px-2 py-1 rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25"
-                    title="Reset rating to 400"
-                  >
+                  <button onClick={() => resetUserRating(u.id)} className="text-[10px] px-2 py-1 rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25" title="Reset rating">
                     Reset
+                  </button>
+                  <button onClick={() => openBanDialog(u)} className="text-[10px] px-2 py-1 rounded bg-destructive/15 text-destructive hover:bg-destructive/25" title="Ban/Suspend">
+                    <Ban className="w-3 h-3" />
                   </button>
                 </div>
               </motion.div>
@@ -281,43 +404,148 @@ const Admin = () => {
           </div>
         </TabsContent>
 
-        {/* Moderation Tab */}
-        <TabsContent value="actions" className="mt-4">
-          <div className="glass-card p-6 space-y-4">
-            <h3 className="font-display text-lg font-bold">Quick Actions</h3>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <button onClick={() => toast.info("Ban system requires selecting a user from the Users tab.")} className="flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 hover:bg-secondary/50 transition-colors text-left">
-                <Ban className="w-5 h-5 text-destructive" />
-                <div>
-                  <p className="text-sm font-semibold">Ban Player</p>
-                  <p className="text-xs text-muted-foreground">Permanently restrict account access</p>
+        {/* Tournaments Tab */}
+        <TabsContent value="tournaments" className="space-y-4 mt-4">
+          {tournaments.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <Trophy className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="font-display font-bold">No tournaments</p>
+              <p className="text-sm text-muted-foreground">Create one from the lobby!</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {tournaments.map(t => (
+                <div key={t.id} className="rounded-xl border border-border bg-card/60 p-4 flex flex-col md:flex-row md:items-center gap-3">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-display font-bold text-sm">{t.name}</span>
+                      {getTournamentStatusBadge(t.status)}
+                      <span className="text-[10px] text-muted-foreground uppercase">{t.tournament_type}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>{t.reg_count || 0}/{t.max_players} players</span>
+                      <span>Round {t.current_round}/{t.max_rounds}</span>
+                      <span className="flex items-center gap-0.5"><Crown className="w-3 h-3" /> {t.prize_pool} prize</span>
+                      <span>{format(new Date(t.created_at), "MMM d")}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {t.status === "open" && (
+                      <button onClick={() => updateTournamentStatus(t.id, "active")} disabled={processingId === t.id} className="text-xs px-3 py-1.5 rounded-md bg-green-500/15 text-green-500 hover:bg-green-500/25">
+                        Start
+                      </button>
+                    )}
+                    {(t.status === "open" || t.status === "active") && (
+                      <button onClick={() => updateTournamentStatus(t.id, "cancelled")} disabled={processingId === t.id} className="text-xs px-3 py-1.5 rounded-md bg-destructive/15 text-destructive hover:bg-destructive/25">
+                        Cancel
+                      </button>
+                    )}
+                    {t.status === "active" && (
+                      <button onClick={() => updateTournamentStatus(t.id, "completed")} disabled={processingId === t.id} className="text-xs px-3 py-1.5 rounded-md bg-primary/15 text-primary hover:bg-primary/25">
+                        Complete
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </button>
-              <button onClick={() => toast.info("Suspension system requires selecting a user from the Users tab.")} className="flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 hover:bg-secondary/50 transition-colors text-left">
-                <Clock className="w-5 h-5 text-amber-500" />
-                <div>
-                  <p className="text-sm font-semibold">Temp Suspend</p>
-                  <p className="text-xs text-muted-foreground">Temporarily restrict for 24h–7d</p>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Bans Tab */}
+        <TabsContent value="bans" className="space-y-4 mt-4">
+          {bans.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <Ban className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="font-display font-bold">No active bans</p>
+              <p className="text-sm text-muted-foreground">All clear!</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {bans.map(b => (
+                <div key={b.id} className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-4">
+                  <Ban className="w-5 h-5 text-destructive shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">{b.username || "Unknown"}</p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="capitalize">{b.ban_type.replace("_", " ")}</span>
+                      {b.expires_at && <span>Expires: {format(new Date(b.expires_at), "MMM d, HH:mm")}</span>}
+                      <span>{b.reason}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => liftBan(b.id)}
+                    disabled={processingId === b.id}
+                    className="text-xs px-3 py-1.5 rounded-md bg-green-500/15 text-green-500 hover:bg-green-500/25 disabled:opacity-50"
+                  >
+                    Lift Ban
+                  </button>
                 </div>
-              </button>
-              <button onClick={() => toast.info("Navigate to Users tab to reset a player's rating.")} className="flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 hover:bg-secondary/50 transition-colors text-left">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Reset Rating</p>
-                  <p className="text-xs text-muted-foreground">Reset CrownScore to 400</p>
-                </div>
-              </button>
-              <button onClick={loadData} className="flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 hover:bg-secondary/50 transition-colors text-left">
-                <Activity className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Refresh Data</p>
-                  <p className="text-xs text-muted-foreground">Reload all admin data</p>
-                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Ban Dialog */}
+      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ban / Suspend Player</DialogTitle>
+            <DialogDescription>
+              {banTarget ? `Action against ${banTarget.username || "Player"} (CrownScore: ${banTarget.crown_score})` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Ban Type</label>
+              <Select value={banType} onValueChange={v => setBanType(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="temporary">Temporary Suspension</SelectItem>
+                  <SelectItem value="permanent">Permanent Ban</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {banType === "temporary" && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Duration</label>
+                <Select value={banDuration} onValueChange={setBanDuration}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24h">24 hours</SelectItem>
+                    <SelectItem value="3d">3 days</SelectItem>
+                    <SelectItem value="7d">7 days</SelectItem>
+                    <SelectItem value="30d">30 days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Reason</label>
+              <Textarea
+                placeholder="Reason for ban..."
+                value={banReason}
+                onChange={e => setBanReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setBanDialogOpen(false)} className="px-4 py-2 rounded-lg text-sm bg-muted hover:bg-muted/80">Cancel</button>
+              <button
+                onClick={submitBan}
+                disabled={banSubmitting}
+                className="px-4 py-2 rounded-lg text-sm bg-destructive text-destructive-foreground hover:opacity-90 disabled:opacity-50"
+              >
+                {banSubmitting ? "Processing..." : banType === "permanent" ? "Permanent Ban" : "Suspend"}
               </button>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
