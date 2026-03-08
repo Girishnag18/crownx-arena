@@ -62,7 +62,9 @@ const ProfileCard = ({
   const equippedFrame = equippedItems.find((i) => i.category === "avatar_frame");
   const equippedBadges = equippedItems.filter((i) => i.category === "badge");
 
-  const frameClass = equippedFrame ? (rarityGlow[equippedFrame.rarity] || "") : "";
+  const frameBorderColor = equippedFrame?.metadata?.border_color;
+  const frameClass = equippedFrame && !frameBorderColor ? (rarityGlow[equippedFrame.rarity] || "") : "";
+  const frameStyle = frameBorderColor ? { borderColor: frameBorderColor, boxShadow: `0 0 20px -5px ${frameBorderColor}` } : {};
 
   if (compact) {
     return (
