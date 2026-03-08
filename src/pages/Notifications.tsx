@@ -72,7 +72,12 @@ const Notifications = () => {
   const unreadCount = useMemo(() => notifications.filter((item) => !item.is_read).length, [notifications]);
   const grouped = useMemo(() => groupByDate(notifications), [notifications]);
 
-  const markNotificationRead = async (notificationId: string) => {
+  const markAllRead = async () => {
+    if (!user || unreadCount === 0) return;
+    await (supabase as any).from("player_notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+    setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+  };
+
     await (supabase as any).from("player_notifications").update({ is_read: true }).eq("id", notificationId);
     setNotifications((prev) => prev.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item)));
   };
