@@ -335,12 +335,12 @@ const Profile = () => {
 
       {/* Tabs: Performance & Social */}
       <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="w-full grid grid-cols-5 bg-secondary/40">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="history">Match History</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="social">Social</TabsTrigger>
-          <TabsTrigger value="search">Find Players</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 bg-secondary/40">
+          <TabsTrigger value="performance" className="text-xs sm:text-sm">Performance</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
+          <TabsTrigger value="achievements" className="text-xs sm:text-sm">Achievements</TabsTrigger>
+          <TabsTrigger value="social" className="text-xs sm:text-sm">Social</TabsTrigger>
+          <TabsTrigger value="search" className="text-xs sm:text-sm">Find</TabsTrigger>
         </TabsList>
 
         <TabsContent value="performance">
