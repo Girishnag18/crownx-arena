@@ -755,12 +755,27 @@ const Play = () => {
               className={`mt-2 sm:mt-3 flex items-center justify-between w-full ${boardSizeClass}`}
             >
               <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
-                {!isOnline && (
+                {!isOnline && !aiThinking && (
                   <div className={`w-3 h-3 rounded-full shrink-0 border ${game.turn() === "w" ? "bg-white border-border/60" : "bg-foreground/80 border-transparent"}`} />
                 )}
                 {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
                 {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
-                <span className="truncate">{gameStatus}</span>
+                {isComputerGame && aiThinking ? (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Monitor className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
+                    <span className="truncate text-muted-foreground">Analyzing…</span>
+                    <div className="w-16 sm:w-24 h-1.5 rounded-full bg-muted/50 overflow-hidden shrink-0">
+                      <motion.div
+                        className="h-full rounded-full bg-primary/70"
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${aiThinkProgress}%` }}
+                        transition={{ duration: 0.1, ease: "linear" }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <span className="truncate">{gameStatus}</span>
+                )}
               </div>
               <div className="flex gap-1.5 shrink-0">
                 {/* Resign button - online */}
