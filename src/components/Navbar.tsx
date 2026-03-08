@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings,
   LogOut, Menu, X, Wallet, Swords, Puzzle, Users, BookOpen, Trophy,
-  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye,
+  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
@@ -82,6 +82,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<NavbarProfile | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -131,10 +132,11 @@ const Navbar = () => {
   }, [user]);
 
   const handleSignOut = async () => {
-    await signOut();
+    setLoggingOut(true);
     setProfileOpen(false);
     setMobileOpen(false);
-    navigate("/");
+    await signOut();
+    navigate("/dashboard");
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
@@ -152,6 +154,27 @@ const Navbar = () => {
 
   return (
     <>
+      {/* Logging out overlay */}
+      <AnimatePresence>
+        {loggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="font-display font-bold text-lg text-foreground">Logging out…</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <motion.nav
         initial={{ y: -80 }}
         animate={{ y: 0 }}
