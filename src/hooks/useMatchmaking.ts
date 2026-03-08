@@ -147,7 +147,7 @@ export const useMatchmaking = () => {
         setState((prev) => {
           if (prev === "searching") {
             clearSearchState();
-            // Remove from queue
+            soundManager.play("searchTimeout");
             supabase.from("matchmaking_queue").delete().eq("player_id", user.id);
             return "timeout";
           }
