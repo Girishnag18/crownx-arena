@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Crown, CheckCircle, Clock, Gift } from "lucide-react";
 import BackButton from "@/components/common/BackButton";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Challenge {
   id: string;
