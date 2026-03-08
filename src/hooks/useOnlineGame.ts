@@ -50,7 +50,7 @@ export const useOnlineGame = (gameId: string | null) => {
         .from("games")
         .select("*")
         .eq("id", gameId)
-        .single();
+        .maybeSingle();
 
       if (data) {
         const gd = data as unknown as GameData;
@@ -297,7 +297,7 @@ export const useOnlineGame = (gameId: string | null) => {
               .from("profiles")
               .select("crown_score")
               .eq("id", user.id)
-              .single();
+              .maybeSingle();
             
             if (currentProfile) {
               const eloBefore = currentProfile.crown_score;

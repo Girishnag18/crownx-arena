@@ -27,7 +27,7 @@ const CrownGiftDialog = ({ friend, onClose }: CrownGiftDialogProps) => {
       .from("profiles")
       .select("wallet_crowns")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile || profile.wallet_crowns < amount) {
       toast.error("Insufficient Crown balance!");
@@ -48,7 +48,7 @@ const CrownGiftDialog = ({ friend, onClose }: CrownGiftDialogProps) => {
       .from("profiles")
       .select("wallet_crowns")
       .eq("id", friend.id)
-      .single();
+      .maybeSingle();
 
     await supabase
       .from("profiles")

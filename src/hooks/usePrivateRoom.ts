@@ -143,7 +143,7 @@ export const usePrivateRoom = () => {
       .eq("status", "waiting")
       .is("guest_id", null)
       .select("*")
-      .single();
+      .maybeSingle();
 
     if (claimErr || !claimedRoom) {
       setError("This room is no longer available. Ask the host for a new code.");
@@ -230,7 +230,7 @@ export const usePrivateRoom = () => {
               .from("profiles")
               .select("username")
               .eq("id", updated.guest_id)
-              .single()
+              .maybeSingle()
               .then(({ data }) => {
                 const name = data?.username || "An opponent";
                 toast(`👋 ${name} joined your room!`, { duration: 4000 });

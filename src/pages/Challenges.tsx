@@ -108,13 +108,16 @@ const Challenges = () => {
       .eq("id", p.id);
 
     // Credit wallet
-    await supabase
-      .from("profiles")
-      .update({ 
-        wallet_crowns: (await supabase.from("profiles").select("wallet_crowns").eq("id", user.id).single()).data?.wallet_crowns as number + challenge.crown_reward,
-        xp: (await supabase.from("profiles").select("xp").eq("id", user.id).single()).data?.xp as number + challenge.xp_reward,
-      })
-      .eq("id", user.id);
+    const { data: currentProfile } = await supabase.from("profiles").select("wallet_crowns, xp").eq("id", user.id).maybeSingle();
+    if (currentProfile) {
+      await supabase
+        .from("profiles")
+        .update({ 
+          wallet_crowns: (currentProfile.wallet_crowns ?? 0) + challenge.crown_reward,
+          xp: (currentProfile.xp ?? 0) + challenge.xp_reward,
+        })
+        .eq("id", user.id);
+    }
 
     setClaiming(null);
     toast.success(`Claimed ${challenge.crown_reward} Crowns + ${challenge.xp_reward} XP!`);

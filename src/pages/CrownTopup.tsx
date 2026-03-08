@@ -38,7 +38,7 @@ const CrownTopup = () => {
     if (!user) return;
 
     const loadProfile = async () => {
-      const { data } = await supabase.from("profiles").select("wallet_crowns, username").eq("id", user.id).single();
+      const { data } = await supabase.from("profiles").select("wallet_crowns, username").eq("id", user.id).maybeSingle();
       if (data) setProfile(data as unknown as WalletProfile);
     };
     loadProfile();

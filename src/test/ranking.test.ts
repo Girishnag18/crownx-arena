@@ -3,11 +3,11 @@ import { calculateElo, getRankTier } from "@/utils/ranking";
 
 describe("ranking", () => {
   it("maps elo into tiers", () => {
-    expect(getRankTier(1200)).toBe("Bronze");
-    expect(getRankTier(1400)).toBe("Silver");
-    expect(getRankTier(1650)).toBe("Gold");
-    expect(getRankTier(1950)).toBe("Platinum");
-    expect(getRankTier(2250)).toBe("Diamond");
+    expect(getRankTier(400)).toBe("Bronze");
+    expect(getRankTier(600)).toBe("Silver");
+    expect(getRankTier(900)).toBe("Gold");
+    expect(getRankTier(1300)).toBe("Platinum");
+    expect(getRankTier(1700)).toBe("Diamond");
   });
 
   it("updates elo for win", () => {

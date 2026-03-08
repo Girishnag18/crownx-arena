@@ -112,7 +112,7 @@ const AchievementsPanel = ({ wins = 0, winStreak = 0, puzzlesSolved = 0, crownSc
             .from("profiles")
             .select("xp, level")
             .eq("id", user.id)
-            .single();
+            .maybeSingle();
 
           if (profile) {
             const newXp = (profile.xp || 0) + achievement.xp_reward;
