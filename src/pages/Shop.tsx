@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star, Eye, X, User, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContext";
 import BackButton from "@/components/common/BackButton";
 import PullToRefresh from "@/components/common/PullToRefresh";
 import EquipEffect from "@/components/gamification/EquipEffect";
