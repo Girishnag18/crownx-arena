@@ -252,6 +252,7 @@ const Shop = () => {
       </div>
 
       <div className="container max-w-4xl relative z-10 space-y-5">
+        <BackButton label="Back" />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
