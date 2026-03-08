@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ChessBoard from "@/components/chess/ChessBoard";
 import { soundManager } from "@/services/soundManager";
+import PullToRefresh from "@/components/common/PullToRefresh";
 
 interface Puzzle {
   id: string;
