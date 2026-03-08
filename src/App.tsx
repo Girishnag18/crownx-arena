@@ -104,6 +104,7 @@ const RouteAnimator = () => {
           <Route path="/daily-rewards" element={<ProtectedRoute><DailyRewards /></ProtectedRoute>} />
           <Route path="/daily-spin" element={<ProtectedRoute><DailySpin /></ProtectedRoute>} />
           <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+          <Route path="/match-history" element={<ProtectedRoute><MatchHistoryPage /></ProtectedRoute>} />
           <Route path="/replay" element={<ProtectedRoute><Replay /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />

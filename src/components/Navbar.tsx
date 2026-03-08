@@ -64,7 +64,7 @@ const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: User, label: "Profile", to: "/profile" },
   { icon: Trophy, label: "Achievements", to: "/achievements" },
-  { icon: History, label: "Match History", to: "/dashboard?section=history" },
+  { icon: History, label: "Match History", to: "/match-history" },
   { icon: BarChart3, label: "Ratings", to: "/ratings" },
   { icon: Wallet, label: "Wallet", to: "/crown-topup" },
   { icon: Gift, label: "Daily Spin", to: "/daily-spin" },
