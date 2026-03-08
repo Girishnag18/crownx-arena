@@ -256,6 +256,9 @@ const Settings = () => {
           {/* Board Customization */}
           <BoardCustomizationSection />
 
+          {/* Notification Preferences */}
+          <NotificationPrefsSection />
+
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-4">
             <Zap className="w-3.5 h-3.5 text-primary" />
             Profile changes sync in real-time across all sessions
