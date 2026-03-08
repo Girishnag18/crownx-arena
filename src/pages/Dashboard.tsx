@@ -465,7 +465,7 @@ const Dashboard = () => {
               <motion.div variants={fadeUp} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm overflow-hidden">
                 <button
                   onClick={() => setWalletPanelOpen((prev) => !prev)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors"
+                  className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
