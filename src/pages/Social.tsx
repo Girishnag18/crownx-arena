@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight, Crown } from "lucide-react";
+import { Users, Circle, Swords, MessageCircle, Activity, Trophy, Clock, Loader2, Award, Share2, ChevronRight, Crown, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import DirectMessagePanel from "@/components/social/DirectMessagePanel";
 import CrownGiftDialog from "@/components/social/CrownGiftDialog";
+import FriendSearchPanel from "@/components/social/FriendSearchPanel";
+import PendingRequestsPanel from "@/components/social/PendingRequestsPanel";
 import { format } from "date-fns";
 
 interface FriendProfile {
@@ -38,6 +40,7 @@ const Social = () => {
   const [loading, setLoading] = useState(true);
   const [dmFriend, setDmFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
   const [giftFriend, setGiftFriend] = useState<{ id: string; username: string | null; avatar_url: string | null } | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
   const presenceRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
@@ -175,6 +178,26 @@ const Social = () => {
           <Share2 className="w-3.5 h-3.5" /> Refer a Friend — Earn 25 Crowns
           <ChevronRight className="w-3 h-3" />
         </button>
+      </div>
+
+      {/* Friend Search & Pending Requests */}
+      <div className="space-y-3">
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          className="flex items-center gap-2 text-xs font-display font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 border border-primary/20 px-3 py-2 rounded-lg"
+        >
+          {showSearch ? <Users className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
+          {showSearch ? "Hide Search" : "Find & Add Friends"}
+        </button>
+
+        {showSearch && (
+          <FriendSearchPanel
+            existingFriendIds={friends.map(f => f.id)}
+            onRequestSent={() => {}}
+          />
+        )}
+
+        <PendingRequestsPanel onUpdate={loadData} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
