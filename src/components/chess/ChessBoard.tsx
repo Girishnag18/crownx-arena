@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBoardSettings } from "@/contexts/BoardSettingsContext";
 import BoardSquare from "./BoardSquare";
 import BoardArrows from "./BoardArrows";
 
