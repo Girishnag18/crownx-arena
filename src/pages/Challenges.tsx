@@ -252,6 +252,7 @@ const Challenges = () => {
         </TabsContent>
       </Tabs>
       </div>
+      </PullToRefresh>
     </main>
   );
 };

@@ -369,6 +369,7 @@ const Shop = () => {
           </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
     </main>
   );
 };

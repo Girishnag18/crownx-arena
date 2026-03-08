@@ -178,6 +178,7 @@ const Achievements = () => {
 
         </motion.div>
       </div>
+      </PullToRefresh>
     </div>
   );
 };
