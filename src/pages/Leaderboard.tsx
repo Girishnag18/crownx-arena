@@ -49,6 +49,7 @@ const Leaderboard = () => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [players, setPlayers] = useState<LeaderboardPlayer[]>([]);
+  const [friendPlayers, setFriendPlayers] = useState<LeaderboardPlayer[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
   const [seasonEntries, setSeasonEntries] = useState<SeasonEntry[]>([]);
@@ -97,16 +98,43 @@ const Leaderboard = () => {
     })));
   };
 
+  const loadFriendsLeaderboard = async () => {
+    if (!user) return;
+    const { data: friendships } = await supabase
+      .from("friendships")
+      .select("requester_id, addressee_id")
+      .eq("status", "accepted")
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+
+    if (!friendships || friendships.length === 0) { setFriendPlayers([]); return; }
+
+    const friendIds = [...new Set(
+      (friendships as any[]).map(f => f.requester_id === user.id ? f.addressee_id : f.requester_id)
+    ), user.id]; // include self
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, avatar_url, crown_score, wins, losses")
+      .in("id", friendIds)
+      .order("crown_score", { ascending: false });
+
+    setFriendPlayers((data || []) as LeaderboardPlayer[]);
+  };
+
   useEffect(() => {
     loadLeaderboard();
     loadSeasons();
+    loadFriendsLeaderboard();
 
     const channel = supabase
       .channel("leaderboard-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, loadLeaderboard)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        loadLeaderboard();
+        loadFriendsLeaderboard();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (activeSeason) loadSeasonEntries(activeSeason.id);
@@ -145,8 +173,9 @@ const Leaderboard = () => {
       </div>
 
       <Tabs defaultValue="season" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 bg-secondary/40">
+        <TabsList className="w-full grid grid-cols-3 bg-secondary/40">
           <TabsTrigger value="season">🏆 Seasonal</TabsTrigger>
+          <TabsTrigger value="friends">👥 Friends</TabsTrigger>
           <TabsTrigger value="alltime">👑 All-Time</TabsTrigger>
         </TabsList>
 
@@ -255,6 +284,60 @@ const Leaderboard = () => {
               <p className="font-display font-bold">No Active Season</p>
               <p className="text-sm text-muted-foreground mt-1">A new season will start soon!</p>
             </div>
+          )}
+        </TabsContent>
+
+        {/* Friends Tab */}
+        <TabsContent value="friends" className="space-y-4 mt-4">
+          {friendPlayers.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="font-display font-bold">No Friends Yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Add friends to see how you stack up against them!</p>
+            </div>
+          ) : (
+            <>
+              {(() => {
+                const myFriendRank = friendPlayers.findIndex(p => p.id === user?.id);
+                return myFriendRank >= 0 ? (
+                  <div className="rounded-lg bg-primary/10 border border-primary/30 px-4 py-2 flex items-center justify-between text-sm">
+                    <span className="font-semibold">Your Rank Among Friends</span>
+                    <span className="text-primary font-bold">#{myFriendRank + 1} of {friendPlayers.length}</span>
+                  </div>
+                ) : null;
+              })()}
+              <div className="space-y-2">
+                {friendPlayers.map((p, idx) => (
+                  <motion.div
+                    layout
+                    key={p.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`rounded-xl border p-4 flex items-center justify-between ${
+                      idx < 3 ? PODIUM_STYLES[idx] : "border-border bg-card/60"
+                    } ${p.id === user?.id ? "ring-1 ring-primary" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 text-center font-bold text-sm">
+                        {idx < 3 ? PODIUM_ICONS[idx] : `#${idx + 1}`}
+                      </span>
+                      <Avatar className="w-8 h-8 border border-border/60">
+                        <AvatarImage src={p.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">{(p.username || "P")[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {p.username || "Player"}
+                          {p.id === user?.id && <span className="text-xs text-primary ml-1">(You)</span>}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{p.wins}W / {p.losses}L</p>
+                      </div>
+                    </div>
+                    <p className="text-lg font-bold text-primary">{p.crown_score}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
 
