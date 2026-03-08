@@ -493,13 +493,13 @@ const Play = () => {
             )}
 
             {/* Bottom player bar */}
-            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-3 rounded-lg border border-border/60 bg-secondary/20 px-2 sm:px-4 py-1.5 sm:py-2`}>
-              <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className={`w-full ${boardSizeClass} mt-1.5 sm:mt-2.5 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5`}>
+              <div className="flex items-center justify-between">
                 <PlayerLabel name={bottomPlayerName} avatarUrl={bottomAvatar} title={bottomTitle} />
-                <div className="flex items-center gap-1.5 sm:gap-3">
-                  <div className="flex gap-0.5 text-sm sm:text-lg" title="Pieces captured by this side">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex gap-0.5 text-sm sm:text-base opacity-80" title="Captured pieces">
                     {capturedPieces.capturedByWhite.length === 0
-                      ? <span className="text-[10px] sm:text-xs text-muted-foreground">—</span>
+                      ? <span className="text-[10px] text-muted-foreground/50">—</span>
                       : capturedPieces.capturedByWhite.slice(0, 8).map((piece, index) => <span key={`cap-white-${index}`}>{piece}</span>)}
                   </div>
                   {timeControl && (
@@ -515,20 +515,20 @@ const Play = () => {
 
             {/* Controls bar */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className={`mt-2 sm:mt-4 flex items-center justify-between w-full ${boardSizeClass}`}
+              className={`mt-2 sm:mt-3 flex items-center justify-between w-full ${boardSizeClass}`}
             >
               <div className={`flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold ${isInCheck ? "text-destructive" : "text-foreground"} min-w-0`}>
                 {!isOnline && (
-                  <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${game.turn() === "w" ? "bg-white border border-border" : "bg-gray-900"}`} />
+                  <div className={`w-3 h-3 rounded-full shrink-0 border ${game.turn() === "w" ? "bg-white border-border/60" : "bg-foreground/80 border-transparent"}`} />
                 )}
                 {(isOnline && online.pendingMove) && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />}
                 {isChess960 && <span className="text-primary flex items-center gap-0.5"><Shuffle className="w-3 h-3" />960</span>}
                 <span className="truncate">{gameStatus}</span>
               </div>
-              <div className="flex gap-1 sm:gap-2 shrink-0">
+              <div className="flex gap-1.5 shrink-0">
                 {isOnline && !online.isGameOver && (
                   <button
                     onClick={async () => {
@@ -538,29 +538,28 @@ const Play = () => {
                       setResignPending(false);
                     }}
                     disabled={resignPending}
-                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-destructive/30 transition-colors text-destructive disabled:opacity-60"
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-destructive/40 hover:bg-destructive/5 transition-all text-destructive disabled:opacity-60"
                     title="Resign"
                   >
                     {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
-                <button
-                  onClick={() => setShowArrows(!showArrows)}
-                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
-                  title={showArrows ? "Hide engine arrows" : "Show engine arrows"}
-                >
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
-                  className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
-                  title={soundEnabled ? "Mute sounds" : "Unmute sounds"}
-                >
-                  {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                </button>
+                {[
+                  { icon: ArrowUpRight, active: showArrows, toggle: () => setShowArrows(!showArrows), label: showArrows ? "Hide engine arrows" : "Show engine arrows" },
+                  { icon: soundEnabled ? Volume2 : VolumeX, active: false, toggle: () => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }, label: soundEnabled ? "Mute" : "Unmute" },
+                ].map(({ icon: Icon, active, toggle, label }) => (
+                  <button
+                    key={label}
+                    onClick={toggle}
+                    className={`rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-primary/30 hover:bg-primary/5 transition-all ${active ? "text-primary border-primary/30" : "text-muted-foreground"}`}
+                    title={label}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
+                ))}
                 <button
                   onClick={() => setStreamerMode(!streamerMode)}
-                  className={`glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors hidden sm:flex ${streamerMode ? "text-primary border-primary/40" : ""}`}
+                  className={`rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-primary/30 hover:bg-primary/5 transition-all hidden sm:flex ${streamerMode ? "text-primary border-primary/30" : "text-muted-foreground"}`}
                   title={streamerMode ? "Exit streamer mode" : "Streamer mode"}
                 >
                   <Monitor className="w-4 h-4" />
@@ -568,13 +567,15 @@ const Play = () => {
                 {!isOnline && (
                   <button
                     onClick={resetLocalGame}
-                    className="glass-card p-2 sm:px-3 sm:py-2 hover:border-primary/30 transition-colors"
+                    className="rounded-lg border border-border/40 bg-card/60 p-2 sm:px-3 sm:py-2 hover:border-primary/30 hover:bg-primary/5 transition-all text-muted-foreground"
                     title="New Game"
                   >
                     <RotateCcw className="w-4 h-4" />
                   </button>
                 )}
               </div>
+            </motion.div>
+          </div>
             </motion.div>
           </div>
 
