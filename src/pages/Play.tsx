@@ -683,8 +683,8 @@ const Play = () => {
             )}
 
             {/* Move History */}
-            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-4 sm:p-5">
-              <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
+            <div className="glass-card p-4 sm:p-5">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2">Move History</h3>
               <div className="max-h-64 overflow-y-auto space-y-0.5 text-sm font-mono">
                 {movePairs.length === 0 && (
                   <p className="text-xs text-muted-foreground italic">No moves yet</p>
