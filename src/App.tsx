@@ -87,9 +87,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Navbar />
-          
-          <RouteAnimator />
+          <BoardSettingsProvider>
+            <Navbar />
+            <RouteAnimator />
+          </BoardSettingsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
