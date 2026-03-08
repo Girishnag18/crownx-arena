@@ -36,6 +36,7 @@ import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import AchievementListener from "./components/gamification/AchievementListener";
+import StreakBanner from "./components/gamification/StreakBanner";
 
 
 const queryClient = new QueryClient();
