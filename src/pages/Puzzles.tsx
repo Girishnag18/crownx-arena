@@ -207,6 +207,14 @@ const Puzzles = () => {
     }
   }, [game, puzzle, moveIndex, status, user, stats, startTime, loadLeaderboard]);
 
+  const getDifficultyLevel = (rating: number): { label: string; color: string; bg: string } => {
+    if (rating <= 800) return { label: "Beginner", color: "text-emerald-400", bg: "bg-emerald-500/10" };
+    if (rating <= 1100) return { label: "Intermediate", color: "text-blue-400", bg: "bg-blue-500/10" };
+    if (rating <= 1400) return { label: "Advanced", color: "text-violet-400", bg: "bg-violet-500/10" };
+    if (rating <= 1700) return { label: "Expert", color: "text-orange-400", bg: "bg-orange-500/10" };
+    return { label: "Master", color: "text-primary", bg: "bg-primary/10" };
+  };
+
   const themeLabels: Record<string, string> = {
     "mate-in-1": "Mate in 1",
     "back-rank": "Back Rank",
