@@ -554,7 +554,7 @@ const Dashboard = () => {
                         View realtime Top 10 qualifiers
                       </button>
                       </div>
-                    )
+                    )}
 
                     {tournament.created_by === user?.id && tournament.status !== "cancelled" && (
                       <button onClick={() => cancelTournament(tournament)} className="text-[11px] px-2 py-1 rounded bg-destructive/10 text-destructive font-semibold">
