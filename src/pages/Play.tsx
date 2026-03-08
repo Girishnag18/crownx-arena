@@ -645,16 +645,80 @@ const Play = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="glass-card p-5 border-glow gold-glow text-center"
+                className="glass-card p-5 border-glow gold-glow text-center space-y-4"
               >
-                <Crown className="w-8 h-8 text-primary mx-auto mb-2" />
-                <p className="font-display font-bold text-lg mb-3">{gameStatus}</p>
-                <button
-                  onClick={isOnline ? () => navigate("/lobby") : resetLocalGame}
-                  className="bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg gold-glow hover:scale-105 transition-transform"
-                >
-                  {isOnline ? "BACK TO LOBBY" : "PLAY AGAIN"}
-                </button>
+                <Crown className="w-8 h-8 text-primary mx-auto mb-1" />
+                <p className="font-display font-bold text-lg">{gameStatus}</p>
+
+                {/* Stats summary */}
+                <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+                  <span>{displayMoves.length} moves</span>
+                  {timeControl && <span>Time: {timeControl.label}</span>}
+                  {isOnline && <span>{online.gameData?.game_mode?.replace("_", " ")}</span>}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-2">
+                  {isOnline ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          const params = new URLSearchParams();
+                          if (online.gameData?.game_mode) params.set("mode", online.gameData.game_mode);
+                          navigate(`/lobby?${params.toString()}`);
+                        }}
+                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        🔄 FIND NEW MATCH
+                      </button>
+                      <button
+                        onClick={() => setShowEngineReview(true)}
+                        className="w-full border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10 transition-colors"
+                      >
+                        📊 ANALYZE GAME
+                      </button>
+                      <button
+                        onClick={() => setShowAICoach(true)}
+                        className="w-full border border-border text-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                      >
+                        🧠 AI COACH REVIEW
+                      </button>
+                      <button
+                        onClick={() => navigate("/lobby")}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1.5"
+                      >
+                        Back to Lobby
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={resetLocalGame}
+                        className="w-full bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        🔄 REMATCH
+                      </button>
+                      <button
+                        onClick={() => setShowEngineReview(true)}
+                        className="w-full border border-primary/30 text-primary font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-primary/10 transition-colors"
+                      >
+                        📊 ANALYZE GAME
+                      </button>
+                      <button
+                        onClick={() => setShowAICoach(true)}
+                        className="w-full border border-border text-foreground font-display font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                      >
+                        🧠 AI COACH REVIEW
+                      </button>
+                      <button
+                        onClick={() => navigate("/lobby")}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1.5"
+                      >
+                        Play Online Instead
+                      </button>
+                    </>
+                  )}
+                </div>
               </motion.div>
             )}
 
