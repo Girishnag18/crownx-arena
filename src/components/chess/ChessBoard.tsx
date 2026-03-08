@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
 import BoardSquare from "./BoardSquare";
+import BoardArrows from "./BoardArrows";
 
 const PIECE_UNICODE: Record<string, string> = {
   wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
