@@ -324,6 +324,14 @@ const Profile = () => {
           )}
         </TabsContent>
 
+        <TabsContent value="history">
+          {user && <MatchHistory playerId={user.id} />}
+        </TabsContent>
+
+        <TabsContent value="achievements">
+          {user && <AchievementShowcase playerId={user.id} />}
+        </TabsContent>
+
         <TabsContent value="social">
           <section className="grid lg:grid-cols-3 gap-6">
             <div className="glass-card p-6 space-y-3">
