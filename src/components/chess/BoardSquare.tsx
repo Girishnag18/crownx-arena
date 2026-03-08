@@ -134,16 +134,20 @@ const BoardSquare = React.memo(({
 
       {/* Chess piece */}
       {hasPiece && (
-        moveAnimation ? (
+        moveAnimation && slideFrom ? (
           <motion.img
-            layout
-            initial={{ scale: 0.92, opacity: 0.85 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 18, mass: 0.6 }}
+            key={`slide-${slideAnimKey}`}
+            initial={{
+              x: `${slideFrom.dx * 100}%`,
+              y: `${slideFrom.dy * 100}%`,
+              scale: 1,
+            }}
+            animate={{ x: 0, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25, mass: 0.5 }}
             src={spriteUrl}
             alt={`${pieceColor === "w" ? "white" : "black"} ${pieceType}`}
             draggable={false}
-            className="w-[85%] h-[85%] object-contain select-none pointer-events-none relative z-[1]"
+            className="w-[85%] h-[85%] object-contain select-none pointer-events-none relative z-[2]"
             style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))" }}
           />
         ) : (

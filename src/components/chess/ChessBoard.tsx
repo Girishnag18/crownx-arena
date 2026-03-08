@@ -341,6 +341,21 @@ const ChessBoard = ({
             const isPremoveSquare = premove?.from === square || premove?.to === square;
             const isDragSource = dragState?.from === square;
 
+            // Calculate slide offset for the piece that just landed here
+            let slideFrom: { dx: number; dy: number } | undefined;
+            if (moveAnimation && lastMove && square === lastMove.to && !dragState) {
+              const fromFi = files.indexOf(lastMove.from[0]);
+              const fromRi = ranks.indexOf(lastMove.from[1]);
+              const toFi = fi;
+              const toRi = ri;
+              if (fromFi >= 0 && fromRi >= 0) {
+                slideFrom = {
+                  dx: (fromFi - toFi),
+                  dy: (fromRi - toRi),
+                };
+              }
+            }
+
             return (
               <BoardSquare
                 key={square}
@@ -358,6 +373,8 @@ const ChessBoard = ({
                 showFile={!streamerMode && ri === 7 ? file : undefined}
                 onClick={() => handleSquareClick(square)}
                 onTouchStart={(e) => handleTouchStart(e, square)}
+                slideFrom={slideFrom}
+                slideAnimKey={slideAnimKey}
               />
             );
           })
