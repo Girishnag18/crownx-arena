@@ -428,6 +428,7 @@ export const useOnlineGame = (gameId: string | null) => {
     resign,
     claimTimeout,
     acceptDraw,
+    abortGame,
     playerName: user
       ? (playerColor === "w" ? whitePlayer?.username : blackPlayer?.username) || "You"
       : "You",
