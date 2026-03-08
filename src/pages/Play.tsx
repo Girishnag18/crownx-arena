@@ -47,6 +47,11 @@ const Play = () => {
   const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const [streamerMode, setStreamerMode] = useState(false);
+  const [timeControl, setTimeControl] = useState<TimeControl | null>(() => {
+    const tc = searchParams.get("tc");
+    return tc ? TIME_CONTROLS.find((t) => t.label === tc) || null : null;
+  });
+  const [clockGameOver, setClockGameOver] = useState(false);
   const prevMoveCountRef = useRef(0);
 
   const online = useOnlineGame(onlineGameId);
