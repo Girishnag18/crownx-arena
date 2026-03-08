@@ -17,20 +17,19 @@ const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<PlayerNotification[]>([]);
 
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("player_notifications")
+      .select("id,title,message,kind,is_read,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(60);
+    setNotifications((data || []) as PlayerNotification[]);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
-
-    const loadNotifications = async () => {
-      const { data } = await (supabase as any)
-        .from("player_notifications")
-        .select("id,title,message,kind,is_read,created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(60);
-
-      setNotifications((data || []) as PlayerNotification[]);
-    };
-
     loadNotifications();
 
     const channel = supabase
