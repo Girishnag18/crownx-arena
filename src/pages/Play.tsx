@@ -418,6 +418,9 @@ const Play = () => {
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
                 arrows={showArrows ? engineArrows : []}
+                premovesEnabled={isOnline}
+                playerColor={isOnline ? online.playerColor : null}
+                streamerMode={streamerMode}
               />
             </motion.div>
 
