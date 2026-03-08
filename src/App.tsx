@@ -65,6 +65,7 @@ const RouteAnimator = () => {
           <Route path="/studies" element={<ProtectedRoute><Studies /></ProtectedRoute>} />
           <Route path="/openings" element={<ProtectedRoute><OpeningTrainer /></ProtectedRoute>} />
           <Route path="/analysis" element={<ProtectedRoute><PgnAnalysis /></ProtectedRoute>} />
+          <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />
           <Route path="/crown-topup" element={<ProtectedRoute><CrownTopup /></ProtectedRoute>} />
