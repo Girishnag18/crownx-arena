@@ -252,39 +252,58 @@ const Play = () => {
 
     const thinkDelay = aiConfig.thinkMs[0] + Math.random() * (aiConfig.thinkMs[1] - aiConfig.thinkMs[0]);
 
+    const pickWeighted = (candidates: Array<{ move: any; score: number }>) => {
+      // Add controlled noise and pick weighted by score
+      const noised = candidates.map(c => ({
+        ...c,
+        noisyScore: c.score + (Math.random() - 0.5) * aiConfig.noiseCP,
+      }));
+      noised.sort((a, b) => b.noisyScore - a.noisyScore);
+      // Always pick from topN candidates to maintain realism
+      const pool = noised.slice(0, Math.min(aiConfig.topN, noised.length));
+      // Weight towards best: exponential decay
+      const weights = pool.map((_, i) => Math.exp(-i * 0.8));
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * totalWeight;
+      for (let i = 0; i < pool.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return pool[i].move;
+      }
+      return pool[0].move;
+    };
+
     const makeAIMove = async () => {
       const moves = game.moves({ verbose: true });
       if (moves.length === 0) return;
 
-      // Random blunder: pick a random move instead of best
-      if (Math.random() < aiConfig.blunderChance) {
-        await new Promise(r => setTimeout(r, thinkDelay));
-        if (cancelled) return;
-        const pick = moves[Math.floor(Math.random() * moves.length)];
-        handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
-        setAiThinking(false);
-        return;
-      }
-
       if (aiConfig.useStockfish) {
-        // Use real Stockfish engine
         try {
-          const result = await stockfish.evaluate(game.fen(), aiConfig.depth);
-          const elapsed = performance.now();
+          // Evaluate top N moves by trying each and getting Stockfish eval
+          const startTime = performance.now();
+          const evaluations = await Promise.all(
+            moves.map(async (candidate) => {
+              const sim = new Chess(game.fen());
+              sim.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+              const ev = await stockfish.evaluate(sim.fen(), Math.max(6, aiConfig.depth - 4));
+              // Negate because eval is from opponent's perspective after our move
+              return { move: candidate, score: -ev.score };
+            })
+          );
+
+          const elapsed = performance.now() - startTime;
           const remaining = Math.max(0, thinkDelay - elapsed);
           await new Promise(r => setTimeout(r, remaining));
           if (cancelled) return;
-          
-          const bestMove = result.bestMove;
-          if (bestMove && bestMove.length >= 4) {
-            const from = bestMove.slice(0, 2) as Square;
-            const to = bestMove.slice(2, 4) as Square;
-            const promotion = bestMove.length > 4 ? bestMove[4] : undefined;
-            handleLocalMove(from, to, promotion);
-          }
+
+          evaluations.sort((a, b) => b.score - a.score);
+          const pick = pickWeighted(evaluations);
+          handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
         } catch {
-          // Fallback to random legal move
-          const pick = moves[Math.floor(Math.random() * moves.length)];
+          // Fallback: pick a reasonable move
+          await new Promise(r => setTimeout(r, thinkDelay));
+          if (cancelled) return;
+          const captures = moves.filter(m => m.captured);
+          const pick = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
           handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
         }
       } else {
@@ -301,9 +320,7 @@ const Play = () => {
           };
         }).sort((a, b) => b.score - a.score);
 
-        // Pick from top 3 for more variety in beginner
-        const window = Math.min(3, evaluated.length);
-        const pick = evaluated[Math.floor(Math.random() * window)].move;
+        const pick = pickWeighted(evaluated);
         handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
       }
 
