@@ -576,8 +576,8 @@ const Play = () => {
               </div>
             </motion.div>
           </div>
-            </motion.div>
-          </div>
+
+
 
           {/* Side panel */}
           <motion.div
