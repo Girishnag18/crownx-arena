@@ -127,6 +127,7 @@ Deno.serve(async (req) => {
         game_mode,
         rating: playerRating,
         duration_seconds: duration_seconds ?? null,
+        increment_seconds: increment_seconds ?? null,
       }, { onConflict: 'player_id' });
 
     if (queueError) {
