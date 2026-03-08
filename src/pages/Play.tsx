@@ -215,35 +215,77 @@ const Play = () => {
     }
   }, [isOnline, online.isGameOver]);
 
+  // AI move logic — uses Stockfish for intermediate/advanced, minimax fallback for beginner
   useEffect(() => {
     if (!isComputerGame || isGameOver) return;
     if (game.turn() !== computerColor) return;
 
-    const timer = window.setTimeout(() => {
+    let cancelled = false;
+    setAiThinking(true);
+
+    const thinkDelay = aiConfig.thinkMs[0] + Math.random() * (aiConfig.thinkMs[1] - aiConfig.thinkMs[0]);
+
+    const makeAIMove = async () => {
       const moves = game.moves({ verbose: true });
       if (moves.length === 0) return;
-      const searchDepth = aiAccuracy >= 95 ? 3 : 2;
-      const evaluated = moves.map((candidate) => {
-        const simulated = new Chess(game.fen());
-        simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
-        return {
-          move: candidate,
-          score: searchBestMove(simulated, searchDepth, -Infinity, Infinity, false),
-        };
-      }).sort((a, b) => b.score - a.score);
 
-      const bestWindow = Math.max(1, Math.ceil(((100 - aiAccuracy) / 140) * Math.min(3, evaluated.length)));
-      const pick = evaluated[Math.floor(Math.random() * bestWindow)].move;
-      handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
-    }, 350);
+      // Random blunder: pick a random move instead of best
+      if (Math.random() < aiConfig.blunderChance) {
+        await new Promise(r => setTimeout(r, thinkDelay));
+        if (cancelled) return;
+        const pick = moves[Math.floor(Math.random() * moves.length)];
+        handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+        setAiThinking(false);
+        return;
+      }
 
-    return () => window.clearTimeout(timer);
-  }, [aiAccuracy, computerColor, game, handleLocalMove, isComputerGame, isGameOver, searchBestMove]);
+      if (aiConfig.useStockfish) {
+        // Use real Stockfish engine
+        try {
+          const result = await stockfish.evaluate(game.fen(), aiConfig.depth);
+          const elapsed = performance.now();
+          const remaining = Math.max(0, thinkDelay - elapsed);
+          await new Promise(r => setTimeout(r, remaining));
+          if (cancelled) return;
+          
+          const bestMove = result.bestMove;
+          if (bestMove && bestMove.length >= 4) {
+            const from = bestMove.slice(0, 2) as Square;
+            const to = bestMove.slice(2, 4) as Square;
+            const promotion = bestMove.length > 4 ? bestMove[4] : undefined;
+            handleLocalMove(from, to, promotion);
+          }
+        } catch {
+          // Fallback to random legal move
+          const pick = moves[Math.floor(Math.random() * moves.length)];
+          handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+        }
+      } else {
+        // Beginner: use minimax with low depth
+        await new Promise(r => setTimeout(r, thinkDelay));
+        if (cancelled) return;
 
-  useEffect(() => {
-    if (!isComputerGame || isGameOver) return;
-    setAiAccuracy(Math.floor(Math.random() * 11) + 88);
-  }, [game, isComputerGame, isGameOver]);
+        const evaluated = moves.map((candidate) => {
+          const simulated = new Chess(game.fen());
+          simulated.move({ from: candidate.from, to: candidate.to, promotion: candidate.promotion });
+          return {
+            move: candidate,
+            score: searchBestMove(simulated, aiConfig.depth, -Infinity, Infinity, false),
+          };
+        }).sort((a, b) => b.score - a.score);
+
+        // Pick from top 3 for more variety in beginner
+        const window = Math.min(3, evaluated.length);
+        const pick = evaluated[Math.floor(Math.random() * window)].move;
+        handleLocalMove(pick.from as Square, pick.to as Square, pick.promotion);
+      }
+
+      setAiThinking(false);
+    };
+
+    makeAIMove();
+    return () => { cancelled = true; };
+  }, [computerColor, game, handleLocalMove, isComputerGame, isGameOver, searchBestMove, aiConfig]);
 
   // Sound effects for moves
   useEffect(() => {
