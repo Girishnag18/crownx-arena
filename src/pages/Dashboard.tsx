@@ -119,6 +119,7 @@ const Dashboard = () => {
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
+  const [recentTournamentsList, setRecentTournamentsList] = useState<RecentTournamentRow[]>([]);
   const [showCreateTournament, setShowCreateTournament] = useState(false);
   const [promotion, setPromotion] = useState<{ oldRank: string; newRank: string } | null>(null);
   const prevRankRef = useRef<string | null>(null);
