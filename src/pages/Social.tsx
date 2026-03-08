@@ -308,6 +308,7 @@ const Social = () => {
           <CrownGiftDialog friend={giftFriend} onClose={() => setGiftFriend(null)} />
         )}
       </AnimatePresence>
+      </div>
     </main>
   );
 };
