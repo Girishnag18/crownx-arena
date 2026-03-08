@@ -28,23 +28,30 @@ interface AchievementsPanelProps {
   gamesPlayed?: number;
 }
 
-// Achievement unlock conditions
-const UNLOCK_CONDITIONS: Record<string, (stats: AchievementsPanelProps) => boolean> = {
-  first_game: (s) => (s.gamesPlayed || 0) >= 1,
-  win_5: (s) => (s.wins || 0) >= 5,
-  win_25: (s) => (s.wins || 0) >= 25,
-  win_100: (s) => (s.wins || 0) >= 100,
-  streak_3: (s) => (s.winStreak || 0) >= 3,
-  streak_5: (s) => (s.winStreak || 0) >= 5,
-  streak_10: (s) => (s.winStreak || 0) >= 10,
-  puzzle_10: (s) => (s.puzzlesSolved || 0) >= 10,
-  puzzle_50: (s) => (s.puzzlesSolved || 0) >= 50,
-  puzzle_100: (s) => (s.puzzlesSolved || 0) >= 100,
-  elo_500: (s) => (s.crownScore || 0) >= 500,
-  elo_800: (s) => (s.crownScore || 0) >= 800,
-  elo_1200: (s) => (s.crownScore || 0) >= 1200,
-  elo_1600: (s) => (s.crownScore || 0) >= 1600,
+// Achievement unlock conditions & progress targets
+const ACHIEVEMENT_TARGETS: Record<string, { getter: (s: AchievementsPanelProps) => number; target: number }> = {
+  first_game: { getter: (s) => s.gamesPlayed || 0, target: 1 },
+  win_5: { getter: (s) => s.wins || 0, target: 5 },
+  win_25: { getter: (s) => s.wins || 0, target: 25 },
+  win_100: { getter: (s) => s.wins || 0, target: 100 },
+  streak_3: { getter: (s) => s.winStreak || 0, target: 3 },
+  streak_5: { getter: (s) => s.winStreak || 0, target: 5 },
+  streak_10: { getter: (s) => s.winStreak || 0, target: 10 },
+  puzzle_10: { getter: (s) => s.puzzlesSolved || 0, target: 10 },
+  puzzle_50: { getter: (s) => s.puzzlesSolved || 0, target: 50 },
+  puzzle_100: { getter: (s) => s.puzzlesSolved || 0, target: 100 },
+  elo_500: { getter: (s) => s.crownScore || 0, target: 500 },
+  elo_800: { getter: (s) => s.crownScore || 0, target: 800 },
+  elo_1200: { getter: (s) => s.crownScore || 0, target: 1200 },
+  elo_1600: { getter: (s) => s.crownScore || 0, target: 1600 },
 };
+
+const UNLOCK_CONDITIONS: Record<string, (stats: AchievementsPanelProps) => boolean> = Object.fromEntries(
+  Object.entries(ACHIEVEMENT_TARGETS).map(([key, { getter, target }]) => [
+    key,
+    (s: AchievementsPanelProps) => getter(s) >= target,
+  ])
+);
 
 const AchievementsPanel = ({ wins = 0, winStreak = 0, puzzlesSolved = 0, crownScore = 0, gamesPlayed = 0 }: AchievementsPanelProps) => {
   const { user } = useAuth();
