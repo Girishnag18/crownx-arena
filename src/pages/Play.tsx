@@ -396,13 +396,25 @@ const Play = () => {
     ? (online.playerColor === "w" ? online.whitePlayer?.avatar_url : online.blackPlayer?.avatar_url)
     : null;
 
-  const PlayerLabel = ({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) => (
+  const topTitle = isOnline
+    ? (online.playerColor === "w" ? online.blackPlayer?.equippedTitle : online.whitePlayer?.equippedTitle)
+    : null;
+  const bottomTitle = isOnline
+    ? (online.playerColor === "w" ? online.whitePlayer?.equippedTitle : online.blackPlayer?.equippedTitle)
+    : null;
+
+  const PlayerLabel = ({ name, avatarUrl, title }: { name: string; avatarUrl?: string | null; title?: { name: string; icon: string } | null }) => (
     <div className="flex items-center gap-2">
       <Avatar className="w-7 h-7 border border-border/70">
         <AvatarImage src={avatarUrl || undefined} alt={name} />
         <AvatarFallback className="text-[10px] bg-secondary">{name.slice(0, 1)}</AvatarFallback>
       </Avatar>
       <span className="font-display font-bold">{name}</span>
+      {title && (
+        <span className="text-[10px] text-yellow-400 font-semibold bg-yellow-400/10 px-1.5 py-0.5 rounded-full">
+          {title.icon} {title.name}
+        </span>
+      )}
     </div>
   );
 
