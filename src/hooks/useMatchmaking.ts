@@ -92,7 +92,7 @@ export const useMatchmaking = () => {
     }, 3000);
   }, [clearSearchState, user]);
 
-  const startSearch = useCallback(async (gameMode = "quick_play", durationSeconds: number | null = null) => {
+  const startSearch = useCallback(async (gameMode = "quick_play", durationSeconds: number | null = null, incrementSeconds: number | null = null) => {
     if (!user) return;
 
     searchStartedAt.current = new Date().toISOString();
@@ -104,7 +104,7 @@ export const useMatchmaking = () => {
       attachRealtimeGameListener(durationSeconds);
 
       const { data, error: fnError } = await supabase.functions.invoke("matchmake", {
-        body: { game_mode: gameMode, duration_seconds: durationSeconds },
+        body: { game_mode: gameMode, duration_seconds: durationSeconds, increment_seconds: incrementSeconds },
       });
 
       if (fnError) throw fnError;
