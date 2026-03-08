@@ -63,6 +63,13 @@ Deno.serve(async (req) => {
       candidatesQuery = candidatesQuery.eq('duration_seconds', duration_seconds);
     }
 
+    // Filter by increment_seconds
+    if (increment_seconds === null) {
+      candidatesQuery = candidatesQuery.is('increment_seconds', null);
+    } else {
+      candidatesQuery = candidatesQuery.eq('increment_seconds', increment_seconds);
+    }
+
     const { data: candidates } = await candidatesQuery;
 
     if (candidates && candidates.length > 0) {
