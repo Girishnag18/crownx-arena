@@ -324,11 +324,15 @@ const ChessBoard = ({
         </div>
       )}
 
-      <div
+      <motion.div
         ref={boardRef}
         className={boardClasses}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        animate={isInCheck ? {
+          x: [0, -3, 3, -2, 2, -1, 1, 0],
+        } : { x: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <BoardArrows arrows={arrows} flipped={flipped} />
         {ranks.map((rank, ri) =>
@@ -379,7 +383,7 @@ const ChessBoard = ({
             );
           })
         )}
-      </div>
+      </motion.div>
 
       {/* Drag ghost piece */}
       {dragState && (
