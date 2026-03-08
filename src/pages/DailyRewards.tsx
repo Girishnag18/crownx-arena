@@ -106,7 +106,7 @@ const DailyRewards = () => {
             >
               <Flame className="w-8 h-8 text-orange-500" />
             </motion.div>
-            <h1 className="font-display text-3xl font-bold">Daily Rewards</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold">Daily Rewards</h1>
             <p className="text-sm text-muted-foreground mt-1">Log in every day to earn escalating Crown bonuses</p>
           </div>
 
