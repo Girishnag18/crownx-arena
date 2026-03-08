@@ -25,6 +25,7 @@ import Profile from "./pages/Profile";
 import Spectate from "./pages/Spectate";
 import TournamentDetail from "./pages/TournamentDetail";
 import Puzzles from "./pages/Puzzles";
+import Studies from "./pages/Studies";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 
@@ -58,6 +59,7 @@ const RouteAnimator = () => {
           <Route path="/lobby" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
           <Route path="/spectate" element={<ProtectedRoute><Spectate /></ProtectedRoute>} />
           <Route path="/puzzles" element={<ProtectedRoute><Puzzles /></ProtectedRoute>} />
+          <Route path="/studies" element={<ProtectedRoute><Studies /></ProtectedRoute>} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/tournament/:id" element={<ProtectedRoute><TournamentDetail /></ProtectedRoute>} />
           <Route path="/crown-topup" element={<ProtectedRoute><CrownTopup /></ProtectedRoute>} />
