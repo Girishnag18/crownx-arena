@@ -507,6 +507,32 @@ const Dashboard = () => {
                 </motion.div>
               )}
 
+              {/* Placement Badge */}
+              {profile && profile.games_played < 10 && (
+                <motion.div variants={fadeUp}>
+                  <PlacementBadge gamesPlayed={profile.games_played} />
+                </motion.div>
+              )}
+
+              {/* Daily Spin */}
+              <motion.div variants={fadeUp}>
+                <button
+                  onClick={() => navigate("/daily-spin")}
+                  className="w-full rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 p-4 text-left group transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                      <Gift className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display font-bold text-xs">Daily Spin</p>
+                      <p className="text-[10px] text-muted-foreground">Free daily Crown rewards</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
+                  </div>
+                </button>
+              </motion.div>
+
               {/* Daily Puzzle */}
               <motion.div variants={fadeUp}>
                 <DailyPuzzleCard />
