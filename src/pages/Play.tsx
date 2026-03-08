@@ -22,11 +22,37 @@ import { stockfish } from "@/services/stockfishService";
 
 type AIDifficulty = "beginner" | "intermediate" | "advanced";
 
-const AI_CONFIG: Record<AIDifficulty, { depth: number; eloLabel: string; thinkMs: [number, number]; useStockfish: boolean; blunderChance: number }> = {
+interface AILevelConfig { depth: number; eloLabel: string; thinkMs: [number, number]; useStockfish: boolean; blunderChance: number }
+
+const AI_CONFIG: Record<AIDifficulty, AILevelConfig> = {
   beginner:     { depth: 2,  eloLabel: "~600",  thinkMs: [200, 600],  useStockfish: false, blunderChance: 0.35 },
   intermediate: { depth: 10, eloLabel: "~1200", thinkMs: [400, 1200], useStockfish: true,  blunderChance: 0.12 },
   advanced:     { depth: 16, eloLabel: "~2000", thinkMs: [600, 1800], useStockfish: true,  blunderChance: 0.02 },
 };
+
+const STREAK_KEY = "chess_ai_streak"; // positive = player winning streak, negative = losing streak
+
+function getAdaptiveConfig(base: AILevelConfig, streak: number): AILevelConfig {
+  // Player on a win streak → AI gets harder (less blunders, more depth)
+  // Player on a lose streak → AI gets easier (more blunders, less depth)
+  const clampedStreak = Math.max(-5, Math.min(5, streak));
+  const blunderAdj = clampedStreak * -0.04; // win streak → fewer blunders; lose streak → more
+  const depthAdj = Math.round(clampedStreak * 1); // ±1 depth per streak game
+
+  return {
+    ...base,
+    depth: Math.max(1, Math.min(20, base.depth + depthAdj)),
+    blunderChance: Math.max(0.01, Math.min(0.6, base.blunderChance + blunderAdj)),
+  };
+}
+
+function loadStreak(): number {
+  try { return parseInt(localStorage.getItem(STREAK_KEY) || "0") || 0; } catch { return 0; }
+}
+
+function saveStreak(streak: number) {
+  try { localStorage.setItem(STREAK_KEY, String(streak)); } catch {}
+}
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
@@ -38,10 +64,11 @@ const Play = () => {
   const variant = searchParams.get("variant");
   const isChess960 = variant === "chess960";
   const difficulty = (searchParams.get("difficulty") as AIDifficulty) || "intermediate";
-  const aiConfig = AI_CONFIG[difficulty] || AI_CONFIG.intermediate;
+  const [aiStreak, setAiStreak] = useState(loadStreak);
+  const aiConfig = useMemo(() => getAdaptiveConfig(AI_CONFIG[difficulty] || AI_CONFIG.intermediate, aiStreak), [difficulty, aiStreak]);
   const { profile } = useAuth();
   const playerElo = profile?.crown_score || 400;
-  const aiElo = isRankedAI ? playerElo + 20 : parseInt(aiConfig.eloLabel.replace("~", ""));
+  const aiElo = isRankedAI ? playerElo + 20 : parseInt((AI_CONFIG[difficulty] || AI_CONFIG.intermediate).eloLabel.replace("~", ""));
 
   const [chess960Fen] = useState(() => isChess960 ? generateChess960Fen() : null);
   const [localGame, setLocalGame] = useState(() => new Chess(chess960Fen || undefined));
