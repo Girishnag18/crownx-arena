@@ -531,6 +531,37 @@ const Play = () => {
     });
   }, [user]);
 
+  const handleRequestTakeback = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setTakebackState("sent");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "takeback_request",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
+  const handleAcceptTakeback = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setTakebackState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "takeback_accept",
+      payload: { from: user.id },
+    });
+    await online.performTakeback();
+  }, [user, online]);
+
+  const handleDeclineTakeback = useCallback(async () => {
+    if (!rematchChannelRef.current || !user) return;
+    setTakebackState("idle");
+    await rematchChannelRef.current.send({
+      type: "broadcast",
+      event: "takeback_decline",
+      payload: { from: user.id },
+    });
+  }, [user]);
+
   const streakUpdatedRef = useRef(false);
   useEffect(() => {
     if (!isComputerGame || streakUpdatedRef.current) return;
