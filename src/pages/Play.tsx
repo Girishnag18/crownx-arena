@@ -576,7 +576,8 @@ const Play = () => {
         return won ? "Opponent ran out of time — You win!" : "You ran out of time";
       }
       if (rt === "stalemate") return "Stalemate — Draw";
-      if (rt === "draw") return "Draw";
+      if (rt === "draw") return "Draw by agreement";
+      if (rt === "aborted") return "Game aborted";
       if (rt === "in_progress") {
         if (clockGameOver) {
           const timedOutSide = (onlineClockWhiteMs ?? 1) <= 0 ? "w" : "b";
