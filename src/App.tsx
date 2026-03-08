@@ -35,6 +35,7 @@ import Tutorial from "./pages/Tutorial";
 import Clubs from "./pages/Clubs";
 import Social from "./pages/Social";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import AchievementListener from "./components/gamification/AchievementListener";
 
 
 const queryClient = new QueryClient();
