@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Crown, ShoppingBag, Check, Sparkles, Loader2, Star } from "lucide-react";
+import BackButton from "@/components/common/BackButton";
 
 interface ShopItem {
   id: string;
@@ -251,6 +252,7 @@ const Shop = () => {
       </div>
 
       <div className="container max-w-4xl relative z-10 space-y-5">
+        <BackButton label="Back" />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}

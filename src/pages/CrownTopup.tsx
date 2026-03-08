@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Crown, Gift, Loader2, Puzzle, Swords, Target, Trophy, Wallet, Zap } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Crown, Gift, Loader2, Puzzle, ShoppingBag, Swords, Target, Trophy, Wallet, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import BackButton from "@/components/common/BackButton";
 
 interface WalletProfile {
   wallet_crowns: number;
@@ -67,6 +68,7 @@ const CrownTopup = () => {
       </div>
 
       <div className="container mx-auto max-w-2xl relative z-10 space-y-6">
+        <BackButton label="Back" to="/dashboard" />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -128,6 +130,29 @@ const CrownTopup = () => {
               </motion.button>
             ))}
           </div>
+        </motion.div>
+
+        {/* Link to Crown Store */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Link
+            to="/shop"
+            className="glass-card border-glow p-5 flex items-center justify-between group hover:border-primary/30 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+                <ShoppingBag className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-display font-bold text-sm">Crown Store</div>
+                <div className="text-xs text-muted-foreground">Spend crowns on titles, frames, badges & board themes</div>
+              </div>
+            </div>
+            <Zap className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </Link>
         </motion.div>
       </div>
     </div>

@@ -141,6 +141,7 @@ const Navbar = () => {
     { to: "/lobby", label: "Play" },
     { to: "/puzzles", label: "Puzzles" },
     { to: "/dashboard", label: "Arena" },
+    { to: "/shop", label: "Store" },
     { to: "/social", label: "Social" },
   ];
   const visibleDesktopLinks = user ? desktopLinks : [{ to: "/", label: "Home" }];
