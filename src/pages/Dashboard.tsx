@@ -78,6 +78,7 @@ const Dashboard = () => {
   const [newMaxRegistrations, setNewMaxRegistrations] = useState("128");
   const [newStartsAt, setNewStartsAt] = useState("");
   const [createTournamentLoading, setCreateTournamentLoading] = useState(false);
+  const [newTournamentType, setNewTournamentType] = useState("swiss");
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
   const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
   const [walletPanelOpen, setWalletPanelOpen] = useState(false);
