@@ -13,6 +13,11 @@ interface GameData {
   moves: any[];
   result_type: string;
   winner_id: string | null;
+  duration_seconds: number | null;
+  increment_seconds: number | null;
+  white_time_ms: number | null;
+  black_time_ms: number | null;
+  last_move_at: string | null;
 }
 
 interface PlayerSummary {
