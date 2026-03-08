@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Save, Mail, KeyRound, Loader2, User, Zap, ArrowLeft, Palette, Volume2, VolumeX } from "lucide-react";
+import { Save, Mail, KeyRound, Loader2, User, Zap, ArrowLeft, Palette, Volume2, VolumeX, Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { uploadAvatarImage } from "@/lib/avatar";
 import { useBoardSettings, BOARD_THEMES, PIECE_SETS } from "@/contexts/BoardSettingsContext";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 
 const Settings = () => {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -255,6 +256,9 @@ const Settings = () => {
           {/* Board Customization */}
           <BoardCustomizationSection />
 
+          {/* Notification Preferences */}
+          <NotificationPrefsSection />
+
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-4">
             <Zap className="w-3.5 h-3.5 text-primary" />
             Profile changes sync in real-time across all sessions
@@ -338,6 +342,30 @@ const BoardCustomizationSection = () => {
           <Label className="cursor-pointer">Board Coordinates</Label>
           <Switch checked={showCoordinates} onCheckedChange={setShowCoordinates} />
         </div>
+      </div>
+    </div>
+  );
+};
+
+const NotificationPrefsSection = () => {
+  const { prefs, toggle, categories } = useNotificationPrefs();
+
+  return (
+    <div className="glass-card p-6 mb-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Bell className="w-5 h-5 text-primary" />
+        <h3 className="font-display text-lg font-bold">Notification Preferences</h3>
+      </div>
+      <p className="text-xs text-muted-foreground">Choose which notifications show as pop-up toasts. All notifications still appear in the bell menu.</p>
+      <div className="space-y-3">
+        {categories.map((cat) => (
+          <div key={cat.key} className="flex items-center justify-between">
+            <Label className="cursor-pointer flex items-center gap-2">
+              <span>{cat.icon}</span> {cat.label}
+            </Label>
+            <Switch checked={prefs[cat.key] !== false} onCheckedChange={() => toggle(cat.key)} />
+          </div>
+        ))}
       </div>
     </div>
   );
