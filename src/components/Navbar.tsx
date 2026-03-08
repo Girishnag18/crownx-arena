@@ -66,8 +66,10 @@ const profileMenuItems = [
   { icon: Trophy, label: "Achievements", to: "/achievements" },
   { icon: History, label: "Match History", to: "/dashboard?section=history" },
   { icon: BarChart3, label: "Ratings", to: "/ratings" },
-  { icon: Settings, label: "Settings", to: "/settings" },
   { icon: Wallet, label: "Wallet", to: "/crown-topup" },
+  { icon: Gift, label: "Daily Spin", to: "/daily-spin" },
+  { icon: Puzzle, label: "Daily Puzzle", to: "/puzzles" },
+  { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 interface NavbarProfile {

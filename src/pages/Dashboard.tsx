@@ -342,45 +342,6 @@ const Dashboard = () => {
             {/* ── LEFT ── */}
             <div className="lg:col-span-4 space-y-3">
 
-              {/* Wallet + Daily Spin + Daily Puzzle */}
-              <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
-                <button onClick={() => setWalletPanelOpen((v) => !v)} className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-secondary/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={sectionIcon}><Wallet className="w-3.5 h-3.5 text-primary" /></div>
-                    <div>
-                      <p className="font-display font-bold text-sm">Wallet</p>
-                      <p className="text-[10px] text-muted-foreground">{Number(profile?.wallet_crowns || 0).toFixed(0)} Crowns</p>
-                    </div>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${walletPanelOpen ? "rotate-180" : ""}`} />
-                </button>
-                {walletPanelOpen && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} transition={{ duration: 0.2 }} className="border-t border-border/15 px-4 py-3 space-y-2 bg-secondary/5">
-                    <div className="flex items-center gap-2 text-base font-display font-bold">
-                      <Crown className="w-4 h-4 text-primary" />{Number(profile?.wallet_crowns || 0).toFixed(2)} Crowns
-                    </div>
-                    <button onClick={() => navigate("/crown-topup")} className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-display font-bold tracking-wider hover:opacity-90 transition-opacity">Top Up</button>
-                  </motion.div>
-                )}
-
-                {/* Daily Spin */}
-                <button onClick={() => navigate("/daily-spin")} className="w-full px-4 py-3 flex items-center justify-between text-left border-t border-border/15 hover:bg-secondary/10 transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className={sectionIcon}><Gift className="w-3.5 h-3.5 text-primary" /></div>
-                    <div>
-                      <p className="font-display font-bold text-xs">Daily Spin</p>
-                      <p className="text-[10px] text-muted-foreground">Free Crown rewards</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                </button>
-
-                {/* Daily Puzzle */}
-                <div className="border-t border-border/15">
-                  <DailyPuzzleCard />
-                </div>
-              </motion.div>
-
               {/* Global Rank */}
               {globalRank !== null && (
                 <motion.div variants={fadeUp} className={`${card} p-4`}>
