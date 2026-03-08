@@ -154,6 +154,27 @@ const Navbar = () => {
 
   return (
     <>
+      {/* Logging out overlay */}
+      <AnimatePresence>
+        {loggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="font-display font-bold text-lg text-foreground">Logging out…</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <motion.nav
         initial={{ y: -80 }}
         animate={{ y: 0 }}
