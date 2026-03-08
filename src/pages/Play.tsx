@@ -411,6 +411,7 @@ const Play = () => {
                 lastMove={derivedLastMove}
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
+                arrows={showArrows ? engineArrows : []}
               />
             </motion.div>
 
