@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { motion, AnimatePresence } from "framer-motion";
 import BoardSquare from "./BoardSquare";
+import BoardArrows from "./BoardArrows";
 
 const PIECE_UNICODE: Record<string, string> = {
   wp: "♙", wn: "♘", wb: "♗", wr: "♖", wq: "♕", wk: "♔",
@@ -19,9 +20,10 @@ interface ChessBoardProps {
   lastMove?: { from: Square; to: Square } | null;
   sizeClassName?: string;
   maxBoardSizePx?: number;
+  arrows?: Array<{ from: string; to: string; color?: string }>;
 }
 
-const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName, maxBoardSizePx }: ChessBoardProps) => {
+const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove, sizeClassName, maxBoardSizePx, arrows = [] }: ChessBoardProps) => {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
@@ -119,7 +121,8 @@ const ChessBoard = ({ game, onMove, flipped = false, disabled = false, lastMove,
         )}
       </AnimatePresence>
 
-      <div className="chess-board-shell grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl">
+      <div className="chess-board-shell relative grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-glass-border/60 shadow-2xl">
+        <BoardArrows arrows={arrows} flipped={flipped} />
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
             const square = (file + rank) as Square;

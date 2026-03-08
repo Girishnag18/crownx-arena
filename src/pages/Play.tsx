@@ -1,15 +1,17 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSkillLevel } from "@/components/ProfileCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOnlineGame } from "@/hooks/useOnlineGame";
 import ChessBoard from "@/components/chess/ChessBoard";
 import GameReview from "@/components/chess/GameReview";
+import OpeningExplorer from "@/components/chess/OpeningExplorer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
+import { stockfish } from "@/services/stockfishService";
 
 const Play = () => {
   const { user, loading: authLoading } = useAuth();
@@ -35,6 +37,8 @@ const Play = () => {
   const [showPostGameReview, setShowPostGameReview] = useState(false);
   const [showEngineReview, setShowEngineReview] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [engineArrows, setEngineArrows] = useState<Array<{ from: string; to: string; color?: string }>>([]);
+  const [showArrows, setShowArrows] = useState(true);
   const [localBottomColor, setLocalBottomColor] = useState<"w" | "b">("w");
   const prevMoveCountRef = useRef(0);
 
@@ -227,6 +231,23 @@ const Play = () => {
     prevMoveCountRef.current = currentMoves;
   }, [game, isOnline, online.gameData?.moves, moveHistory.length]);
 
+  // Engine best-move arrow
+  useEffect(() => {
+    if (!showArrows || isGameOver) {
+      setEngineArrows([]);
+      return;
+    }
+    let cancelled = false;
+    const fen = game.fen();
+    stockfish.getBestMove(fen, 10).then((bestMove) => {
+      if (cancelled || !bestMove || bestMove.length < 4) return;
+      const from = bestMove.slice(0, 2);
+      const to = bestMove.slice(2, 4);
+      setEngineArrows([{ from, to }]);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [game, showArrows, isGameOver]);
+
   useEffect(() => {
     if (!game.isCheckmate()) {
       setShowCheckmateBanner(false);
@@ -390,6 +411,7 @@ const Play = () => {
                 lastMove={derivedLastMove}
                 sizeClassName={boardSizeClass}
                 maxBoardSizePx={maxBoardSizePx || undefined}
+                arrows={showArrows ? engineArrows : []}
               />
             </motion.div>
 
@@ -451,6 +473,13 @@ const Play = () => {
                     {resignPending ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
                   </button>
                 )}
+                <button
+                  onClick={() => setShowArrows(!showArrows)}
+                  className={`glass-card px-3 py-2 hover:border-primary/30 transition-colors ${showArrows ? "text-primary" : ""}`}
+                  title={showArrows ? "Hide engine arrows" : "Show engine arrows"}
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => { setSoundEnabled(!soundEnabled); soundManager.setEnabled(!soundEnabled); }}
                   className="glass-card px-3 py-2 hover:border-primary/30 transition-colors"
@@ -518,6 +547,8 @@ const Play = () => {
                 </button>
               )}
             </div>
+
+            <OpeningExplorer moves={displayMoves} />
 
             <div className="glass-card p-5">
               <h3 className="font-display font-bold text-sm mb-3">Move History</h3>
