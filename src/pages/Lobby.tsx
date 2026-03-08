@@ -187,6 +187,7 @@ const Lobby = () => {
   }, [joinCode, mode]);
 
   const durationFromTC = selectedTimeControl ? selectedTimeControl.initialSeconds : null;
+  const incrementFromTC = selectedTimeControl ? selectedTimeControl.incrementSeconds : null;
 
   const gameModes = [
     { id: "quick_play" as Mode, icon: Swords, title: "Quick Play", desc: "Instant match at your skill level", accent: true },
