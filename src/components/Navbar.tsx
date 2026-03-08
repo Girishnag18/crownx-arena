@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings,
   LogOut, Menu, X, Wallet, Swords, Puzzle, Users, BookOpen, Trophy,
-  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye,
+  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
