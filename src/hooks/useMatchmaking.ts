@@ -135,6 +135,7 @@ export const useMatchmaking = () => {
           if (d2?.matched && d2?.game?.id) {
             setState("matched");
             setGameId(d2.game.id);
+            soundManager.play("matchFound");
             clearSearchState();
           }
         } catch { /* polling will catch it */ }
