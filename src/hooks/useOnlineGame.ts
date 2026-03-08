@@ -212,6 +212,24 @@ export const useOnlineGame = (gameId: string | null) => {
         if (!move) return false;
 
         setPendingMove(true);
+
+        // Calculate clock update
+        const now = new Date();
+        const nowISO = now.toISOString();
+        let updatedWhiteMs = gameData.white_time_ms;
+        let updatedBlackMs = gameData.black_time_ms;
+
+        if (gameData.duration_seconds && gameData.last_move_at && updatedWhiteMs != null && updatedBlackMs != null) {
+          const elapsed = now.getTime() - new Date(gameData.last_move_at).getTime();
+          const incrementMs = (gameData.increment_seconds ?? 0) * 1000;
+
+          if (playerColor === "w") {
+            updatedWhiteMs = Math.max(0, updatedWhiteMs - elapsed) + incrementMs;
+          } else {
+            updatedBlackMs = Math.max(0, updatedBlackMs - elapsed) + incrementMs;
+          }
+        }
+
         setGame(gameCopy);
         setGameData((prev) => {
           if (!prev) return prev;
@@ -219,6 +237,9 @@ export const useOnlineGame = (gameId: string | null) => {
             ...prev,
             current_fen: gameCopy.fen(),
             moves: [...(prev.moves || []), { from, to, san: move.san, promotion }],
+            white_time_ms: updatedWhiteMs,
+            black_time_ms: updatedBlackMs,
+            last_move_at: nowISO,
           };
         });
 
@@ -230,13 +251,24 @@ export const useOnlineGame = (gameId: string | null) => {
         if (gameCopy.isCheckmate()) {
           resultType = "checkmate";
           winnerId = user.id;
-          endedAt = new Date().toISOString();
+          endedAt = nowISO;
         } else if (gameCopy.isStalemate()) {
           resultType = "stalemate";
-          endedAt = new Date().toISOString();
+          endedAt = nowISO;
         } else if (gameCopy.isDraw()) {
           resultType = "draw";
-          endedAt = new Date().toISOString();
+          endedAt = nowISO;
+        }
+
+        // Check if player ran out of time
+        if (updatedWhiteMs != null && updatedWhiteMs <= 0 && playerColor === "w") {
+          resultType = "timeout";
+          winnerId = gameData.player_black;
+          endedAt = nowISO;
+        } else if (updatedBlackMs != null && updatedBlackMs <= 0 && playerColor === "b") {
+          resultType = "timeout";
+          winnerId = gameData.player_white;
+          endedAt = nowISO;
         }
 
         const newMoves = [...previousMoves, { from, to, san: move.san, promotion }];
@@ -250,7 +282,10 @@ export const useOnlineGame = (gameId: string | null) => {
             winner_id: winnerId,
             ended_at: endedAt,
             pgn: gameCopy.pgn(),
-          })
+            white_time_ms: updatedWhiteMs,
+            black_time_ms: updatedBlackMs,
+            last_move_at: nowISO,
+          } as any)
           .eq("id", gameData.id);
 
         if (error) throw error;
