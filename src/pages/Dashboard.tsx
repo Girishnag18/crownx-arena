@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Crown, Globe, Trophy, Clock, ChevronRight, ChevronDown, Plus, Wallet, Loader2, User, Target, Flame, BarChart3, Settings, Gamepad2, Gift, Shield, Sparkles } from "lucide-react";
-import XPProgressBar from "@/components/gamification/XPProgressBar";
-import DailyPuzzleCard from "@/components/gamification/DailyPuzzleCard";
-import PlacementBadge from "@/components/gamification/PlacementBadge";
+import { Crown, Loader2 } from "lucide-react";
 import RankPromotionOverlay from "@/components/gamification/RankPromotionOverlay";
+import PlacementBadge from "@/components/gamification/PlacementBadge";
 import TrainingInsights from "@/components/gamification/TrainingInsights";
+
+import ProfileHero from "@/components/dashboard/ProfileHero";
+import QuickPlayCard from "@/components/dashboard/QuickPlayCard";
+import StatsGrid from "@/components/dashboard/StatsGrid";
+import RecentGamesCard from "@/components/dashboard/RecentGamesCard";
+import TournamentsCard from "@/components/dashboard/TournamentsCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { publishInGameNotification } from "@/components/InGameNotificationBar";
 import PullToRefresh from "@/components/common/PullToRefresh";
 
@@ -39,7 +42,6 @@ interface Tournament {
   status: "open" | "full" | "live" | "completed" | "cancelled";
   tournament_type?: string;
   starts_at: string | null;
-  cancelled_at?: string | null;
   registration_count?: { count: number }[];
 }
 
@@ -57,12 +59,6 @@ interface RecentTournamentRow {
   player_count: number;
 }
 
-interface TournamentLeaderboardRow {
-  playerId: string;
-  wins: number;
-  matches: number;
-}
-
 interface RecentGame {
   id: string;
   created_at: string;
@@ -74,32 +70,11 @@ interface RecentGame {
   black_name?: string;
 }
 
-/* ─── Animation variants ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
-const stagger = { show: { transition: { staggerChildren: 0.05 } } };
-
-/* ─── Rank theming ─── */
-const rankEmoji: Record<string, string> = { Bronze: "🥉", Silver: "🥈", Gold: "🥇", Platinum: "💎", Diamond: "💠", "Crown Master": "👑" };
-const rankGradient: Record<string, string> = {
-  Bronze: "from-amber-700/20 via-amber-800/8 to-transparent",
-  Silver: "from-slate-300/18 via-slate-400/6 to-transparent",
-  Gold: "from-yellow-500/18 via-amber-500/6 to-transparent",
-  Platinum: "from-cyan-400/18 via-blue-500/6 to-transparent",
-  Diamond: "from-violet-400/18 via-purple-500/6 to-transparent",
-  "Crown Master": "from-primary/22 via-amber-500/8 to-transparent",
-};
-const rankBorder: Record<string, string> = {
-  Bronze: "border-amber-600/25", Silver: "border-slate-400/25", Gold: "border-yellow-500/25",
-  Platinum: "border-cyan-400/25", Diamond: "border-violet-400/25", "Crown Master": "border-primary/35",
-};
-
-/* ─── Shared card style ─── */
-const card = "rounded-xl border border-border/25 bg-card/50 backdrop-blur-sm";
-const cardHeader = "px-4 py-2.5 border-b border-border/15 flex items-center justify-between";
-const sectionIcon = "w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center shrink-0";
+const stagger = { show: { transition: { staggerChildren: 0.06 } } };
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -117,7 +92,6 @@ const Dashboard = () => {
   const [newTournamentType, setNewTournamentType] = useState("swiss");
   const [recentGames, setRecentGames] = useState<RecentGame[]>([]);
   const [registeringTournamentId, setRegisteringTournamentId] = useState<string | null>(null);
-  const [walletPanelOpen, setWalletPanelOpen] = useState(false);
   const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [liveLeaderboardSize, setLiveLeaderboardSize] = useState(0);
   const [recentTournamentsList, setRecentTournamentsList] = useState<RecentTournamentRow[]>([]);
@@ -204,7 +178,7 @@ const Dashboard = () => {
     setNewTournamentName(""); setNewPrizePool("500"); setNewMaxRegistrations("128"); setNewStartsAt(""); setShowCreateTournament(false);
     if (data) setTournaments((prev) => [{ ...(data as any), registration_count: [{ count: 0 }] } as Tournament, ...prev]);
     loadTournaments();
-    toast.success("Tournament created and synced live for all players");
+    toast.success("Tournament created");
   };
 
   const registerTournament = async (tournamentId: string) => {
@@ -213,72 +187,49 @@ const Dashboard = () => {
     const { error } = await (supabase as any).rpc("register_tournament_with_wallet", { target_tournament: tournamentId });
     setRegisteringTournamentId(null);
     if (error) { toast.error(error.message); return; }
-    toast.success("Registered! 2 crowns deducted from wallet.");
+    toast.success("Registered! 2 crowns deducted.");
     loadMyRegistrations(user.id); loadTournaments(); loadProfile(user.id);
   };
 
   const cancelTournament = async (tournament: Tournament) => {
     if (!user || tournament.created_by !== user.id) return;
-    if (!window.confirm("Call off this tournament and refund all players 2 crowns?")) return;
+    if (!window.confirm("Call off this tournament and refund all players?")) return;
     const { data: regs } = await (supabase as any).from("tournament_registrations").select("id, player_id").eq("tournament_id", tournament.id);
     for (const reg of regs || []) {
       const { data: pd } = await supabase.from("profiles").select("wallet_crowns").eq("id", reg.player_id).single();
       await supabase.from("profiles").update({ wallet_crowns: Number(pd?.wallet_crowns || 0) + 2 }).eq("id", reg.player_id);
       await supabase.from("wallet_transactions").insert({ player_id: reg.player_id, amount: 2, txn_type: "tournament_refund" });
-      await (supabase as any).from("player_notifications").insert({ user_id: reg.player_id, title: "Tournament cancelled", message: `Your tournament "${tournament.name}" was cancelled. Refund has been issued.`, kind: "tournament_cancelled" });
+      await (supabase as any).from("player_notifications").insert({ user_id: reg.player_id, title: "Tournament cancelled", message: `"${tournament.name}" was cancelled. Refund issued.`, kind: "tournament_cancelled" });
     }
     await (supabase as any).from("tournament_registrations").delete().eq("tournament_id", tournament.id);
-    const playerCount = (regs || []).length;
-    // Move to recent_tournaments
     await (supabase as any).from("recent_tournaments").insert({
-      original_id: tournament.id,
-      name: tournament.name,
-      prize_pool: tournament.prize_pool,
-      max_players: tournament.max_players,
-      created_by: tournament.created_by || user.id,
-      status: "cancelled",
-      tournament_type: tournament.tournament_type || "swiss",
-      starts_at: tournament.starts_at,
-      ended_at: new Date().toISOString(),
-      player_count: playerCount,
+      original_id: tournament.id, name: tournament.name, prize_pool: tournament.prize_pool,
+      max_players: tournament.max_players, created_by: tournament.created_by || user.id,
+      status: "cancelled", tournament_type: tournament.tournament_type || "swiss",
+      starts_at: tournament.starts_at, ended_at: new Date().toISOString(), player_count: (regs || []).length,
     });
-    // Delete from tournaments
     await (supabase as any).from("tournaments").delete().eq("id", tournament.id);
-    publishInGameNotification(`Sorry! Tournament "${tournament.name}" was called off. Crowns have been refunded.`, "warning");
-    toast.success("Tournament called off, refunds issued.");
+    publishInGameNotification(`Tournament "${tournament.name}" cancelled. Crowns refunded.`, "warning");
+    toast.success("Tournament cancelled, refunds issued.");
     loadTournaments(); loadRecentTournaments(); loadProfile(user.id);
   };
 
   /* ─── Derived ─── */
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
-  const winRate = profile && profile.games_played > 0 ? ((profile.wins / profile.games_played) * 100).toFixed(1) : "0.0";
   const rank = profile?.rank_tier || "Bronze";
   const activeTournaments = useMemo(() => tournaments.filter((t) => t.status !== "completed" && t.status !== "cancelled"), [tournaments]);
-  const finishedGames = useMemo(() => recentGames.filter((g) => g.result_type !== "in_progress"), [recentGames]);
 
   useEffect(() => {
     const section = new URLSearchParams(location.search).get("section");
     if (!section) return;
-    if (section === "settings") { navigate("/settings"); return; }
-    if (section === "history") document.getElementById("history-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (section === "settings") navigate("/settings");
   }, [location.search]);
-
-  const statChips = [
-    { label: "Games", value: profile?.games_played || 0, icon: Gamepad2 },
-    { label: "Wins", value: profile?.wins || 0, icon: Trophy },
-    { label: "Win%", value: `${winRate}%`, icon: Target },
-    { label: "Streak", value: profile?.win_streak || 0, icon: Flame },
-  ];
 
   const handlePullRefresh = useCallback(async () => {
     if (!user) return;
     await Promise.all([
-      loadProfile(user.id),
-      loadTournaments(),
-      loadRecentTournaments(),
-      loadMyRegistrations(user.id),
-      loadRecentGames(user.id),
-      loadRatingOverview(user.id),
+      loadProfile(user.id), loadTournaments(), loadRecentTournaments(),
+      loadMyRegistrations(user.id), loadRecentGames(user.id), loadRatingOverview(user.id),
     ]);
   }, [user]);
 
@@ -297,283 +248,84 @@ const Dashboard = () => {
       {promotion && <RankPromotionOverlay oldRank={promotion.oldRank} newRank={promotion.newRank} onDismiss={() => setPromotion(null)} />}
 
       <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="container mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
-        <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-3">
+        <div className="container mx-auto max-w-6xl px-3 sm:px-4 lg:px-6">
+          <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-4">
 
-          {/* ════════ HERO ════════ */}
-          <motion.div variants={fadeUp} className={`relative rounded-xl border ${rankBorder[rank] || "border-border/30"} bg-gradient-to-br ${rankGradient[rank] || rankGradient.Bronze} overflow-hidden`}>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.06),transparent_60%)]" />
-            <div className="relative px-4 py-4 sm:px-5 sm:py-5">
-              <div className="flex items-center gap-4">
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                  <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/25 to-transparent blur-sm" />
-                  <Avatar className="relative w-14 h-14 sm:w-16 sm:h-16 border-2 border-primary/30 ring-2 ring-primary/8 ring-offset-2 ring-offset-background">
-                    <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-                    <AvatarFallback className="bg-secondary text-primary font-display font-bold text-lg"><User className="w-6 h-6" /></AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background bg-emerald-500">
-                    <div className="w-full h-full rounded-full bg-emerald-500 animate-pulse" />
-                  </div>
-                </div>
+            {/* ─── Profile Hero ─── */}
+            <motion.div variants={fadeUp}>
+              <ProfileHero
+                username={displayName}
+                avatarUrl={profile?.avatar_url || null}
+                rank={rank}
+                crownScore={profile?.crown_score || 400}
+                level={profile?.level || 1}
+                xp={profile?.xp || 0}
+                walletCrowns={profile?.wallet_crowns || 0}
+              />
+            </motion.div>
 
-                {/* Identity */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="font-display text-lg sm:text-xl font-black tracking-tight truncate">{displayName}</h1>
-                    <span className="inline-flex items-center gap-1 text-[9px] bg-primary/12 border border-primary/20 text-primary font-display font-bold px-1.5 py-0.5 rounded-full">
-                      <Sparkles className="w-2.5 h-2.5" /> Lvl {profile?.level || 1}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm font-display font-bold">{rankEmoji[rank]} {rank}</span>
-                    <span className="w-1 h-1 rounded-full bg-border" />
-                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                      <Crown className="w-3 h-3 text-primary" />{profile?.crown_score || 400}
-                    </span>
-                  </div>
-                </div>
+            {/* ─── Quick Play ─── */}
+            <motion.div variants={fadeUp}>
+              <QuickPlayCard />
+            </motion.div>
 
-                {/* Desktop stats */}
-                <div className="hidden md:flex items-center gap-1.5">
-                  {statChips.map((s) => (
-                    <div key={s.label} className="rounded-lg border border-border/25 bg-card/60 px-3 py-2 text-center min-w-[4rem]">
-                      <s.icon className="w-3.5 h-3.5 text-primary mx-auto mb-0.5" />
-                      <div className="font-display text-xs font-bold">{s.value}</div>
-                      <div className="text-[8px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* ─── Stats ─── */}
+            <motion.div variants={fadeUp}>
+              <StatsGrid
+                gamesPlayed={profile?.games_played || 0}
+                wins={profile?.wins || 0}
+                losses={profile?.losses || 0}
+                draws={profile?.draws || 0}
+                winStreak={profile?.win_streak || 0}
+                globalRank={globalRank}
+                totalPlayers={liveLeaderboardSize}
+                puzzlesSolved={profile?.puzzles_solved || 0}
+              />
+            </motion.div>
 
-              {/* Mobile stats */}
-              <div className="grid grid-cols-4 gap-1.5 mt-3 md:hidden">
-                {statChips.map((s) => (
-                  <div key={s.label} className="rounded-lg border border-border/25 bg-card/40 px-1.5 py-1.5 text-center">
-                    <s.icon className="w-3 h-3 text-primary mx-auto mb-0.5" />
-                    <div className="font-display text-[11px] font-bold">{s.value}</div>
-                    <div className="text-[7px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* XP Bar */}
-              <div className="mt-3">
-                <XPProgressBar xp={profile?.xp || 0} level={profile?.level || 1} />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* ════════ QUICK ACTIONS ════════ */}
-          <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {[
-              { title: "Play Online", desc: "Quick match", icon: Globe, onClick: () => navigate("/lobby"), accent: true },
-              { title: "Puzzles", desc: "Train tactics", icon: Target, onClick: () => navigate("/puzzles") },
-              { title: "Leaderboard", desc: "Rankings", icon: BarChart3, onClick: () => navigate("/leaderboard") },
-              { title: "Settings", desc: "Preferences", icon: Settings, onClick: () => navigate("/settings") },
-            ].map((a) => (
-              <motion.button key={a.title} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={a.onClick}
-                className={`${card} p-3 text-left group transition-all duration-200 ${a.accent ? "border-primary/25 hover:border-primary/40 hover:shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.12)]" : "hover:border-border/50"}`}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1.5 ${a.accent ? "bg-primary/12" : "bg-secondary/50"}`}>
-                  <a.icon className={`w-4 h-4 ${a.accent ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} transition-colors`} />
-                </div>
-                <h3 className="font-display font-bold text-[10px] sm:text-xs">{a.title}</h3>
-                <p className="text-[8px] sm:text-[9px] text-muted-foreground mt-0.5 hidden sm:block">{a.desc}</p>
-              </motion.button>
-            ))}
-          </motion.div>
-
-          {/* ════════ MAIN 2-COL ════════ */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-
-            {/* ── LEFT ── */}
-            <div className="lg:col-span-4 space-y-3">
-
-              {/* Global Rank */}
-              {globalRank !== null && (
-                <motion.div variants={fadeUp} className={`${card} p-4`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/12 to-primary/4 border border-primary/15 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Global Rank</p>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="font-display font-black text-xl text-primary">#{globalRank}</span>
-                        <span className="text-[10px] text-muted-foreground">/ {liveLeaderboardSize}</span>
-                      </div>
-                    </div>
-                    <button onClick={() => navigate("/leaderboard")} className="p-2 rounded-lg border border-border/25 hover:border-primary/25 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary">
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Placement */}
-              {profile && profile.games_played < 10 && <motion.div variants={fadeUp}><PlacementBadge gamesPlayed={profile.games_played} /></motion.div>}
-
-              {/* Training Insights */}
-              {user && <motion.div variants={fadeUp}><TrainingInsights userId={user.id} /></motion.div>}
-            </div>
-
-            {/* ── RIGHT (empty for now, tournaments below) ── */}
-            <div className="lg:col-span-8" />
-          </div>
-
-          {/* ════════ TOURNAMENTS — FULL WIDTH ════════ */}
-          <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
-            <div className={cardHeader}>
-              <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                <div className={sectionIcon}><Trophy className="w-3 h-3 text-primary" /></div>
-                Tournaments
-                {activeTournaments.length > 0 && (
-                  <span className="text-[9px] bg-primary/12 text-primary font-bold px-2 py-0.5 rounded-full">{activeTournaments.length} active</span>
-                )}
-              </h3>
-              <button onClick={() => setShowCreateTournament(!showCreateTournament)} className="flex items-center gap-1.5 text-xs font-display font-bold text-primary hover:text-primary/80 px-2.5 py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
-                <Plus className="w-3.5 h-3.5" /> Create
-              </button>
-            </div>
-
-            {/* Create form */}
-            {showCreateTournament && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} transition={{ duration: 0.2 }} className="border-b border-border/15 px-4 py-4 bg-secondary/5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Name</label>
-                    <input value={newTournamentName} onChange={(e) => setNewTournamentName(e.target.value)} placeholder="Weekend Crown Clash" className="w-full bg-background border border-border/30 rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/25 transition-all" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Prize Pool</label>
-                    <input value={newPrizePool} onChange={(e) => setNewPrizePool(e.target.value)} type="number" min={0} className="w-full bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/25 transition-all" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Max Players</label>
-                    <input value={newMaxRegistrations} onChange={(e) => setNewMaxRegistrations(e.target.value)} type="number" min={2} className="w-full bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/25 transition-all" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Start Time</label>
-                    <input type="datetime-local" value={newStartsAt} onChange={(e) => setNewStartsAt(e.target.value)} className="w-full bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/25 transition-all" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Format</label>
-                    <select value={newTournamentType} onChange={(e) => setNewTournamentType(e.target.value)} className="w-full bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/25 transition-all">
-                      <option value="swiss">Swiss</option>
-                      <option value="arena">Arena</option>
-                    </select>
-                  </div>
-                  <button onClick={createTournament} disabled={createTournamentLoading || !newTournamentName.trim()} className="sm:col-span-2 lg:col-span-3 w-full bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-xs font-display font-bold tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 transition-opacity">
-                    {createTournamentLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</> : <><Plus className="w-3.5 h-3.5" /> Create Tournament</>}
-                  </button>
-                </div>
+            {/* ─── Placement Badge ─── */}
+            {profile && profile.games_played < 10 && (
+              <motion.div variants={fadeUp}>
+                <PlacementBadge gamesPlayed={profile.games_played} />
               </motion.div>
             )}
 
-            {/* List */}
-            <div className="max-h-[26rem] overflow-y-auto">
-              {activeTournaments.length === 0 && (
-                <div className="px-4 py-10 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-secondary/30 flex items-center justify-center mx-auto mb-3">
-                    <Trophy className="w-6 h-6 text-muted-foreground/25" />
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium">No active tournaments</p>
-                  <p className="text-[10px] text-muted-foreground/50 mt-0.5">Create one to get started</p>
-                </div>
-              )}
-              {activeTournaments.map((t) => {
-                const count = t.registration_count?.[0]?.count || 0;
-                const isReg = registeredTournamentIds.includes(t.id);
-                const isFull = count >= t.max_players;
-                const isReady = t.starts_at ? Date.now() >= new Date(t.starts_at).getTime() : false;
-                return (
-                  <div key={t.id} className="px-4 py-3 border-b border-border/10 last:border-0 hover:bg-secondary/6 transition-colors">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
-                          {isReady && (
-                            <span className="inline-flex items-center gap-1 text-[8px] bg-emerald-500/12 text-emerald-500 font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-1"><User className="w-2.5 h-2.5" />{count}/{t.max_players}</span>
-                          <span>₹{t.prize_pool}</span>
-                          {t.starts_at && <span className="hidden sm:inline">{new Date(t.starts_at).toLocaleDateString()} {new Date(t.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {isReady && <button onClick={() => navigate(`/tournament/${t.id}`)} className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/8 text-primary font-display font-bold hover:bg-primary/12 transition-colors">View</button>}
-                        <button onClick={() => registerTournament(t.id)} disabled={isReg || isFull || registeringTournamentId === t.id}
-                          className={`text-[10px] font-display font-bold px-3 py-1.5 rounded-lg transition-all ${isReg ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : isFull ? "bg-muted text-muted-foreground" : "bg-primary/8 text-primary hover:bg-primary/12 border border-primary/20"}`}>
-                          {isReg ? "✓ Joined" : isFull ? "Full" : registeringTournamentId === t.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
-                        </button>
-                      </div>
-                    </div>
-                    {t.created_by === user?.id && (
-                      <button onClick={() => cancelTournament(t)} className="mt-2 text-[10px] px-2.5 py-1 rounded-md bg-destructive/8 text-destructive font-semibold hover:bg-destructive/12 transition-colors">Cancel & Refund</button>
-                    )}
-                  </div>
-                );
-              })}
+            {/* ─── Two Column: Games + Insights ─── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <motion.div variants={fadeUp}>
+                <RecentGamesCard games={recentGames} userId={user?.id || ""} />
+              </motion.div>
+              <motion.div variants={fadeUp}>
+                {user && <TrainingInsights userId={user.id} />}
+              </motion.div>
             </div>
-          </motion.div>
 
-          {/* ════════ RECENT TOURNAMENTS ════════ */}
-          <motion.div variants={fadeUp} className={`${card} overflow-hidden`}>
-            <div className={cardHeader}>
-              <h3 className="font-display font-bold text-sm flex items-center gap-2">
-                <div className={sectionIcon}><Clock className="w-3 h-3 text-muted-foreground" /></div>
-                Recent Tournaments
-              </h3>
-              {recentTournamentsList.length > 0 && (
-                <span className="text-[10px] text-muted-foreground font-medium">{recentTournamentsList.length} ended</span>
-              )}
-            </div>
-            {recentTournamentsList.length === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <div className="w-10 h-10 rounded-xl bg-secondary/30 flex items-center justify-center mx-auto mb-2">
-                  <Clock className="w-5 h-5 text-muted-foreground/25" />
-                </div>
-                <p className="text-xs text-muted-foreground font-medium">No recent tournaments</p>
-                <p className="text-[10px] text-muted-foreground/50 mt-0.5">Completed and cancelled tournaments appear here</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border/10 max-h-[14rem] overflow-y-auto">
-                {recentTournamentsList.map((t) => {
-                  const isCancelled = t.status === "cancelled";
-                  return (
-                    <div key={t.id} className="px-4 py-2.5 flex items-center justify-between gap-2 hover:bg-secondary/6 transition-colors">
-                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
-                          <Trophy className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
-                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
-                            <span className="capitalize">{t.tournament_type || "swiss"}</span>
-                            <span>{t.player_count} players</span>
-                            <span>₹{t.prize_pool}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${isCancelled ? "bg-destructive/10 text-destructive" : "bg-primary/8 text-primary"}`}>
-                          {isCancelled ? "CANCELLED" : "COMPLETED"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
+            {/* ─── Tournaments Full Width ─── */}
+            <motion.div variants={fadeUp}>
+              <TournamentsCard
+                activeTournaments={activeTournaments}
+                recentTournaments={recentTournamentsList}
+                registeredIds={registeredTournamentIds}
+                registeringId={registeringTournamentId}
+                userId={user?.id || ""}
+                onRegister={registerTournament}
+                onCancel={cancelTournament}
+                onNavigateToTournament={(id) => navigate(`/tournament/${id}`)}
+                showCreateForm={showCreateTournament}
+                onToggleCreate={() => setShowCreateTournament(!showCreateTournament)}
+                createFormProps={{
+                  name: newTournamentName, setName: setNewTournamentName,
+                  prizePool: newPrizePool, setPrizePool: setNewPrizePool,
+                  maxPlayers: newMaxRegistrations, setMaxPlayers: setNewMaxRegistrations,
+                  startsAt: newStartsAt, setStartsAt: setNewStartsAt,
+                  type: newTournamentType, setType: setNewTournamentType,
+                  loading: createTournamentLoading, onCreate: createTournament,
+                }}
+              />
+            </motion.div>
 
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
       </PullToRefresh>
     </div>
   );
