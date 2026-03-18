@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { History, Crown } from "lucide-react";
 import MatchHistory from "@/components/profile/MatchHistory";
 import BackButton from "@/components/common/BackButton";
+import PageHeader from "@/components/layout/PageHeader";
 
 const MatchHistoryPage = () => {
   const { user, loading } = useAuth();
@@ -28,28 +29,21 @@ const MatchHistoryPage = () => {
 
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 lg:pb-6">
-      <div className="container mx-auto max-w-3xl px-3 sm:px-4 lg:px-6">
+      <div className="page-content page-content--narrow">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
           className="space-y-4"
         >
-          {/* Header */}
-          <div className="flex items-center gap-3 pt-4">
-            <BackButton />
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <History className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h1 className="font-display text-lg font-black tracking-tight">Match History</h1>
-                <p className="text-xs text-muted-foreground">Review your recent games and replays</p>
-              </div>
-            </div>
-          </div>
+          <PageHeader
+            badge="History"
+            badgeIcon={History}
+            title="Match history"
+            description="Review completed games, revisit replays, and keep your recent results easy to scan."
+            actions={<BackButton />}
+          />
 
-          {/* Match list */}
           <MatchHistory playerId={user.id} />
         </motion.div>
       </div>

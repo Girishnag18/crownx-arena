@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Zap, ArrowLeft, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Settings as SettingsIcon, User, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import EmailChangeSection from "@/components/settings/EmailChangeSection";
 import PasswordSection from "@/components/settings/PasswordSection";
 import { BoardCustomizationSection } from "@/components/settings/BoardCustomizationSection";
 import { NotificationPrefsSection } from "@/components/settings/NotificationPrefsSection";
+import PageHeader from "@/components/layout/PageHeader";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -125,26 +126,29 @@ const Settings = () => {
 
   return (
     <div className="page-container">
-      <div className="container mx-auto max-w-2xl">
+      <div className="page-content page-content--compact">
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-4">
 
-          {/* Back + Header */}
           <motion.div variants={fadeUp}>
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4 transition-colors font-display font-bold"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <SettingsIcon className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight">Settings</h1>
-                <p className="text-[10px] text-muted-foreground">Manage your profile, security, and preferences</p>
-              </div>
-            </div>
+            <PageHeader
+              badge="Settings"
+              badgeIcon={SettingsIcon}
+              title="Account and preferences"
+              description="Manage profile details, security, board setup, and notification preferences from one place."
+              meta={[
+                { icon: User, label: displayName },
+                { icon: Zap, label: "Realtime sync" },
+              ]}
+              actions={
+                <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-border/45 bg-background/45 px-4 py-2.5 text-xs font-display font-bold uppercase tracking-[0.18em] text-foreground transition-all hover:border-primary/25 hover:bg-secondary/35"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back
+                </button>
+              }
+            />
           </motion.div>
 
           <motion.div variants={fadeUp}>

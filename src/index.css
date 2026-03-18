@@ -111,10 +111,25 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at top, hsl(var(--primary) / 0.12), transparent 30%),
+      radial-gradient(circle at 85% 12%, hsl(var(--accent) / 0.08), transparent 24%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+    background-attachment: fixed;
+  }
+
+  #root {
+    min-height: 100vh;
+    isolation: isolate;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -123,8 +138,38 @@
 }
 
 @layer utilities {
+  .app-shell {
+    @apply relative min-h-screen overflow-x-hidden;
+  }
+
+  .app-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(180deg, transparent, black 18%, black 82%, transparent);
+    z-index: -2;
+  }
+
+  .app-shell::after {
+    content: "";
+    position: fixed;
+    inset: auto auto -12rem -6rem;
+    width: 26rem;
+    height: 26rem;
+    border-radius: 9999px;
+    background: hsl(var(--primary) / 0.12);
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
   .glass-card {
-    @apply bg-card/60 backdrop-blur-xl border border-border/40 rounded-xl shadow-sm;
+    @apply rounded-2xl border border-border/45 bg-card/70 shadow-[0_22px_60px_-40px_hsl(var(--foreground)/0.55)] backdrop-blur-xl;
   }
 
   .gold-glow {
@@ -185,23 +230,64 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Consistent page wrapper */
   .page-container {
-    @apply min-h-screen bg-background pt-16 sm:pt-20 pb-24 lg:pb-8 px-3 sm:px-4 md:px-6;
+    @apply relative min-h-screen px-3 pb-24 pt-20 sm:px-4 sm:pt-24 md:px-6 lg:pb-10;
   }
 
-  /* Section heading */
+  .page-content {
+    @apply mx-auto w-full max-w-7xl space-y-6;
+  }
+
+  .page-content--narrow {
+    @apply max-w-4xl;
+  }
+
+  .page-content--compact {
+    @apply max-w-2xl;
+  }
+
+  .page-content--wide {
+    @apply max-w-[1500px];
+  }
+
+  .surface-panel {
+    @apply rounded-[24px] border border-border/50 bg-card/70 shadow-[0_24px_70px_-48px_hsl(var(--foreground)/0.6)] backdrop-blur-xl;
+  }
+
+  .surface-section {
+    @apply rounded-[28px] border border-border/50 bg-card/70 p-5 shadow-[0_28px_80px_-54px_hsl(var(--foreground)/0.52)] backdrop-blur-xl sm:p-6;
+  }
+
+  .surface-muted {
+    @apply rounded-2xl border border-border/40 bg-background/45 backdrop-blur-lg;
+  }
+
+  .page-stack {
+    @apply space-y-6;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary;
+  }
+
+  .kicker-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/85;
+  }
+
+  .metric-pill {
+    @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/55 px-3 py-1.5 text-xs font-medium text-foreground/90 backdrop-blur;
+  }
+
   .section-heading {
     @apply font-display text-xl sm:text-2xl font-bold tracking-tight;
   }
 
-  /* Stat card */
   .stat-card {
-    @apply bg-secondary/40 rounded-lg p-3 text-center border border-border/30;
+    @apply rounded-2xl border border-border/40 bg-secondary/30 p-4 text-center;
   }
 
   .game-action-btn {
-    @apply rounded-md border border-border/30 bg-card/60 p-2 sm:px-3 sm:py-2 text-muted-foreground transition-all;
+    @apply rounded-xl border border-border/35 bg-card/70 p-2 text-muted-foreground transition-all sm:px-3 sm:py-2;
   }
 
   .game-action-btn:hover {
@@ -239,4 +325,19 @@
 ::selection {
   background: hsl(var(--primary) / 0.25);
   color: hsl(var(--foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

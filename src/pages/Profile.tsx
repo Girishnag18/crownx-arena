@@ -9,11 +9,12 @@ import PerformanceTab from "@/components/profile/PerformanceTab";
 import MatchHistory from "@/components/profile/MatchHistory";
 import AchievementShowcase from "@/components/profile/AchievementShowcase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Edit3, X, Swords, MessageCircle, Search, Users, UserPlus, Clock, Upload, Save, User, Palette } from "lucide-react";
+import { BarChart3, Clock, Edit3, MessageCircle, Palette, Save, Search, Swords, Trophy, Upload, User, UserPlus, Users, X } from "lucide-react";
 import MyCosmeticsSection from "@/components/profile/MyCosmeticsSection";
 import DirectMessagePanel from "@/components/social/DirectMessagePanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/layout/PageHeader";
 
 type FullProfile = {
   id: string;
@@ -274,16 +275,27 @@ const Profile = () => {
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-5">
 
           {/* ═══════════ PAGE HEADER ═══════════ */}
-          <motion.div variants={fadeUp} className="flex items-center justify-between gap-3">
-            <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight">Player Profile</h1>
-            {profileData && !editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-2 text-xs font-display font-bold border border-border/40 rounded-xl px-4 py-2.5 hover:bg-secondary/30 hover:border-border/60 transition-all"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit Profile
-              </button>
-            )}
+          <motion.div variants={fadeUp}>
+            <PageHeader
+              badge="Player profile"
+              badgeIcon={Users}
+              title={profileData?.username || "Player profile"}
+              description="Manage identity, performance, cosmetics, and social connections from one aligned player hub."
+              meta={[
+                { icon: Trophy, label: `${profileData?.crown_score || 0} rating` },
+                { icon: BarChart3, label: `${profileData?.games_played || 0} games played` },
+                { icon: Users, label: `${friends.length} friends` },
+              ]}
+              actions={profileData && !editing ? (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-border/45 bg-background/45 px-4 py-2.5 text-xs font-display font-bold uppercase tracking-[0.18em] text-foreground transition-all hover:border-primary/25 hover:bg-secondary/35"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                  Edit profile
+                </button>
+              ) : null}
+            />
           </motion.div>
 
           {/* ═══════════ PROFILE CARD / EDIT FORM ═══════════ */}

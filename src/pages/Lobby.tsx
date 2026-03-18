@@ -8,6 +8,7 @@ import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { usePrivateRoom } from "@/hooks/usePrivateRoom";
 import { supabase } from "@/integrations/supabase/client";
 import WorldChatMessageItem, { type ChatMessage } from "@/components/chat/WorldChatMessage";
+import PageHeader from "@/components/layout/PageHeader";
 
 type Mode = null | "quick_play" | "world_arena" | "private" | "vs_computer";
 type AIDifficulty = "beginner" | "intermediate" | "advanced";
@@ -798,16 +799,123 @@ const Lobby = () => {
     </motion.div>
   );
 
+  const modeSummary: Record<Exclude<Mode, null> | "overview", { title: string; description: string; highlights: string[] }> = {
+    overview: {
+      title: "Choose a mode",
+      description: "Start with quick play, open a private room, or jump into practice with clearer next steps.",
+      highlights: [
+        "Select a time control before searching for the best match quality.",
+        "Use the right-side summary to keep track of variant and mode details.",
+        "Every flow keeps the same visual structure so actions stay easy to find.",
+      ],
+    },
+    quick_play: {
+      title: "Quick play",
+      description: "Fastest route into an online match with focused setup and quick retries.",
+      highlights: [
+        "Pick a time control to improve matchmaking accuracy.",
+        "Enable Chess960 when you want more unpredictable openings.",
+        "If search times out, you can retry or switch to computer practice.",
+      ],
+    },
+    world_arena: {
+      title: "World arena",
+      description: "Competitive realtime play with shared presence, chat, and faster match flow.",
+      highlights: [
+        "Arena chat stays visible while you wait for a match.",
+        "Presence shows how many players are online right now.",
+        "Longer search times widen the rating range automatically.",
+      ],
+    },
+    private: {
+      title: "Private room",
+      description: "Create a code, share it, and launch a direct game with a friend.",
+      highlights: [
+        "Room previews help confirm the host and time control before joining.",
+        "Codes can be regenerated if you want a fresh invite.",
+        "Chess960 can be enabled before room creation for custom matches.",
+      ],
+    },
+    vs_computer: {
+      title: "Computer practice",
+      description: "Choose an engine difficulty and train with optional time controls.",
+      highlights: [
+        "Difficulty presets change both engine strength and overall feel.",
+        "Optional clocks make practice sessions closer to competitive play.",
+        "This mode is ideal when you want fast repetition without waiting on matchmaking.",
+      ],
+    },
+  };
+
+  const activeSummary = mode ? modeSummary[mode] : modeSummary.overview;
+  const modeIcon = mode === "world_arena" ? Globe : mode === "private" ? Users : mode === "vs_computer" ? Bot : Swords;
+  const timeSummary = selectedTimeControl
+    ? `${selectedTimeControl.label}${selectedTimeControl.incrementSeconds ? ` + ${selectedTimeControl.incrementSeconds}s` : ""}`
+    : "Choose time control";
+
   return (
     <div className="page-container">
-      <div className="container mx-auto max-w-xl">
-        <AnimatePresence mode="wait">
-          {!mode && renderModeSelection()}
-          {mode === "quick_play" && renderQuickPlay()}
-          {mode === "world_arena" && renderWorldArena()}
-          {mode === "private" && renderPrivateRoom()}
-          {mode === "vs_computer" && renderVsComputer()}
-        </AnimatePresence>
+      <div className="page-content max-w-6xl">
+        <PageHeader
+          badge="Play center"
+          badgeIcon={Swords}
+          title="Find the right way to play"
+          description="The lobby now keeps the mode picker, supporting details, and next actions aligned so you can move from browsing to playing without friction."
+          meta={[
+            { icon: modeIcon, label: activeSummary.title },
+            { icon: Timer, label: timeSummary },
+            { icon: UserCheck, label: `${onlineUserIds.size} arena players online` },
+          ]}
+        />
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,720px)_320px]">
+          <div className="surface-section">
+            <AnimatePresence mode="wait">
+              {!mode && renderModeSelection()}
+              {mode === "quick_play" && renderQuickPlay()}
+              {mode === "world_arena" && renderWorldArena()}
+              {mode === "private" && renderPrivateRoom()}
+              {mode === "vs_computer" && renderVsComputer()}
+            </AnimatePresence>
+          </div>
+
+          <aside className="space-y-4">
+            <section className="surface-section space-y-4">
+              <div className="space-y-2">
+                <p className="kicker-label">Current mode</p>
+                <h2 className="section-heading text-2xl">{activeSummary.title}</h2>
+                <p className="text-sm leading-6 text-muted-foreground">{activeSummary.description}</p>
+              </div>
+
+              <div className="surface-muted space-y-3 px-4 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-muted-foreground">Time control</span>
+                  <span className="text-xs font-semibold text-foreground">{timeSummary}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-muted-foreground">Variant</span>
+                  <span className="text-xs font-semibold text-foreground">{chess960 ? "Chess960 enabled" : "Standard chess"}</span>
+                </div>
+              </div>
+            </section>
+
+            <section className="surface-section space-y-3">
+              <div className="space-y-1">
+                <p className="kicker-label">Helpful context</p>
+                <h2 className="section-heading text-2xl">Before you queue</h2>
+              </div>
+
+              <div className="space-y-3">
+                {activeSummary.highlights.map((highlight) => (
+                  <div key={highlight} className="surface-muted flex items-start gap-3 px-4 py-4">
+                    <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-primary" />
+                    <p className="text-sm leading-6 text-foreground/90">{highlight}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
+        </div>
       </div>
     </div>
   );

@@ -1,51 +1,63 @@
 import { motion } from "framer-motion";
-import { Swords, Bot, Users, Eye, Globe, Target, Shuffle, Trophy } from "lucide-react";
+import { Bot, Eye, Puzzle, Swords, Target, Trophy, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const QuickPlayCard = () => {
   const navigate = useNavigate();
 
   const actions = [
-    { icon: Swords, label: "Play Online", desc: "Find a match", onClick: () => navigate("/lobby"), primary: true },
-    { icon: Bot, label: "vs Computer", desc: "Practice AI", onClick: () => navigate("/lobby") },
-    { icon: Target, label: "Puzzles", desc: "Train tactics", onClick: () => navigate("/puzzles") },
-    { icon: Trophy, label: "Tournaments", desc: "Compete", onClick: () => navigate("/leaderboard") },
-    { icon: Users, label: "Private Room", desc: "Play a friend", onClick: () => navigate("/lobby") },
-    { icon: Eye, label: "Spectate", desc: "Watch live", onClick: () => navigate("/spectate") },
+    { icon: Bot, label: "vs Computer", desc: "Practice AI matches", onClick: () => navigate("/lobby") },
+    { icon: Target, label: "Puzzles", desc: "Sharpen tactics", onClick: () => navigate("/puzzles") },
+    { icon: Trophy, label: "Events", desc: "Track tournaments", onClick: () => navigate("/leaderboard") },
+    { icon: Users, label: "Private Room", desc: "Invite a friend", onClick: () => navigate("/lobby") },
+    { icon: Eye, label: "Spectate", desc: "Watch live boards", onClick: () => navigate("/spectate") },
+    { icon: Puzzle, label: "Openings", desc: "Build repertoire", onClick: () => navigate("/openings") },
   ];
 
   return (
-    <div className="space-y-3">
-      {/* Big Play Button */}
-      <motion.button
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate("/lobby")}
-        className="w-full rounded-xl bg-gradient-to-r from-primary via-accent to-primary text-primary-foreground font-display font-black text-lg tracking-wider py-5 gold-glow hover:shadow-lg hover:shadow-primary/25 transition-all flex items-center justify-center gap-3"
-      >
-        <Swords className="w-6 h-6" />
-        PLAY
-      </motion.button>
+    <section className="surface-section space-y-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-2">
+          <p className="kicker-label">Quick launch</p>
+          <div>
+            <h3 className="section-heading">Jump back into the arena</h3>
+            <p className="text-sm text-muted-foreground">
+              Start a fresh match, train a specific skill, or open the multiplayer lobby in one tap.
+            </p>
+          </div>
+        </div>
 
-      {/* Action Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        {actions.map((a) => (
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate("/lobby")}
+          className="inline-flex w-full items-center justify-center gap-3 rounded-[22px] bg-gradient-to-r from-primary via-accent to-primary px-6 py-4 text-sm font-display font-black uppercase tracking-[0.26em] text-primary-foreground shadow-[0_24px_60px_-34px_hsl(var(--primary))] transition-all hover:translate-y-[-1px] sm:w-auto"
+        >
+          <Swords className="h-5 w-5" />
+          <span>Open lobby</span>
+        </motion.button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {actions.map((action) => (
           <motion.button
-            key={a.label}
+            key={action.label}
             whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={a.onClick}
-            className="rounded-xl bg-card/80 border border-border/30 hover:border-primary/30 p-3 text-center transition-all group"
+            whileTap={{ scale: 0.98 }}
+            onClick={action.onClick}
+            className="surface-muted group flex items-start gap-4 px-4 py-4 text-left transition-all hover:border-primary/30 hover:bg-secondary/35"
           >
-            <div className="w-9 h-9 rounded-lg bg-secondary/60 group-hover:bg-primary/10 flex items-center justify-center mx-auto mb-1.5 transition-colors">
-              <a.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/40 bg-secondary/45 text-muted-foreground transition-all group-hover:border-primary/20 group-hover:bg-primary/10 group-hover:text-primary">
+              <action.icon className="h-5 w-5" />
             </div>
-            <p className="font-display font-bold text-[10px] sm:text-xs">{a.label}</p>
-            <p className="text-[8px] text-muted-foreground mt-0.5 hidden sm:block">{a.desc}</p>
+            <div className="space-y-1">
+              <p className="font-display text-sm font-bold text-foreground">{action.label}</p>
+              <p className="text-xs leading-5 text-muted-foreground">{action.desc}</p>
+            </div>
           </motion.button>
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 

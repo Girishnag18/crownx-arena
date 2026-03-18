@@ -65,12 +65,12 @@ const NotificationBell = forwardRef<HTMLDivElement>((_, forwardedRef) => {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-secondary/60 transition-colors"
+        className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/70 text-muted-foreground shadow-[0_12px_30px_-22px_hsl(var(--foreground)/0.9)] backdrop-blur transition-all hover:border-primary/40 hover:bg-secondary/45 hover:text-foreground"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -83,7 +83,7 @@ const NotificationBell = forwardRef<HTMLDivElement>((_, forwardedRef) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-border/70 bg-card/95 p-2 shadow-2xl z-50"
+            className="absolute right-0 z-50 mt-3 max-h-96 w-80 overflow-y-auto rounded-2xl border border-border/70 bg-card/95 p-2 shadow-[0_28px_80px_-45px_hsl(var(--foreground)/0.85)] backdrop-blur-2xl"
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 mb-1">
               <p className="text-sm font-bold">Notifications</p>

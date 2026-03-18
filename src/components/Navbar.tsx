@@ -1,10 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Crown, User, ChevronDown, LayoutDashboard, History, BarChart3, Settings,
-  LogOut, Menu, X, Wallet, Swords, Puzzle, Users, BookOpen, Trophy,
-  Gift, ShoppingBag, Sparkles, Gamepad2, GraduationCap, Eye, Loader2,
+  BarChart3,
+  BookOpen,
+  ChevronDown,
+  Crown,
+  Eye,
+  Gamepad2,
+  Gift,
+  GraduationCap,
+  History,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  Menu,
+  Puzzle,
+  Settings,
+  ShoppingBag,
+  Sparkles,
+  Swords,
+  Trophy,
+  User,
+  Users,
+  Wallet,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "@/components/layout/ThemeToggle";
@@ -12,6 +32,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const navSections = [
   {
@@ -58,8 +79,6 @@ const navSections = [
   },
 ];
 
-const flatNavLinks = navSections.flatMap((s) => s.items);
-
 const profileMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
   { icon: User, label: "Profile", to: "/profile" },
@@ -78,6 +97,15 @@ interface NavbarProfile {
   avatar_url: string | null;
 }
 
+const desktopLinks = [
+  { to: "/", label: "Home" },
+  { to: "/lobby", label: "Play" },
+  { to: "/puzzles", label: "Train" },
+  { to: "/dashboard", label: "Arena" },
+  { to: "/shop", label: "Store" },
+  { to: "/social", label: "Social" },
+];
+
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,24 +121,30 @@ const Navbar = () => {
     setMobileOpen(false);
   }, [location.pathname, location.search]);
 
-  // Lock body scroll when drawer is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setProfileOpen(false);
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
     };
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setProfileOpen(false);
         setMobileOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
+
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
@@ -118,17 +152,37 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    if (!user) { setProfile(null); return; }
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
     const loadNavbarProfile = async () => {
-      const { data } = await supabase.from("profiles").select("username, wallet_crowns, avatar_url").eq("id", user.id).maybeSingle();
-      if (data) setProfile(data as unknown as NavbarProfile);
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, wallet_crowns, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setProfile(data as unknown as NavbarProfile);
+      }
     };
+
     loadNavbarProfile();
+
     const profileChannel = supabase
       .channel(`navbar-profile-${user.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, loadNavbarProfile)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        loadNavbarProfile,
+      )
       .subscribe();
-    return () => { supabase.removeChannel(profileChannel); };
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+    };
   }, [user]);
 
   const handleSignOut = async () => {
@@ -139,152 +193,183 @@ const Navbar = () => {
     setTimeout(() => {
       setLoggingOut(false);
       navigate("/");
-    }, 1200);
+    }, 1000);
   };
 
   const displayName = profile?.username || user?.user_metadata?.username || "Player";
-
-  // Desktop: show a few key links only
-  const desktopLinks = [
-    { to: "/", label: "Home" },
-    { to: "/lobby", label: "Play" },
-    { to: "/puzzles", label: "Puzzles" },
-    { to: "/dashboard", label: "Arena" },
-    { to: "/shop", label: "Store" },
-    { to: "/social", label: "Social" },
-  ];
-  const visibleDesktopLinks = user ? desktopLinks : [{ to: "/", label: "Home" }];
+  const walletAmount = Number(profile?.wallet_crowns || 0).toFixed(2);
+  const visibleDesktopLinks = user ? desktopLinks : desktopLinks.slice(0, 2);
 
   return (
     <>
-      {/* Logging out overlay */}
       <AnimatePresence>
         {loggingOut && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/86 backdrop-blur-xl"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="flex flex-col items-center gap-4"
+              transition={{ type: "spring", damping: 20, stiffness: 260 }}
+              className="surface-panel flex min-w-[220px] flex-col items-center gap-4 px-8 py-7"
             >
-              <Loader2 className="w-10 h-10 text-primary animate-spin" />
-              <p className="font-display font-bold text-lg text-foreground">Logging out…</p>
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="font-display text-lg font-bold text-foreground">Logging out...</p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.nav
-        initial={{ y: -80 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl"
+
+      <motion.header
+        initial={{ y: -40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:px-6"
       >
-        <div className="container mx-auto flex items-center justify-between px-4 py-2.5 md:px-6">
-          <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <Crown className="w-6 h-6 md:w-7 md:h-7 text-primary transition-transform group-hover:scale-110" />
-            <span className="font-display text-base md:text-lg font-bold tracking-wide">CrownX</span>
+        <div className="mx-auto flex max-w-7xl items-center gap-3 rounded-[26px] border border-border/60 bg-background/78 px-4 py-3 shadow-[0_22px_70px_-38px_hsl(var(--foreground)/0.88)] backdrop-blur-2xl">
+          <Link to="/" className="group flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary transition-transform duration-200 group-hover:scale-[1.03]">
+              <Crown className="h-5 w-5" />
+            </div>
+            <div className="hidden min-w-0 sm:block">
+              <p className="font-display text-base font-black tracking-[0.18em] text-foreground">CROWNX</p>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Arena platform</p>
+            </div>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-1 rounded-lg border border-border/60 bg-card/60 px-1 py-1">
-            {visibleDesktopLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`relative px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
-                  location.pathname === link.to ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {link.label}
-                {location.pathname === link.to && (
-                  <motion.div layoutId="nav-indicator" className="absolute inset-x-2 -bottom-0.5 h-0.5 bg-primary rounded-full" />
-                )}
-              </Link>
-            ))}
+          <div className="hidden flex-1 xl:flex xl:justify-center">
+            <nav className="flex items-center gap-1 rounded-2xl border border-border/50 bg-card/58 p-1 backdrop-blur">
+              {visibleDesktopLinks.map((link) => {
+                const active = location.pathname === link.to;
+
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={cn(
+                      "relative rounded-xl px-4 py-2 text-sm font-semibold transition-all",
+                      active
+                        ? "bg-primary/12 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.16)]"
+                        : "text-muted-foreground hover:bg-secondary/40 hover:text-foreground",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
-          <div className="flex items-center gap-1.5 md:gap-2">
+          <div className="ml-auto flex items-center gap-2">
+            {user && (
+              <div className="hidden items-center gap-2 rounded-2xl border border-border/50 bg-card/58 px-3 py-2 text-xs font-semibold text-muted-foreground xl:flex">
+                <Crown className="h-4 w-4 text-primary" />
+                <span className="text-foreground">{walletAmount}</span>
+                <span>Crowns</span>
+              </div>
+            )}
+
             <ThemeToggle />
             <NotificationBell />
 
             {user ? (
               <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => setProfileOpen((o) => !o)}
+                  onClick={() => setProfileOpen((open) => !open)}
                   aria-expanded={profileOpen}
                   aria-haspopup="menu"
-                  className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-card/70 px-2 py-1.5 hover:border-primary/40 transition-colors"
+                  className="flex items-center gap-2 rounded-2xl border border-border/60 bg-card/70 px-2.5 py-2 shadow-[0_12px_30px_-22px_hsl(var(--foreground)/0.85)] backdrop-blur transition-all hover:border-primary/35"
                 >
-                  <Avatar className="w-7 h-7 border border-border/60">
+                  <Avatar className="h-8 w-8 border border-border/60">
                     <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
                     <AvatarFallback className="bg-secondary text-muted-foreground">
-                      <User className="w-3.5 h-3.5" />
+                      <User className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm font-semibold max-w-[100px] truncate">{displayName}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+                  <div className="hidden min-w-0 text-left md:block">
+                    <p className="max-w-[110px] truncate text-sm font-semibold text-foreground">{displayName}</p>
+                    <p className="text-[11px] text-muted-foreground">Arena ready</p>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform",
+                      profileOpen && "rotate-180",
+                    )}
+                  />
                 </button>
 
                 <AnimatePresence>
                   {profileOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-60 rounded-xl border border-border/70 bg-card/95 backdrop-blur-xl p-2 shadow-2xl z-50"
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.18 }}
+                      className="absolute right-0 z-50 mt-3 w-72 rounded-[24px] border border-border/70 bg-card/95 p-2 shadow-[0_28px_80px_-45px_hsl(var(--foreground)/0.85)] backdrop-blur-2xl"
                     >
-                      <div className="px-3 py-2 border-b border-border/70 mb-1">
-                        <p className="text-sm font-semibold leading-tight truncate">{displayName}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{Number(profile?.wallet_crowns || 0).toFixed(2)} Crowns</p>
+                      <div className="surface-muted mb-2 flex items-center gap-3 px-3 py-3">
+                        <Avatar className="h-11 w-11 border border-primary/20">
+                          <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                          <AvatarFallback className="bg-secondary text-muted-foreground">
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate font-display text-sm font-bold text-foreground">{displayName}</p>
+                          <p className="text-xs text-muted-foreground">{walletAmount} Crowns</p>
+                        </div>
                       </div>
-                      {profileMenuItems.map((item) => (
-                        <Link
-                          key={item.label}
-                          to={item.to}
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
-                        >
-                          <item.icon className="w-4 h-4" />
-                          {item.label}
-                        </Link>
-                      ))}
-                      <div className="border-t border-border my-1" />
+
+                      <div className="space-y-1">
+                        {profileMenuItems.map((item) => (
+                          <Link
+                            key={item.label}
+                            to={item.to}
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/45 hover:text-foreground"
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+
+                      <div className="my-2 border-t border-border/60" />
+
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg text-destructive hover:bg-destructive/10 w-full transition-colors"
+                        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
                       >
-                        <LogOut className="w-4 h-4" />
-                        Logout
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
                       </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             ) : (
-              <Link to="/auth" className="hidden md:inline-flex bg-primary text-primary-foreground font-display font-bold text-xs tracking-wider px-4 py-2 rounded-lg">
-                LOGIN
+              <Link
+                to="/auth"
+                className="hidden rounded-2xl bg-primary px-4 py-2.5 text-xs font-display font-bold uppercase tracking-[0.22em] text-primary-foreground shadow-[0_18px_40px_-28px_hsl(var(--primary))] transition-all hover:translate-y-[-1px] hover:shadow-[0_24px_50px_-28px_hsl(var(--primary))] sm:inline-flex"
+              >
+                Login
               </Link>
             )}
 
-            {/* Mobile hamburger */}
             <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-secondary/50 transition-colors"
+              onClick={() => setMobileOpen((open) => !open)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/70 text-muted-foreground shadow-[0_12px_30px_-22px_hsl(var(--foreground)/0.9)] backdrop-blur transition-all hover:border-primary/40 hover:bg-secondary/45 hover:text-foreground xl:hidden"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
-      </motion.nav>
+      </motion.header>
 
-      {/* Mobile drawer overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -292,112 +377,128 @@ const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm xl:hidden"
               onClick={() => setMobileOpen(false)}
             />
+
             <motion.aside
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-[280px] max-w-[85vw] bg-card border-l border-border/60 shadow-2xl lg:hidden flex flex-col"
+              className="fixed bottom-0 right-0 top-0 z-50 flex w-[340px] max-w-[90vw] flex-col border-l border-border/60 bg-background/95 shadow-[0_28px_80px_-40px_hsl(var(--foreground)/0.9)] backdrop-blur-2xl xl:hidden"
             >
-              {/* Drawer header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-                <Link to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-primary" />
-                  <span className="font-display text-sm font-bold">CrownX Arena</span>
+              <div className="flex items-center justify-between border-b border-border/60 px-4 py-4">
+                <Link to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
+                    <Crown className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm font-black tracking-[0.16em] text-foreground">CROWNX</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Arena menu</p>
+                  </div>
                 </Link>
+
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-secondary/50 transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/70 text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
-              {/* User info */}
-              {user && profile && (
-                <div className="px-4 py-3 border-b border-border/60">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10 border border-primary/30">
-                      <AvatarImage src={profile.avatar_url || undefined} />
+              {user && (
+                <div className="border-b border-border/60 px-4 py-4">
+                  <div className="surface-muted flex items-center gap-3 px-3 py-3">
+                    <Avatar className="h-12 w-12 border border-primary/20">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
                       <AvatarFallback className="bg-secondary text-muted-foreground">
-                        <User className="w-4 h-4" />
+                        <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="font-display font-bold text-sm truncate">{displayName}</p>
-                      <p className="text-xs text-muted-foreground">{Number(profile.wallet_crowns || 0).toFixed(2)} Crowns</p>
+                      <p className="truncate font-display text-sm font-bold text-foreground">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">{walletAmount} Crowns</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Nav sections */}
-              <ScrollArea className="flex-1 px-3 py-2">
+              <ScrollArea className="flex-1 px-4 py-4">
                 {user ? (
-                  navSections.map((section) => (
-                    <div key={section.title} className="mb-3">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-2 mb-1">
-                        {section.title}
-                      </p>
-                      {section.items.map((item) => (
-                        <Link
-                          key={item.to}
-                          to={item.to}
-                          onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                            location.pathname === item.to
-                              ? "bg-primary/10 text-primary font-semibold"
-                              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                          }`}
-                        >
-                          <item.icon className="w-4 h-4 shrink-0" />
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  ))
+                  <div className="space-y-5">
+                    {navSections.map((section) => (
+                      <div key={section.title} className="space-y-2">
+                        <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                          {section.title}
+                        </p>
+                        <div className="space-y-1">
+                          {section.items.map((item) => {
+                            const active = location.pathname === item.to;
+                            return (
+                              <Link
+                                key={item.to}
+                                to={item.to}
+                                onClick={() => setMobileOpen(false)}
+                                className={cn(
+                                  "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-all",
+                                  active
+                                    ? "bg-primary/12 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.16)]"
+                                    : "text-muted-foreground hover:bg-secondary/40 hover:text-foreground",
+                                )}
+                              >
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <Link
-                    to="/"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground font-semibold"
-                  >
-                    <Crown className="w-4 h-4 text-primary" />
-                    Home
-                  </Link>
+                  <div className="space-y-2">
+                    {desktopLinks.slice(0, 2).map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
+                      >
+                        <Crown className="h-4 w-4 text-primary" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
                 )}
               </ScrollArea>
 
-              {/* Drawer footer */}
-              <div className="px-4 py-3 border-t border-border/60 space-y-2">
+              <div className="border-t border-border/60 px-4 py-4">
                 {user ? (
-                  <>
+                  <div className="space-y-2">
                     <Link
                       to="/settings"
                       onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                      className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
                     >
-                      <Settings className="w-4 h-4" />
-                      Settings
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                      className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
                     >
-                      <LogOut className="w-4 h-4" />
-                      Logout
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <Link
                     to="/auth"
                     onClick={() => setMobileOpen(false)}
-                    className="w-full block text-center bg-primary text-primary-foreground font-display font-bold text-sm tracking-wider py-3 rounded-lg"
+                    className="flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-display font-bold uppercase tracking-[0.22em] text-primary-foreground"
                   >
-                    LOGIN
+                    Login
                   </Link>
                 )}
               </div>

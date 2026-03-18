@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Plus, Loader2, User, Clock, Crown, Timer, Users, Swords } from "lucide-react";
+import {
+  CalendarDays,
+  Crown,
+  Loader2,
+  Plus,
+  Swords,
+  Timer,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface Tournament {
   id: string;
@@ -52,284 +62,387 @@ interface TournamentsCardProps {
   };
 }
 
-/* ─── Countdown Hook ─── */
 function useCountdown(targetDate: string | null) {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    if (!targetDate) { setTimeLeft(""); return; }
+    if (!targetDate) {
+      setTimeLeft("");
+      return;
+    }
 
     const update = () => {
       const diff = new Date(targetDate).getTime() - Date.now();
-      if (diff <= 0) { setTimeLeft("Starting now"); return; }
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      if (h > 24) {
-        const d = Math.floor(h / 24);
-        setTimeLeft(`${d}d ${h % 24}h`);
-      } else if (h > 0) {
-        setTimeLeft(`${h}h ${m}m`);
+
+      if (diff <= 0) {
+        setTimeLeft("Starting now");
+        return;
+      }
+
+      const hours = Math.floor(diff / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+
+      if (hours >= 24) {
+        const days = Math.floor(hours / 24);
+        setTimeLeft(`${days}d ${hours % 24}h`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours}h ${minutes}m`);
       } else {
-        setTimeLeft(`${m}m ${s}s`);
+        setTimeLeft(`${minutes}m ${seconds}s`);
       }
     };
 
     update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
+    const interval = window.setInterval(update, 1000);
+    return () => window.clearInterval(interval);
   }, [targetDate]);
 
   return timeLeft;
 }
 
-/* ─── Player fill bar ─── */
-const FillBar = ({ count, max }: { count: number; max: number }) => {
-  const pct = max > 0 ? Math.min((count / max) * 100, 100) : 0;
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
-        <Users className="w-3 h-3" />
-        <span className="font-display font-bold text-foreground">{count}</span>/{max}
-      </div>
-      <Progress value={pct} className="h-1.5 flex-1" />
-    </div>
-  );
-};
-
-/* ─── Countdown Badge ─── */
 const CountdownBadge = ({ startsAt }: { startsAt: string | null }) => {
   const timeLeft = useCountdown(startsAt);
+
   if (!timeLeft) return null;
 
-  const isStarting = timeLeft === "Starting now";
   return (
-    <span className={`inline-flex items-center gap-1 text-[9px] font-display font-bold px-2 py-0.5 rounded-full ${
-      isStarting
-        ? "bg-emerald-500/12 text-emerald-400"
-        : "bg-accent/10 text-accent"
-    }`}>
-      <Timer className="w-2.5 h-2.5" />
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em]",
+        timeLeft === "Starting now" ? "bg-emerald-500/12 text-emerald-400" : "bg-primary/10 text-primary",
+      )}
+    >
+      <Timer className="h-3 w-3" />
       {timeLeft}
     </span>
   );
 };
 
-/* ─── Player Avatars Stack ─── */
-const PlayerAvatarStack = ({ count }: { count: number }) => {
-  const shown = Math.min(count, 5);
-  const extra = count - shown;
-
-  return (
-    <div className="flex items-center -space-x-1.5">
-      {Array.from({ length: shown }).map((_, i) => (
-        <div
-          key={i}
-          className="w-6 h-6 rounded-full border-2 border-card bg-secondary/80 flex items-center justify-center"
-          style={{ zIndex: shown - i }}
-        >
-          <User className="w-3 h-3 text-muted-foreground" />
-        </div>
-      ))}
-      {extra > 0 && (
-        <div className="w-6 h-6 rounded-full border-2 border-card bg-primary/10 flex items-center justify-center text-[8px] font-display font-bold text-primary" style={{ zIndex: 0 }}>
-          +{extra}
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ─── Format type badge ─── */
 const TypeBadge = ({ type }: { type?: string }) => (
-  <span className="text-[8px] uppercase tracking-widest font-display font-bold text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+  <span className="rounded-full border border-border/50 bg-background/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
     {type === "arena" ? "Arena" : "Swiss"}
   </span>
 );
 
 const TournamentsCard = ({
-  activeTournaments, recentTournaments, registeredIds, registeringId,
-  userId, onRegister, onCancel, onNavigateToTournament,
-  showCreateForm, onToggleCreate, createFormProps,
+  activeTournaments,
+  recentTournaments,
+  registeredIds,
+  registeringId,
+  userId,
+  onRegister,
+  onCancel,
+  onNavigateToTournament,
+  showCreateForm,
+  onToggleCreate,
+  createFormProps,
 }: TournamentsCardProps) => {
   const [tab, setTab] = useState<"active" | "recent">("active");
 
   return (
-    <div className="rounded-xl bg-card/80 border border-border/30 overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-primary" />
-          <h3 className="font-display font-bold text-sm">Tournaments</h3>
-          {activeTournaments.length > 0 && (
-            <span className="text-[9px] bg-primary/12 text-primary font-bold px-2 py-0.5 rounded-full">{activeTournaments.length}</span>
-          )}
+    <section className="surface-section space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="kicker-label">Events</p>
+          <h3 className="section-heading">Tournaments</h3>
+          <p className="text-sm text-muted-foreground">
+            Join active brackets, watch events go live, or launch a new tournament.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-secondary/40 rounded-lg p-0.5">
-            <button onClick={() => setTab("active")} className={`text-[10px] font-display font-bold px-2.5 py-1 rounded-md transition-all ${tab === "active" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Active</button>
-            <button onClick={() => setTab("recent")} className={`text-[10px] font-display font-bold px-2.5 py-1 rounded-md transition-all ${tab === "recent" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Recent</button>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="rounded-2xl border border-border/50 bg-background/55 p-1">
+            <button
+              onClick={() => setTab("active")}
+              className={cn(
+                "rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] transition-all",
+                tab === "active" ? "bg-primary/12 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setTab("recent")}
+              className={cn(
+                "rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] transition-all",
+                tab === "recent" ? "bg-primary/12 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Recent
+            </button>
           </div>
-          <button onClick={onToggleCreate} className="flex items-center gap-1 text-xs font-display font-bold text-primary hover:text-primary/80 px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors">
-            <Plus className="w-3.5 h-3.5" />
+
+          <button
+            onClick={onToggleCreate}
+            className="inline-flex items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-primary transition-colors hover:bg-primary/14"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {showCreateForm ? "Close form" : "Create"}
           </button>
         </div>
       </div>
 
-      {/* Create Form */}
-      {showCreateForm && (
-        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="border-b border-border/15 px-4 py-4 bg-secondary/5">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="col-span-2">
-              <input value={createFormProps.name} onChange={(e) => createFormProps.setName(e.target.value)} placeholder="Tournament Name" className="w-full bg-background border border-border/30 rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/25" />
-            </div>
-            <input value={createFormProps.prizePool} onChange={(e) => createFormProps.setPrizePool(e.target.value)} type="number" placeholder="Prize Pool" className="bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25" />
-            <input value={createFormProps.maxPlayers} onChange={(e) => createFormProps.setMaxPlayers(e.target.value)} type="number" placeholder="Max Players" className="bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25" />
-            <input type="datetime-local" value={createFormProps.startsAt} onChange={(e) => createFormProps.setStartsAt(e.target.value)} className="bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25" />
-            <select value={createFormProps.type} onChange={(e) => createFormProps.setType(e.target.value)} className="bg-background border border-border/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/25">
-              <option value="swiss">Swiss</option>
-              <option value="arena">Arena</option>
-            </select>
-            <button onClick={createFormProps.onCreate} disabled={createFormProps.loading || !createFormProps.name.trim()} className="col-span-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-display font-bold tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90">
-              {createFormProps.loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...</> : "Create Tournament"}
-            </button>
-          </div>
-        </motion.div>
-      )}
+      <AnimateCreate open={showCreateForm}>
+        <div className="grid gap-3 rounded-[24px] border border-border/45 bg-background/45 p-4 backdrop-blur sm:grid-cols-2">
+          <input
+            value={createFormProps.name}
+            onChange={(event) => createFormProps.setName(event.target.value)}
+            placeholder="Tournament name"
+            className="rounded-2xl border border-border/45 bg-card/70 px-4 py-3 text-sm outline-none ring-0 transition-all placeholder:text-muted-foreground/55 focus:border-primary/30"
+          />
+          <select
+            value={createFormProps.type}
+            onChange={(event) => createFormProps.setType(event.target.value)}
+            className="rounded-2xl border border-border/45 bg-card/70 px-4 py-3 text-sm outline-none transition-all focus:border-primary/30"
+          >
+            <option value="swiss">Swiss</option>
+            <option value="arena">Arena</option>
+          </select>
+          <input
+            value={createFormProps.prizePool}
+            onChange={(event) => createFormProps.setPrizePool(event.target.value)}
+            type="number"
+            placeholder="Prize pool"
+            className="rounded-2xl border border-border/45 bg-card/70 px-4 py-3 text-sm outline-none transition-all focus:border-primary/30"
+          />
+          <input
+            value={createFormProps.maxPlayers}
+            onChange={(event) => createFormProps.setMaxPlayers(event.target.value)}
+            type="number"
+            placeholder="Max players"
+            className="rounded-2xl border border-border/45 bg-card/70 px-4 py-3 text-sm outline-none transition-all focus:border-primary/30"
+          />
+          <input
+            type="datetime-local"
+            value={createFormProps.startsAt}
+            onChange={(event) => createFormProps.setStartsAt(event.target.value)}
+            className="rounded-2xl border border-border/45 bg-card/70 px-4 py-3 text-sm outline-none transition-all focus:border-primary/30 sm:col-span-2"
+          />
+          <button
+            onClick={createFormProps.onCreate}
+            disabled={createFormProps.loading || !createFormProps.name.trim()}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-display font-bold uppercase tracking-[0.18em] text-primary-foreground transition-all hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-55 sm:col-span-2"
+          >
+            {createFormProps.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            <span>{createFormProps.loading ? "Creating" : "Create tournament"}</span>
+          </button>
+        </div>
+      </AnimateCreate>
 
-      {/* Active Tournaments */}
-      {tab === "active" && (
-        <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 20rem)" }}>
-          {activeTournaments.length === 0 ? (
-            <div className="px-4 py-12 text-center">
-              <Trophy className="w-10 h-10 text-muted-foreground/15 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground font-medium">No active tournaments</p>
-              <p className="text-[10px] text-muted-foreground/50 mt-1">Create one to get started</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border/10">
-              {activeTournaments.map((t) => {
-                const count = t.registration_count?.[0]?.count || 0;
-                const isReg = registeredIds.includes(t.id);
-                const isFull = count >= t.max_players;
-                const isReady = t.starts_at ? Date.now() >= new Date(t.starts_at).getTime() : false;
+      {tab === "active" ? (
+        activeTournaments.length === 0 ? (
+          <EmptyState
+            icon={Trophy}
+            title="No active tournaments"
+            description="Create the first bracket or check back when a new event opens."
+          />
+        ) : (
+          <div className="space-y-3">
+            {activeTournaments.map((tournament) => {
+              const count = tournament.registration_count?.[0]?.count || 0;
+              const isRegistered = registeredIds.includes(tournament.id);
+              const isFull = count >= tournament.max_players;
+              const isLive = tournament.starts_at ? Date.now() >= new Date(tournament.starts_at).getTime() : false;
+              const progress = tournament.max_players > 0 ? Math.min((count / tournament.max_players) * 100, 100) : 0;
 
-                return (
-                  <div key={t.id} className="px-4 py-3.5 hover:bg-secondary/6 transition-colors">
-                    {/* Row 1: Title + badges */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0">
-                        <Swords className="w-4 h-4 text-primary" />
+              return (
+                <article
+                  key={tournament.id}
+                  className="surface-muted space-y-4 px-4 py-4 transition-all hover:border-primary/25 hover:bg-secondary/35"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                          <Swords className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-display text-lg font-bold text-foreground">{tournament.name}</h4>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <TypeBadge type={tournament.tournament_type} />
+                            {isLive ? (
+                              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                Live
+                              </span>
+                            ) : (
+                              <CountdownBadge startsAt={tournament.starts_at} />
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <h4 className="font-display font-bold text-sm truncate flex-1 min-w-0">{t.name}</h4>
-                      <TypeBadge type={t.tournament_type} />
-                      {isReady ? (
-                        <span className="inline-flex items-center gap-1 text-[8px] bg-emerald-500/12 text-emerald-400 font-bold px-1.5 py-0.5 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE
-                        </span>
-                      ) : (
-                        <CountdownBadge startsAt={t.starts_at} />
-                      )}
                     </div>
 
-                    {/* Row 2: Details */}
-                    <div className="mt-2.5 flex items-center gap-4">
-                      <PlayerAvatarStack count={count} />
-                      <div className="flex-1">
-                        <FillBar count={count} max={t.max_players} />
-                      </div>
-                    </div>
-
-                    {/* Row 3: Prize + schedule + actions */}
-                    <div className="mt-2.5 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1 font-display font-bold text-primary">
-                          <Crown className="w-3 h-3" /> ₹{t.prize_pool}
-                        </span>
-                        {t.starts_at && !isReady && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5" />
-                            {new Date(t.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · {new Date(t.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {isReady && (
-                          <button onClick={() => onNavigateToTournament(t.id)} className="text-[10px] px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-display font-bold hover:bg-emerald-500/15 border border-emerald-500/20 transition-all">
-                            Watch
-                          </button>
-                        )}
-                        <button onClick={() => onRegister(t.id)} disabled={isReg || isFull || registeringId === t.id}
-                          className={`text-[10px] font-display font-bold px-3.5 py-1.5 rounded-lg transition-all ${
-                            isReg
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : isFull
-                                ? "bg-muted text-muted-foreground"
-                                : "bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20"
-                          }`}>
-                          {isReg ? "✓ Joined" : isFull ? "Full" : registeringId === t.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Join · 2♛"}
+                    <div className="flex flex-wrap gap-2">
+                      {isLive && (
+                        <button
+                          onClick={() => onNavigateToTournament(tournament.id)}
+                          className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-emerald-400 transition-colors hover:bg-emerald-500/16"
+                        >
+                          Watch
                         </button>
+                      )}
+                      <button
+                        onClick={() => onRegister(tournament.id)}
+                        disabled={isRegistered || isFull || registeringId === tournament.id}
+                        className={cn(
+                          "inline-flex min-w-[136px] items-center justify-center rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] transition-all",
+                          isRegistered
+                            ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                            : isFull
+                              ? "border border-border/40 bg-background/55 text-muted-foreground"
+                              : "bg-primary text-primary-foreground hover:translate-y-[-1px]",
+                        )}
+                      >
+                        {registeringId === tournament.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : isRegistered ? (
+                          "Joined"
+                        ) : isFull ? (
+                          "Full"
+                        ) : (
+                          "Join for 2 crowns"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-2">
+                          <Users className="h-3.5 w-3.5" />
+                          {count}/{tournament.max_players} players
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                          <CalendarDays className="h-3.5 w-3.5" />
+                          {tournament.starts_at
+                            ? new Date(tournament.starts_at).toLocaleString([], {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "Schedule pending"}
+                        </span>
                       </div>
+                      <Progress value={progress} className="h-2" />
                     </div>
 
-                    {/* Owner cancel */}
-                    {t.created_by === userId && (
-                      <button onClick={() => onCancel(t)} className="mt-2 text-[10px] px-2.5 py-1 rounded-md bg-destructive/8 text-destructive font-semibold hover:bg-destructive/12 transition-colors">
-                        Cancel & Refund
-                      </button>
+                    <div className="flex items-center justify-between rounded-2xl border border-border/45 bg-background/50 px-4 py-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Prize pool</p>
+                        <p className="font-display text-lg font-bold text-foreground">Rs {tournament.prize_pool}</p>
+                      </div>
+                      <Crown className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+
+                  {tournament.created_by === userId && (
+                    <button
+                      onClick={() => onCancel(tournament)}
+                      className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-destructive transition-colors hover:bg-destructive/14"
+                    >
+                      Cancel and refund
+                    </button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )
+      ) : recentTournaments.length === 0 ? (
+        <EmptyState
+          icon={Timer}
+          title="No recent tournaments"
+          description="Completed and cancelled events will show up here once matches wrap up."
+        />
+      ) : (
+        <div className="space-y-3">
+          {recentTournaments.map((tournament) => {
+            const isCancelled = tournament.status === "cancelled";
+
+            return (
+              <article key={tournament.id} className="surface-muted flex items-center gap-4 px-4 py-4">
+                <div
+                  className={cn(
+                    "flex h-11 w-11 items-center justify-center rounded-2xl border",
+                    isCancelled
+                      ? "border-destructive/20 bg-destructive/10 text-destructive"
+                      : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
+                  )}
+                >
+                  <Trophy className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-display text-sm font-bold text-foreground">{tournament.name}</h4>
+                    <TypeBadge type={tournament.tournament_type} />
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" />
+                      {tournament.player_count} players
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Crown className="h-3.5 w-3.5" />
+                      Rs {tournament.prize_pool}
+                    </span>
+                    {tournament.ended_at && (
+                      <span>
+                        {new Date(tournament.ended_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                </div>
 
-      {/* Recent Tournaments */}
-      {tab === "recent" && (
-        <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 20rem)" }}>
-          {recentTournaments.length === 0 ? (
-            <div className="px-4 py-12 text-center">
-              <Clock className="w-10 h-10 text-muted-foreground/15 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground font-medium">No recent tournaments</p>
-              <p className="text-[10px] text-muted-foreground/50 mt-1">Completed and cancelled events appear here</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border/10">
-              {recentTournaments.map((t) => {
-                const isCancelled = t.status === "cancelled";
-                return (
-                  <div key={t.id} className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/6 transition-colors">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCancelled ? "bg-destructive/8" : "bg-primary/8"}`}>
-                      <Trophy className={`w-4 h-4 ${isCancelled ? "text-destructive" : "text-primary"}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-display font-bold text-xs truncate">{t.name}</h4>
-                        <TypeBadge type={t.tournament_type} />
-                      </div>
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1"><Users className="w-2.5 h-2.5" />{t.player_count} players</span>
-                        <span className="flex items-center gap-1"><Crown className="w-2.5 h-2.5" />₹{t.prize_pool}</span>
-                        {t.ended_at && (
-                          <span>{new Date(t.ended_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-                        )}
-                      </div>
-                    </div>
-                    <span className={`text-[9px] font-display font-bold px-2.5 py-1 rounded-full ${isCancelled ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-400"}`}>
-                      {isCancelled ? "CANCELLED" : "COMPLETED"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]",
+                    isCancelled ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-400",
+                  )}
+                >
+                  {isCancelled ? "Cancelled" : "Completed"}
+                </span>
+              </article>
+            );
+          })}
         </div>
       )}
-    </div>
+    </section>
   );
 };
+
+const AnimateCreate = ({ open, children }: { open: boolean; children: ReactNode }) =>
+  open ? (
+    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+      {children}
+    </motion.div>
+  ) : null;
+
+const EmptyState = ({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof Trophy;
+  title: string;
+  description: string;
+}) => (
+  <div className="surface-muted flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/40 bg-secondary/40">
+      <Icon className="h-6 w-6 text-muted-foreground/60" />
+    </div>
+    <div className="space-y-1">
+      <p className="font-display text-base font-bold text-foreground">{title}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </div>
+  </div>
+);
 
 export default TournamentsCard;

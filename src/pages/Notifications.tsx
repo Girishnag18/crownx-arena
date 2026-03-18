@@ -4,6 +4,7 @@ import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PullToRefresh from "@/components/common/PullToRefresh";
+import PageHeader from "@/components/layout/PageHeader";
 
 type PlayerNotification = {
   id: string;
@@ -92,27 +93,22 @@ const Notifications = () => {
   return (
     <main className="page-container">
       <PullToRefresh onRefresh={loadNotifications}>
-      <div className="container max-w-2xl mx-auto space-y-4">
-        <header className="glass-card p-4 sm:p-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-3xl font-bold truncate">Notifications</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">Stay updated with messages from CrownX Arena.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="text-[10px] sm:text-xs text-primary font-semibold hover:underline whitespace-nowrap"
-              >
-                Mark all read
-              </button>
-            )}
-            <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{unreadCount}</span>
-          </div>
-        </header>
+      <div className="page-content page-content--compact space-y-4">
+        <PageHeader
+          badge="Inbox"
+          badgeIcon={Bell}
+          title="Notifications"
+          description="Stay on top of friend requests, tournaments, rewards, and account updates without losing context."
+          meta={[{ icon: Bell, label: `${unreadCount} unread` }]}
+          actions={unreadCount > 0 ? (
+            <button
+              onClick={markAllRead}
+              className="inline-flex items-center rounded-2xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-xs font-display font-bold uppercase tracking-[0.18em] text-primary transition-colors hover:bg-primary/14"
+            >
+              Mark all read
+            </button>
+          ) : null}
+        />
 
         {notifications.length === 0 ? (
           <section className="glass-card p-3 sm:p-6">

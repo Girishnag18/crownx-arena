@@ -1,4 +1,4 @@
-import { Gamepad2, Trophy, Target, Flame, Shield, BarChart3 } from "lucide-react";
+import { BarChart3, Flame, Gamepad2, Shield, Target, Trophy } from "lucide-react";
 
 interface StatsGridProps {
   gamesPlayed: number;
@@ -11,48 +11,57 @@ interface StatsGridProps {
   puzzlesSolved: number;
 }
 
-const StatsGrid = ({ gamesPlayed, wins, losses, draws, winStreak, globalRank, totalPlayers, puzzlesSolved }: StatsGridProps) => {
-  const winRate = gamesPlayed > 0 ? ((wins / gamesPlayed) * 100).toFixed(1) : "0.0";
+const StatsGrid = ({
+  gamesPlayed,
+  wins,
+  losses,
+  draws,
+  winStreak,
+  globalRank,
+  totalPlayers,
+  puzzlesSolved,
+}: StatsGridProps) => {
+  const winRate = gamesPlayed > 0 ? `${((wins / gamesPlayed) * 100).toFixed(1)}%` : "0.0%";
 
   const stats = [
-    { label: "Games", value: gamesPlayed, icon: Gamepad2, color: "text-primary" },
-    { label: "Wins", value: wins, icon: Trophy, color: "text-emerald-400" },
-    { label: "Losses", value: losses, icon: BarChart3, color: "text-destructive" },
-    { label: "Draws", value: draws, icon: Target, color: "text-muted-foreground" },
-    { label: "Win Rate", value: `${winRate}%`, icon: Target, color: "text-primary" },
-    { label: "Streak", value: winStreak, icon: Flame, color: "text-amber-400" },
-    { label: "Rank", value: globalRank ? `#${globalRank}` : "—", icon: Shield, color: "text-primary" },
-    { label: "Puzzles", value: puzzlesSolved, icon: Target, color: "text-violet-400" },
+    { label: "Games played", value: gamesPlayed, icon: Gamepad2, tone: "text-primary" },
+    { label: "Wins", value: wins, icon: Trophy, tone: "text-emerald-400" },
+    { label: "Losses", value: losses, icon: BarChart3, tone: "text-destructive" },
+    { label: "Draws", value: draws, icon: Target, tone: "text-muted-foreground" },
+    { label: "Win rate", value: winRate, icon: Target, tone: "text-primary" },
+    { label: "Current streak", value: winStreak, icon: Flame, tone: "text-amber-400" },
+    { label: "Global rank", value: globalRank ? `#${globalRank}` : "-", icon: Shield, tone: "text-primary" },
+    { label: "Puzzles solved", value: puzzlesSolved, icon: Target, tone: "text-sky-400" },
   ];
 
   return (
-    <div className="rounded-xl bg-card/80 border border-border/30 overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-border/20 flex items-center gap-2">
-        <BarChart3 className="w-4 h-4 text-primary" />
-        <h3 className="font-display font-bold text-sm">Stats</h3>
-        {globalRank && (
-          <span className="ml-auto text-[10px] text-muted-foreground">
-            #{globalRank} / {totalPlayers}
-          </span>
-        )}
+    <section className="surface-section space-y-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="kicker-label">Performance</p>
+          <h3 className="section-heading">Competitive overview</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {globalRank ? `Ranked #${globalRank} out of ${totalPlayers} tracked players` : "Play more rated games to enter the rankings"}
+        </p>
       </div>
-      <div className="grid grid-cols-4 divide-x divide-border/15">
-        {stats.slice(0, 4).map((s) => (
-          <div key={s.label} className="px-3 py-3 text-center">
-            <div className={`font-display font-black text-lg ${s.color}`}>{s.value}</div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">{s.label}</div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="surface-muted px-4 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+                <p className={`font-display text-3xl font-black ${stat.tone}`}>{stat.value}</p>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-secondary/45 text-primary">
+                <stat.icon className="h-5 w-5" />
+              </div>
+            </div>
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-4 divide-x divide-border/15 border-t border-border/15">
-        {stats.slice(4).map((s) => (
-          <div key={s.label} className="px-3 py-3 text-center">
-            <div className={`font-display font-black text-lg ${s.color}`}>{s.value}</div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+    </section>
   );
 };
 

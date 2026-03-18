@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { motion } from "framer-motion";
-import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake, XCircle, Undo2 } from "lucide-react";
+import { Crown, RotateCcw, Flag, Wifi, WifiOff, LoaderCircle, Swords, Shield, Timer, Volume2, VolumeX, ArrowUpRight, ArrowUpRightIcon, Monitor, Shuffle, Handshake, XCircle, Undo2 } from "lucide-react";
 import { ResignConfirmDialog, GameOverPopup, type RematchState } from "@/components/chess/ResignDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { generateChess960Fen } from "@/utils/chess960";
@@ -20,6 +20,7 @@ import { TIME_CONTROLS, type TimeControl, TimeControlSelector, useChessClock, Cl
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soundManager } from "@/services/soundManager";
 import { stockfish } from "@/services/stockfishService";
+import PageHeader from "@/components/layout/PageHeader";
 
 type AIDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -738,6 +739,16 @@ const Play = () => {
   const whiteMs = isOnline ? (onlineClockWhiteMs ?? 0) : localWhiteMs;
   const blackMs = isOnline ? (onlineClockBlackMs ?? 0) : localBlackMs;
   const showClock = isOnline ? !!effectiveTimeControl : !!timeControl;
+  const matchTitle = isOnline
+    ? `${online.playerName} vs ${online.opponentName}`
+    : isComputerGame
+      ? "Computer practice"
+      : "Local board";
+  const matchDescription = isOnline
+    ? `Playing as ${online.playerColor === "w" ? "White" : "Black"} in a live match.`
+    : isComputerGame
+      ? `Play against the ${difficulty} engine with optional clocks and post-game review.`
+      : "Pass-and-play mode for local games on a shared board.";
 
   const movePairs = useMemo(() => {
     const pairs: { num: number; white: string; black?: string }[] = [];
@@ -870,14 +881,25 @@ const Play = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-24 lg:pb-4 relative">
-      {/* Subtle ambient glow */}
+    <div className="page-container relative">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[140px]" />
+        <div className="absolute top-0 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/3 blur-[140px]" />
       </div>
 
-      <div className="mx-auto max-w-[1400px] px-2 sm:px-4 lg:px-6">
-        <div className="flex flex-col lg:flex-row lg:gap-5 lg:items-start lg:justify-center">
+      <div className="page-content page-content--wide space-y-4">
+        <PageHeader
+          badge="Match view"
+          badgeIcon={Swords}
+          title={matchTitle}
+          description={matchDescription}
+          meta={[
+            { icon: Crown, label: gameStatus },
+            { icon: Timer, label: (effectiveTimeControl || timeControl)?.label || "No clock" },
+            { icon: Shuffle, label: isChess960 ? "Chess960" : "Standard" },
+          ]}
+        />
+
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-center lg:gap-5">
 
           {/* ── LEFT: Board Column ── */}
           <div className="flex flex-col items-center w-full lg:w-auto lg:flex-shrink-0">
