@@ -88,7 +88,7 @@ const DailyRewards = () => {
 
   return (
     <div className="page-container">
-      <div className="container mx-auto max-w-2xl">
+      <div className="page-content page-content--compact">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <button
             onClick={() => navigate(-1)}

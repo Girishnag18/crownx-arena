@@ -170,8 +170,8 @@ const PgnAnalysis = () => {
   // Import view
   if (!parsed) {
     return (
-      <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-        <div className="container mx-auto max-w-2xl">
+      <div className="page-container">
+        <div className="page-content page-content--compact">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
@@ -222,8 +222,8 @@ const PgnAnalysis = () => {
 
   // Analysis view
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-6xl">
+    <div className="page-container">
+      <div className="page-content page-content--wide">
         <button
           onClick={() => { setParsed(false); setParsedMoves([]); setAnalysis(null); }}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"

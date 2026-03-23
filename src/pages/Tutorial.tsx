@@ -207,8 +207,8 @@ const Tutorial = () => {
   const showBoard = !!step.fen;
 
   return (
-    <main className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-4xl">
+    <main className="page-container">
+      <div className="page-content page-content--narrow">
         {/* Progress */}
         <div className="mb-6 space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">

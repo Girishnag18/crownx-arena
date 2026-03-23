@@ -229,7 +229,7 @@ const Navbar = () => {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:px-6"
       >
-        <div className="mx-auto flex max-w-7xl items-center gap-3 rounded-[26px] border border-border/60 bg-background/78 px-4 py-3 shadow-[0_22px_70px_-38px_hsl(var(--foreground)/0.88)] backdrop-blur-2xl">
+        <div className="shell-frame flex items-center gap-3 rounded-[26px] border border-border/60 bg-background/78 px-4 py-3 shadow-[0_22px_70px_-38px_hsl(var(--foreground)/0.88)] backdrop-blur-2xl">
           <Link to="/" className="group flex min-w-0 items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary transition-transform duration-200 group-hover:scale-[1.03]">
               <Crown className="h-5 w-5" />

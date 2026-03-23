@@ -17,7 +17,7 @@ const MatchHistoryPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
+      <div className="page-loader">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
           <Crown className="w-10 h-10 text-primary" />
         </motion.div>
@@ -28,7 +28,7 @@ const MatchHistoryPage = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background pt-16 pb-20 lg:pb-6">
+    <div className="page-container">
       <div className="page-content page-content--narrow">
         <motion.div
           initial={{ opacity: 0, y: 12 }}

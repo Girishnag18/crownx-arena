@@ -225,8 +225,8 @@ const Spectate = () => {
 
   if (selectedGame && spectateGame) {
     return (
-      <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-        <div className="container mx-auto max-w-[1200px]">
+      <div className="page-container">
+        <div className="page-content page-content--game">
           <button
             onClick={() => { setSelectedGame(null); setSpectateGame(null); setLastMove(null); setComments([]); }}
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -353,8 +353,8 @@ const Spectate = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-3xl">
+    <div className="page-container">
+      <div className="page-content page-content--narrow">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <button
             onClick={() => navigate("/lobby")}

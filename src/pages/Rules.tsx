@@ -26,8 +26,8 @@ const fadeUp = {
 
 const Rules = () => {
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-4xl">
+    <div className="page-container">
+      <div className="page-content page-content--narrow">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
             <span className="text-gradient-gold">Chess</span> Rules

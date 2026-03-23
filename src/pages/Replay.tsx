@@ -172,16 +172,16 @@ const Replay = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="page-loader">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (!gameData || positions.length === 0) {
     return (
-      <div className="min-h-screen bg-background pt-20 px-4">
-        <div className="container mx-auto max-w-2xl text-center py-20">
+      <div className="page-container">
+        <div className="page-content page-content--compact text-center py-20">
           <p className="text-muted-foreground">Game not found or has no moves.</p>
           <button onClick={() => navigate(-1)} className="mt-4 text-primary text-sm hover:underline">Go back</button>
         </div>
@@ -201,7 +201,7 @@ const Replay = () => {
 
   return (
     <div className="page-container">
-      <div className="container mx-auto max-w-[1300px]">
+      <div className="page-content page-content--game">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"

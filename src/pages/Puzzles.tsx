@@ -250,7 +250,7 @@ const Puzzles = () => {
   return (
     <div className="page-container">
       <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="container mx-auto max-w-6xl">
+      <div className="page-content page-content--wide">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
           {/* Board */}
           <div className="lg:col-span-8 flex flex-col items-center">

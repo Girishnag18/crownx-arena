@@ -68,7 +68,7 @@ const DailySpin = () => {
         <div className="absolute bottom-20 right-1/4 w-[300px] h-[300px] bg-accent/6 rounded-full blur-[100px]" />
       </div>
 
-      <div className="container max-w-lg relative z-10 space-y-6">
+      <div className="page-content page-content--compact relative z-10">
         <BackButton label="Back" />
 
         <motion.div

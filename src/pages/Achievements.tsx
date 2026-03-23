@@ -96,7 +96,7 @@ const Achievements = () => {
   return (
     <div className="page-container">
       <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="container mx-auto max-w-4xl">
+      <div className="page-content page-content--narrow">
         <motion.div initial="hidden" animate="show" variants={stagger} className="space-y-2.5">
 
           {/* ═══════════ HERO HEADER ═══════════ */}

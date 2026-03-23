@@ -271,7 +271,7 @@ const Profile = () => {
 
   return (
     <div className="page-container">
-      <div className="container mx-auto max-w-6xl">
+      <div className="page-content page-content--wide">
         <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }} className="space-y-5">
 
           {/* ═══════════ PAGE HEADER ═══════════ */}

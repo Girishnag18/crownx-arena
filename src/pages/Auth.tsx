@@ -72,7 +72,7 @@ const Auth = () => {
     "w-full rounded-xl border border-border/40 bg-secondary/30 backdrop-blur-sm pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:bg-secondary/50 focus:ring-1 focus:ring-primary/20 transition-all duration-200";
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <main className="page-center relative overflow-hidden">
       {/* Ambient background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/6 blur-[120px]" />

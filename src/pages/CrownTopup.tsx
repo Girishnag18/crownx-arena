@@ -53,8 +53,8 @@ const CrownTopup = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="page-loader">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -67,7 +67,7 @@ const CrownTopup = () => {
         <div className="absolute bottom-10 right-1/4 w-[320px] h-[320px] bg-accent/6 rounded-full blur-[100px]" />
       </div>
 
-      <div className="container mx-auto max-w-2xl relative z-10 space-y-6">
+      <div className="page-content page-content--compact relative z-10">
         <BackButton label="Back" to="/dashboard" />
         {/* Header */}
         <motion.div

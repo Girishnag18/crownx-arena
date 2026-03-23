@@ -131,7 +131,7 @@ const App = () => (
               <StreakBanner />
               <RealtimeNotificationToast />
 
-              <main className="relative z-10 pb-24 lg:pb-10">
+              <main className="app-main">
                 <RouteAnimator />
               </main>
 

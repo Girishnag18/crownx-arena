@@ -166,7 +166,7 @@ const BattlePass = () => {
 
   return (
     <main className="page-container">
-      <div className="container max-w-4xl mx-auto space-y-6">
+      <div className="page-content page-content--narrow">
       <BackButton label="Back" to="/dashboard" />
       {/* Header */}
       <div className="glass-card p-4 sm:p-6 space-y-4">

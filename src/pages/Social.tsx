@@ -163,8 +163,8 @@ const Social = () => {
 
   if (loading) {
     return (
-      <main className="page-container flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <main className="page-loader">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </main>
     );
   }
@@ -172,7 +172,7 @@ const Social = () => {
   return (
     <main className="page-container">
       <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="container max-w-4xl mx-auto space-y-4 sm:space-y-6">
+      <div className="page-content page-content--narrow">
       <div>
         <h1 className="text-xl sm:text-3xl font-bold font-display flex items-center gap-2">
           <Users className="w-5 h-5 sm:w-7 sm:h-7 text-primary" /> Social Hub

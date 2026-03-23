@@ -225,7 +225,7 @@ const Challenges = () => {
   return (
     <main className="page-container">
       <PullToRefresh onRefresh={handlePullRefresh}>
-      <div className="container max-w-4xl mx-auto space-y-6">
+      <div className="page-content page-content--narrow">
       <BackButton label="Back" to="/dashboard" />
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold font-display">Challenges</h1>

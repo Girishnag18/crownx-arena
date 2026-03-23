@@ -151,7 +151,7 @@ const Referrals = () => {
         <div className="absolute top-20 left-1/4 w-[400px] h-[400px] bg-primary/8 rounded-full blur-[120px]" />
       </div>
 
-      <div className="container max-w-lg relative z-10 space-y-5">
+      <div className="page-content page-content--compact relative z-10">
         <BackButton label="Back" />
 
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2">

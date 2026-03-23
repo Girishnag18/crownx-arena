@@ -142,6 +142,14 @@
     @apply relative min-h-screen overflow-x-hidden;
   }
 
+  .app-main {
+    @apply relative z-10 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] lg:pb-10;
+  }
+
+  .shell-frame {
+    @apply mx-auto w-full max-w-[1500px];
+  }
+
   .app-shell::before {
     content: "";
     position: fixed;
@@ -231,11 +239,15 @@
   }
 
   .page-container {
-    @apply relative min-h-screen px-3 pb-24 pt-20 sm:px-4 sm:pt-24 md:px-6 lg:pb-10;
+    @apply relative min-h-screen px-3 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] pt-20 sm:px-4 sm:pt-24 md:px-6 lg:pb-10;
   }
 
   .page-content {
     @apply mx-auto w-full max-w-7xl space-y-6;
+  }
+
+  .page-content--medium {
+    @apply max-w-5xl;
   }
 
   .page-content--narrow {
@@ -248,6 +260,18 @@
 
   .page-content--wide {
     @apply max-w-[1500px];
+  }
+
+  .page-content--game {
+    @apply max-w-[1300px];
+  }
+
+  .page-center {
+    @apply relative flex min-h-screen items-center justify-center px-4 pb-10 pt-28 sm:pt-32;
+  }
+
+  .page-loader {
+    @apply page-container flex items-center justify-center;
   }
 
   .surface-panel {

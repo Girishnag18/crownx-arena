@@ -215,8 +215,8 @@ const Studies = () => {
   // LIST VIEW
   if (view === "list") {
     return (
-      <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-        <div className="container mx-auto max-w-4xl">
+      <div className="page-container">
+        <div className="page-content page-content--narrow">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center justify-between mb-6">
               <h1 className="font-display text-2xl font-black flex items-center gap-2">
@@ -288,8 +288,8 @@ const Studies = () => {
   const chapterMoves = selectedChapter?.moves || [];
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-7xl">
+    <div className="page-container">
+      <div className="page-content">
         <div className="flex items-center gap-2 mb-4">
           <button onClick={() => setView("list")} className="text-xs text-muted-foreground hover:text-foreground">← Studies</button>
           <span className="text-muted-foreground">/</span>

@@ -183,8 +183,8 @@ const TournamentDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center pt-20">
-        <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
+      <div className="page-loader">
+          <Crown className="w-12 h-12 text-primary animate-pulse-gold" />
       </div>
     );
   }
@@ -199,7 +199,7 @@ const TournamentDetail = () => {
 
   return (
     <div className="page-container">
-      <div className="container mx-auto max-w-5xl">
+      <div className="page-content page-content--medium">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 border-glow mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
